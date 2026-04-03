@@ -415,12 +415,27 @@
 			</style>
 		</head>
 		<body>
-			<div id="preloader">
-				<div class="preloader-logo">Paraiso Hills</div>
-				<div style="width: 100px; height: 2px; background: #333; margin-top: 20px; overflow: hidden;">
-					<div style="width: 50%; height: 100%; background: var(--accent-gold); animation: loadLine 1s infinite linear;"></div>
-				</div>
-			</div>
+<div id="preloader">
+    <div class="preloader-logo">Paraiso Hills</div>
+    <div style="width: 100px; height: 2px; background: #333; margin-top: 20px; overflow: hidden;">
+        <div style="width: 50%; height: 100%; background: var(--accent-gold); animation: loadLine 1s infinite linear;"></div>
+    </div>
+</div>
+
+<script>
+    let preloaderRemoved = false;
+    function hidePreloader() {
+        if (preloaderRemoved) return;
+        preloaderRemoved = true;
+        const loader = document.getElementById('preloader');
+        if (loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 800);
+        }
+    }
+    window.addEventListener('load', () => setTimeout(hidePreloader, 1000));
+    setTimeout(hidePreloader, 3500); // 3.5 seconds force close
+</script>
 			<style>@keyframes loadLine { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }</style>
 
 			<div class="cursor-dot"></div>
