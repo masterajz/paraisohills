@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Paraiso Quest | Interactive Gamification</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;600;700;800&family=Playfair+Display:wght@700;900&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        :root {
+            --accent-gold: #d4af37;
+            --bg-dark: #0a0a0a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-dark); color: #f4f4f4; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; min-height: 100vh; position: relative;}
+
+        /* Cinematic Background */
+        .bg-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background-image: url('https://res.cloudinary.com/dc7ff0sz2/image/upload/v1775034238/Praiso_front_es9uow.png'); 
+            background-size: cover; background-position: center; 
+            filter: blur(10px) brightness(0.2); z-index: -2;
+        }
+
+        /* Top Navigation */
+        .btn-back-wrapper { padding: 30px 50px; position: relative; z-index: 10; }
+        .btn-back-home { display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; background: transparent; color: var(--accent-gold); border: 1px solid rgba(212, 175, 55, 0.5); border-radius: 30px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: 600;}
+        .btn-back-home:hover { background: var(--accent-gold); color: #000; transform: translateX(-5px); }
+
+        /* Main Game Container */
+        .game-container { max-width: 1000px; margin: 0 auto 50px; text-align: center; font-family: 'Outfit', sans-serif; position: relative; z-index: 5; padding: 0 20px;}
+        .game-title { font-size: 3.5rem; color: var(--accent-gold); font-family: 'Playfair Display', serif; font-weight: 900; letter-spacing: 5px; margin-bottom: 5px; text-transform: uppercase; filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.3));}
+        .game-subtitle { font-size: 0.9rem; color: #ccc; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 50px; font-weight: 300;}
+        
+        /* Menu Cards */
+        .quest-menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; margin-top: 30px; }
+        .quest-card { background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px; padding: 40px 25px; cursor: pointer; transition: all 0.4s ease; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        .quest-card:hover { transform: translateY(-10px); border-color: var(--accent-gold); background: rgba(20, 20, 20, 0.8); box-shadow: 0 20px 50px rgba(212, 175, 55, 0.15); }
+        .quest-card .material-icons-outlined { font-size: 3.5rem; color: var(--accent-gold); margin-bottom: 20px; transition: transform 0.4s ease; }
+        .quest-card:hover .material-icons-outlined { transform: scale(1.1); }
+        .quest-card h3 { font-family: 'Playfair Display', serif; color: #fff; font-size: 1.4rem; margin-bottom: 12px; letter-spacing: 1px; font-weight: 700; }
+        .quest-card p { font-size: 0.85rem; color: #aaa; line-height: 1.6; font-weight: 300; font-family: 'Plus Jakarta Sans', sans-serif;}
+
+        /* Shared Game Box Styles */
+        .game-box { display: none; background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 15px; padding: 50px 40px; box-shadow: 0 30px 60px rgba(0,0,0,0.9); position: relative; margin-top: 20px; max-width: 650px; margin-left: auto; margin-right: auto;}
+        .btn-close-game { position: absolute; top: 25px; left: 25px; background: transparent; border: none; color: #aaa; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Outfit'; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; font-weight: 600;}
+        .btn-close-game:hover { color: var(--accent-gold); }
+        .btn-game { background: transparent; color: var(--accent-gold); border: 1px solid var(--accent-gold); padding: 15px 40px; border-radius: 30px; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: 0.4s; font-weight: 600; display: inline-block; font-family: 'Outfit', sans-serif;}
+        .btn-game:hover { background: var(--accent-gold); color: #000; box-shadow: 0 0 25px rgba(212, 175, 55, 0.3); transform: translateY(-3px);}
+        .game-feedback { font-size: 0.85rem; letter-spacing: 1px; margin-top: 20px; min-height: 20px; font-weight: 500; text-transform: uppercase;}
+
+        /* Auth & Scavenger Styles */
+        .auth-input { width: 100%; max-width: 350px; padding: 18px 25px; background: rgba(0,0,0,0.6); border: 1px solid rgba(212, 175, 55, 0.3); color: var(--accent-gold); font-size: 1.2rem; text-align: center; border-radius: 8px; outline: none; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 30px; font-family: 'Outfit', sans-serif; transition: border-color 0.3s;}
+        .auth-input:focus { border-color: var(--accent-gold); }
+        .riddle-text { font-size: 1.5rem; color: #f4f4f4; line-height: 1.7; font-family: 'Playfair Display', serif; font-style: italic; margin-bottom: 35px; letter-spacing: 1px;}
+        .answer-input { width: 100%; max-width: 300px; padding: 15px 20px; background: transparent; border: none; border-bottom: 2px solid rgba(212, 175, 55, 0.3); color: #fff; font-size: 1.2rem; text-align: center; outline: none; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 35px; transition: 0.3s; font-weight: 700;}
+        .answer-input:focus { border-bottom-color: var(--accent-gold); }
+
+        /* Memory Game Styles */
+        .memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; max-width: 500px; margin: 30px auto 0; perspective: 1000px; }
+        .memory-card { width: 100%; aspect-ratio: 1; position: relative; cursor: pointer; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
+        .memory-card.flip { transform: rotateY(180deg); }
+        .memory-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .memory-front { background: #111; border: 1px solid rgba(212, 175, 55, 0.5); transform: rotateY(180deg); }
+        .memory-front img { width: 100%; height: 100%; object-fit: cover; }
+        .memory-back { background: radial-gradient(circle, #1a1a1a, #000); border: 1px solid rgba(212, 175, 55, 0.2); }
+        .memory-back::after { content: 'PH'; font-family: 'Playfair Display'; color: rgba(212, 175, 55, 0.4); font-size: 2rem; font-weight: 900; }
+
+        /* Snap Quest (Camera) Styles */
+        .snap-preview { width: 100%; max-width: 350px; aspect-ratio: 4/3; background: rgba(0,0,0,0.4); border: 1px dashed rgba(212, 175, 55, 0.4); border-radius: 12px; margin: 25px auto; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+        .snap-preview img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .scanner-line { position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--accent-gold); box-shadow: 0 0 20px var(--accent-gold); display: none; animation: scan 2s linear infinite; }
+        @keyframes scan { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
+
+        /* Avatar Selection Styles */
+        .avatar-grid { display: flex; justify-content: center; gap: 15px; margin: 30px 0; flex-wrap: wrap; }
+        .avatar-card { width: 80px; height: 80px; border-radius: 50%; border: 3px solid rgba(212, 175, 55, 0.2); cursor: pointer; transition: all 0.3s ease; background: rgba(0,0,0,0.5); overflow: hidden; }
+        .avatar-card:hover { border-color: rgba(212, 175, 55, 0.6); transform: translateY(-5px); }
+        .avatar-card.selected { border-color: var(--accent-gold); transform: scale(1.1); box-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
+        .avatar-card img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Resort Map Explorer Styles */
+        #game-explorer { padding: 0; overflow: hidden; height: 65vh; min-height: 550px; max-width: 800px; display: none; border-color: var(--accent-gold);}
+        #explorer-map { width: 100%; height: 100%; background: #0a0a0a; position: absolute; top: 0; left: 0; z-index: 1; border-radius: 15px;}
+        #hud-map {
+            position: absolute; top: 25px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 400px;
+            z-index: 1000; background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 15px 25px; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border: 1px solid rgba(212, 175, 55, 0.3); display: flex; align-items: center; justify-content: space-between;
+        }
+        .hud-title { font-weight: 700; color: #f4f4f4; font-size: 13px; font-family: 'Outfit', sans-serif; letter-spacing: 1px; display: flex; align-items: center; gap: 5px;}
+        .hud-status { font-size: 10px; color: var(--accent-gold); background: rgba(212, 175, 55, 0.1); padding: 6px 15px; border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.4); font-weight: 600; font-family: 'Outfit', sans-serif; letter-spacing: 1px; text-transform: uppercase;}
+
+        .leaflet-div-icon { background: transparent; border: none; }
+        .user-icon-container { width: 20px; height: 20px; position: relative; }
+        .user-dot { width: 14px; height: 14px; background-color: var(--accent-gold); border: 2px solid #111; border-radius: 50%; position: absolute; top: 3px; left: 3px; z-index: 10; box-shadow: 0 0 15px rgba(212, 175, 55, 0.8); }
+        .user-pulse { width: 40px; height: 40px; background-color: rgba(212, 175, 55, 0.3); border-radius: 50%; position: absolute; top: -10px; left: -10px; z-index: 5; animation: pulse-wave-gold 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1); }
+        @keyframes pulse-wave-gold { 0% { transform: scale(0.1); opacity: 1; } 70% { transform: scale(1.2); opacity: 0; } 100% { transform: scale(1.2); opacity: 0; } }
+
+        .other-dot { width: 10px; height: 10px; background-color: #fff; border: 2px solid var(--accent-gold); border-radius: 50%; box-shadow: 0 0 10px rgba(255, 255, 255, 0.4); }
+        .leaflet-popup-content-wrapper { background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px); color: #f4f4f4; border: 1px solid var(--accent-gold); box-shadow: 0 10px 25px rgba(0,0,0,0.8); font-family: 'Outfit', sans-serif; border-radius: 8px;}
+        .leaflet-popup-tip { background: rgba(20, 20, 20, 0.95); border-top: 1px solid var(--accent-gold); border-left: 1px solid var(--accent-gold); }
+        .leaflet-container a.leaflet-popup-close-button { color: #aaa; }
+
+        /* Treasure Hunt Twist Styles */
+        .treasure-popup {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            background: rgba(10, 10, 10, 0.95); border: 2px solid var(--accent-gold);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px; padding: 40px 30px; text-align: center; z-index: 9999;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 30px rgba(212, 175, 55, 0.3);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none; opacity: 0; width: 90%; max-width: 350px;
+        }
+        .treasure-popup.show { transform: translate(-50%, -50%) scale(1); pointer-events: auto; opacity: 1; }
+        .treasure-emoji { font-size: 5rem; margin-bottom: 15px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5)); animation: floatTreasure 3s ease-in-out infinite; }
+        @keyframes floatTreasure { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+        @media (max-width: 900px) {
+            .btn-back-wrapper { padding: 20px; }
+            .quest-menu-grid { grid-template-columns: 1fr; }
+            #game-explorer { height: 75vh; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-overlay"></div>
+
+    <div class="btn-back-wrapper">
+        <button class="btn-back-home" onclick="location.reload()">
+            <span class="material-icons-outlined">refresh</span> Restart Game
+        </button>
+    </div>
+
+    <div class="game-container">
+        <h2 class="game-title">Paraiso Quest</h2>
+        <p class="game-subtitle" id="gameSubtitle">Choose Your Adventure</p>
+
+        <div id="quest-menu" class="quest-menu-grid">
+            <div class="quest-card" onclick="openGame('scavenger')">
+                <span class="material-icons-outlined">explore</span>
+                <h3>The Explorer's Path</h3>
+                <p>A physical scavenger hunt around the resort. Solve riddles to uncover our hidden secrets.</p>
+            </div>
+            <div class="quest-card" onclick="openGame('explorer')">
+                <span class="material-icons-outlined">my_location</span>
+                <h3>Resort Map Explorer</h3>
+                <p>Access the exclusive VIP interactive map and locate other explorers around the resort.</p>
+            </div>
+            <div class="quest-card" onclick="openGame('camera')">
+                <span class="material-icons-outlined">photo_camera</span>
+                <h3>Snap Quest</h3>
+                <p>Use your phone's camera to capture beautiful spots around the resort to complete missions.</p>
+            </div>
+            <div class="quest-card" onclick="openGame('memory')">
+                <span class="material-icons-outlined">dashboard</span>
+                <h3>Paraiso Match</h3>
+                <p>Test your memory with our beautiful resort sights. Perfect while waiting for your meal to arrive.</p>
+            </div>
+        </div>
+
+        <div id="game-auth" class="game-box">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <span class="material-icons-outlined" style="font-size: 3.5rem; color: var(--accent-gold); margin-bottom: 15px; font-weight: 100;">vpn_key</span>
+            <p style="color: #bbb; margin-bottom: 30px; font-size: 0.95rem; line-height: 1.8;">To access this game, please enter the physical <strong>Passkey</strong> provided by our front desk upon your arrival.</p>
+            <input type="text" id="voucherInput" class="auth-input" placeholder="PASSKEY" autocomplete="off">
+            <br>
+            <button class="btn-game" onclick="verifyVoucher()">Unlock Game</button>
+            <div id="auth-error" class="game-feedback"></div>
+        </div>
+
+        <div id="game-character-select" class="game-box">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <h3 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 1.8rem; margin-bottom: 10px;">Choose Your Explorer</h3>
+            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 20px;">Select your avatar before entering the resort map.</p>
+            
+            <div class="avatar-grid" id="avatarGrid">
+                <div class="avatar-card selected" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Abby')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Abby" alt="Avatar 1"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Buster')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Buster" alt="Avatar 2"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Jack')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Jack" alt="Avatar 3"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Luna')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Luna" alt="Avatar 4"></div>
+            </div>
+            
+            <button class="btn-game" style="margin-top: 20px;" onclick="enterMap()">Start Exploring</button>
+        </div>
+
+        <div id="game-explorer" class="game-box">
+            <div id="explorer-map"></div>
+            <div id="hud-map">
+                <div class="hud-title" id="hud-title"><span class="material-icons-outlined" style="color:var(--accent-gold); font-size:16px;">map</span> Resort Map</div>
+                <div class="hud-status" id="hud-status">Locating...</div>
+            </div>
+            
+            <div id="treasurePopup" class="treasure-popup">
+                <div class="treasure-emoji" id="treasureEmoji">🎁</div>
+                <h3 style="color: var(--accent-gold); margin-bottom: 10px; font-family: 'Playfair Display'; font-size: 1.8rem;">Wow! Look!</h3>
+                <p id="treasureText" style="color: #f4f4f4; font-size: 1.1rem; line-height: 1.5; margin-bottom: 25px;"></p>
+                <button class="btn-game" style="padding: 10px 30px; font-size: 0.9rem;" onclick="closeTreasure()">Awesome!</button>
+            </div>
+
+            <button class="btn-close-game" onclick="backToMenu()" style="z-index: 1001; background: rgba(10,10,10,0.8); color: var(--accent-gold); padding: 10px 20px; border-radius: 30px; top: auto; bottom: 30px; left: 50%; transform: translateX(-50%); border: 1px solid var(--accent-gold); box-shadow: 0 5px 15px rgba(0,0,0,0.5); backdrop-filter: blur(5px);"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+        </div>
+
+        <div id="game-quest" class="game-box" style="animation: floatQuest 6s infinite ease-in-out;">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <div style="font-size: 0.8rem; color: var(--accent-gold); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 20px; font-weight: 700;" id="questProgress">Chapter 1 of 3</div>
+            <div class="material-icons-outlined" style="font-size: 3rem; color: var(--accent-gold); margin-bottom: 20px; opacity: 0.9;" id="questIcon">explore</div>
+            <div class="riddle-text" id="riddleText">"Loading riddle..."</div>
+            <input type="text" id="questAnswer" class="answer-input" placeholder="Secret Word" autocomplete="off">
+            <br>
+            <button class="btn-game" onclick="checkAnswer()">Submit</button>
+            <div id="quest-feedback" class="game-feedback"></div>
+        </div>
+
+        <div id="game-complete" class="game-box">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <span class="material-icons-outlined" style="font-size: 5rem; color: var(--accent-gold); margin-bottom: 20px;">emoji_events</span>
+            <h3 style="font-size: 2.5rem; color: var(--accent-gold); font-family: 'Playfair Display', serif; margin-bottom: 15px;">Quest Complete</h3>
+            <p style="color: #ddd; font-size: 1.1rem; line-height: 1.8; margin-bottom: 30px;">You have uncovered the hidden secrets of Paraiso Hills. Present this glowing seal to The Brew Umbrella Cafe for your reward.</p>
+            <div style="padding: 15px 30px; border: 2px dashed var(--accent-gold); display: inline-block; letter-spacing: 5px; font-weight: bold; color: var(--accent-gold); font-size: 1.5rem; border-radius: 10px; background: rgba(212, 175, 55, 0.1);">VIP-SEAL-2026</div>
+        </div>
+
+        <div id="game-camera" class="game-box">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <div style="font-size: 0.8rem; color: var(--accent-gold); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 20px; font-weight: 700;" id="snapProgress">Mission 1 of 3</div>
+            <div class="riddle-text" id="snapMissionText">"Capture the beauty of the Grand Lagoon Pool. Take a picture!"</div>
+            
+            <div class="snap-preview" id="snapPreview">
+                <span class="material-icons-outlined" id="snapIconPlaceholder" style="font-size: 4rem; color: rgba(212, 175, 55, 0.3);">add_a_photo</span>
+                <img id="snapImageDisplay" src="">
+                <div class="scanner-line" id="scannerLine"></div>
+            </div>
+
+            <label class="btn-game" id="btnOpenCamera" style="cursor: pointer;">
+                <input type="file" accept="image/*" capture="environment" style="display: none;" onchange="handleSnap(this)">
+                <span class="material-icons-outlined" style="vertical-align: middle; margin-right: 8px; font-size: 18px;">camera_alt</span> Open Camera
+            </label>
+            
+            <div id="snap-feedback" class="game-feedback"></div>
+        </div>
+
+        <div id="snap-complete" class="game-box">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <span class="material-icons-outlined" style="font-size: 5rem; color: var(--accent-gold); margin-bottom: 20px;">collections</span>
+            <h3 style="font-size: 2.5rem; color: var(--accent-gold); font-family: 'Playfair Display', serif; margin-bottom: 15px;">Master Photographer</h3>
+            <p style="color: #ddd; font-size: 1.1rem; line-height: 1.8; margin-bottom: 30px;">You captured the true essence of Paraiso Hills! Show this badge to the Front Desk to claim your exclusive resort token.</p>
+            <div style="padding: 15px 30px; border: 2px dashed var(--accent-gold); display: inline-block; letter-spacing: 5px; font-weight: bold; color: var(--accent-gold); font-size: 1.5rem; border-radius: 10px; background: rgba(212, 175, 55, 0.1);">PHOTO-VIP-26</div>
+        </div>
+
+        <div id="game-memory" class="game-box" style="max-width: 800px;">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <h3 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 1.8rem; margin-bottom: 5px;">Paraiso Match</h3>
+            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 20px;">Find all matching pairs in the fewest moves possible.</p>
+            <div style="color: #fff; letter-spacing: 2px; font-size: 0.9rem;">MOVES: <span id="memoryMoves" style="color: var(--accent-gold); font-weight: bold;">0</span></div>
+            <div class="memory-grid" id="memoryGrid"></div>
+            <h4 id="memoryWin" style="display:none; color: var(--accent-gold); font-family: 'Playfair Display'; font-size: 1.5rem; margin-top: 20px;">Brilliant Mind! You matched them all!</h4>
+            <button id="memoryResetBtn" class="btn-game" style="display:none; margin: 20px auto 0; padding: 10px 30px; font-size: 0.8rem;" onclick="initMemoryGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // --- GLOBAL AUTHENTICATION LOGIC ---
+        const VALID_VOUCHERS = ["EXPLORE26", "PARAISOVIP", "PARAISO1"]; 
+        let isAuthorized = false;
+        let pendingGame = "";
+
+        function openGame(gameType) {
+            document.getElementById('quest-menu').style.display = 'none';
+            document.getElementById('gameSubtitle').innerText = "Good Luck, Explorer";
+            
+            if (!isAuthorized) {
+                pendingGame = gameType;
+                document.getElementById('game-auth').style.display = 'block';
+                document.getElementById('voucherInput').value = '';
+                document.getElementById('auth-error').innerText = '';
+            } else {
+                launchGame(gameType);
+            }
+        }
+
+        function verifyVoucher() {
+            const input = document.getElementById('voucherInput').value.toUpperCase().trim();
+            const errorDiv = document.getElementById('auth-error');
+            
+            if(VALID_VOUCHERS.includes(input)) {
+                errorDiv.innerHTML = "";
+                isAuthorized = true; 
+                document.getElementById('game-auth').style.display = 'none';
+                launchGame(pendingGame);
+            } else {
+                errorDiv.innerText = "Invalid Passkey. Please check with the front desk."; 
+                errorDiv.style.color = "#ff4c4c";
+            }
+        }
+
+        function backToMenu() {
+            const boxes = document.querySelectorAll('.game-box');
+            boxes.forEach(box => box.style.display = 'none');
+            document.getElementById('quest-menu').style.display = 'grid';
+            document.getElementById('gameSubtitle').innerText = "Choose Your Adventure";
+        }
+
+        // --- AVATAR SELECTION & GAME LAUNCH LOGIC ---
+        let chosenAvatarUrl = 'https://api.dicebear.com/8.x/adventurer/svg?seed=Abby'; 
+
+        function selectAvatar(element, url) {
+            document.querySelectorAll('.avatar-card').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            chosenAvatarUrl = url;
+        }
+
+        function launchGame(gameType) {
+            if(gameType === 'scavenger') {
+                document.getElementById('game-quest').style.display = 'block';
+                loadQuest();
+            } else if(gameType === 'camera') {
+                document.getElementById('game-camera').style.display = 'block';
+                loadSnapMission();
+            } else if(gameType === 'memory') {
+                document.getElementById('game-memory').style.display = 'block';
+                initMemoryGame();
+            } else if(gameType === 'explorer') {
+                document.getElementById('game-character-select').style.display = 'block';
+            }
+        }
+
+        function enterMap() {
+            document.getElementById('game-character-select').style.display = 'none';
+            document.getElementById('game-explorer').style.display = 'block';
+            
+            setTimeout(() => {
+                if (!explorerMap) { 
+                    initExplorerMap(); 
+                } else {
+                    if(userMarker) userMarker.setIcon(getUserIcon(chosenAvatarUrl));
+                }
+                explorerMap.invalidateSize(); 
+            }, 100);
+        }
+
+        // --- DARK LUXURY MAP EXPLORER FUNCTIONS & TWIST ---
+        let explorerMap = null;
+        let userMarker = null;
+        let hasGPSFix = false;
+        let lastFindTime = 0;
+
+        const encounters = [
+            { name: "a Wild Bulbasaur", emoji: "🦕", msg: "A cute little creature was hiding in the bushes!" },
+            { name: "a Golden Mango", emoji: "🥭", msg: "The sweetest fruit in the resort. Rare find!" },
+            { name: "a Secret Drink Voucher", emoji: "🍹", msg: "Show this to The Brew Umbrella for a free iced tea!" },
+            { name: "a Paraiso Butterfly", emoji: "🦋", msg: "It fluttered around you and flew away." },
+            { name: "a Shiny Pearl", emoji: "🔮", msg: "You found something glowing near the lagoon." }
+        ];
+
+        function showTreasurePopup(encounter) {
+            document.getElementById('treasureEmoji').innerText = encounter.emoji;
+            document.getElementById('treasureText').innerHTML = `You found <strong>${encounter.name}</strong>!<br><span style="font-size:0.85rem; color:#aaa; margin-top:5px; display:block;">${encounter.msg}</span>`;
+            document.getElementById('treasurePopup').classList.add('show');
+        }
+
+        function closeTreasure() {
+            document.getElementById('treasurePopup').classList.remove('show');
+        }
+
+        function getUserIcon(url) {
+            return L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div class="user-icon-container" style="width: 45px; height: 45px;">
+                           <div class="user-pulse" style="width: 65px; height: 65px; top: -10px; left: -10px;"></div>
+                           <img src="${url}" style="width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--accent-gold); position: relative; z-index: 10; background: #222; box-shadow: 0 5px 15px rgba(0,0,0,0.8);">
+                       </div>`,
+                iconSize: [45, 45], iconAnchor: [22, 22]
+            });
+        }
+
+        function getOtherIcon(seed) {
+            return L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div class="user-icon-container" style="width: 35px; height: 35px;">
+                           <img src="https://api.dicebear.com/8.x/adventurer/svg?seed=${seed}" style="width: 100%; height: 100%; border-radius: 50%; border: 2px solid #fff; background: #333; box-shadow: 0 3px 10px rgba(0,0,0,0.5);">
+                       </div>`,
+                iconSize: [35, 35], iconAnchor: [17, 17]
+            });
+        }
+
+        function initExplorerMap() {
+            explorerMap = L.map('explorer-map', { zoomControl: false, attributionControl: false }).setView([14.5353, 120.9842], 18);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20 }).addTo(explorerMap);
+            L.control.zoom({ position: 'bottomright' }).addTo(explorerMap);
+
+            userMarker = L.marker([14.5353, 120.9842], { icon: getUserIcon(chosenAvatarUrl) })
+                .addTo(explorerMap)
+                .bindPopup("<b style='color:#d4af37;'>You (Hub Area)</b><br>Exploring Paraiso")
+                .openPopup();
+
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(updateMyPosition, handleLocationError, { enableHighAccuracy: true, maximumAge: 5000, timeout: 5000 });
+            }
+            simulateOthers();
+        }
+
+        function updateMyPosition(position) {
+            const lat = position.coords.latitude; const lng = position.coords.longitude;
+            userMarker.setLatLng([lat, lng]);
+            userMarker.setPopupContent("<b style='color:#d4af37;'>You</b><br>Live location");
+            
+            if(!hasGPSFix) {
+                explorerMap.panTo([lat, lng]); 
+                hasGPSFix = true;
+            }
+
+            // --- THE TWIST: Random chance to find something while moving ---
+            const now = Date.now();
+            if (hasGPSFix && (now - lastFindTime > 15000) && Math.random() < 0.15) {
+                lastFindTime = now;
+                const randomEncounter = encounters[Math.floor(Math.random() * encounters.length)];
+                showTreasurePopup(randomEncounter);
+            }
+            
+            const statusEl = document.getElementById('hud-status');
+            statusEl.innerHTML = "<span class='material-icons-outlined' style='font-size:12px; vertical-align:middle;'>my_location</span> GPS Active"; 
+            statusEl.style.color = "#d4af37"; statusEl.style.borderColor = "#d4af37"; statusEl.style.background = "rgba(212, 175, 55, 0.1)";
+        }
+
+        function handleLocationError(error) {
+            const statusEl = document.getElementById('hud-status');
+            statusEl.innerHTML = "Resort Hub (GPS Off)"; 
+            statusEl.style.color = "#aaa"; statusEl.style.borderColor = "rgba(255, 255, 255, 0.2)"; statusEl.style.background = "rgba(0, 0, 0, 0.5)";
+        }
+
+        function simulateOthers() {
+            const others = [ 
+                { lat: 14.5358, lng: 120.9848, name: "Guest_771", seed: "Felix" }, 
+                { lat: 14.5349, lng: 120.9839, name: "Guest_201", seed: "Bella" } 
+            ];
+            others.forEach(p => { 
+                L.marker([p.lat, p.lng], { icon: getOtherIcon(p.seed) })
+                 .addTo(explorerMap)
+                 .bindPopup(`<b style="color:#d4af37;">${p.name}</b>`); 
+            });
+            document.getElementById('hud-title').innerHTML = `<span class="material-icons-outlined" style="color:var(--accent-gold); font-size:16px;">map</span> Resort Map (${others.length + 1} Online)`;
+        }
+
+        // --- 1. SCAVENGER HUNT LOGIC ---
+        const quests = [
+            { icon: "water", riddle: "\"Where waters meet the sky's embrace... Go to the Lagoon Pool. What color is the large tile near the stairs?\"", answer: "BLUE" },
+            { icon: "local_fire_department", riddle: "\"A warm glow in the dark... Visit the Bonfire Area and find the hidden word etched on the log.\"", answer: "EMBER" },
+            { icon: "two_wheeler", riddle: "\"Four wheels to conquer the dirt... Head to the ATV line, what is the word on the yellow sign?\"", answer: "TRAIL" }
+        ];
+        let currentQuest = 0;
+
+        function loadQuest() {
+            const q = quests[currentQuest];
+            document.getElementById('questProgress').innerText = `Chapter ${currentQuest + 1} of ${quests.length}`;
+            document.getElementById('questIcon').innerText = q.icon;
+            document.getElementById('riddleText').innerText = q.riddle;
+            document.getElementById('questAnswer').value = "";
+            document.getElementById('quest-feedback').innerText = "";
+        }
+
+        function checkAnswer() {
+            const input = document.getElementById('questAnswer').value.toUpperCase().trim();
+            const feedback = document.getElementById('quest-feedback');
+            if (input === quests[currentQuest].answer) {
+                feedback.innerText = "Correct! Unlocking the next clue..."; feedback.style.color = "#4CAF50";
+                setTimeout(() => {
+                    currentQuest++;
+                    if (currentQuest >= quests.length) {
+                        document.getElementById('game-quest').style.display = 'none';
+                        document.getElementById('game-complete').style.display = 'block';
+                    } else { loadQuest(); }
+                }, 1500);
+            } else {
+                feedback.innerText = "Incorrect. Take a closer look around."; feedback.style.color = "#ff4c4c";
+            }
+        }
+
+       // --- 2. SNAP QUEST (SMART CAMERA LOGIC) ---
+    const snapMissions = [
+        "Mission 1: Take a beautiful picture of the Grand Lagoon Pool.",
+        "Mission 2: Find a yellow flower in our garden and snap a macro shot.",
+        "Mission 3: Take a smiling selfie at the Treetop Viewpoint Lounge!"
+    ];
+    let currentSnap = 0;
+    let snapAttempts = 0; // Para sa Pity System (max 3 tries)
+
+    function loadSnapMission() {
+        document.getElementById('snapProgress').innerText = `Mission ${currentSnap + 1} of ${snapMissions.length}`;
+        document.getElementById('snapMissionText').innerText = snapMissions[currentSnap];
+        document.getElementById('snapImageDisplay').style.display = 'none';
+        document.getElementById('snapIconPlaceholder').style.display = 'block';
+        document.getElementById('snap-feedback').innerText = "";
+        document.getElementById('btnOpenCamera').style.display = 'inline-block';
+        snapAttempts = 0;
+    }
+
+    function analyzeImageColor(imgEl, missionIndex) {
+        // Gumawa ng hidden canvas para basahin ang colors
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        canvas.width = 64; canvas.height = 64; // Paliitin para mabilis basahin
+        ctx.drawImage(imgEl, 0, 0, 64, 64);
+        const data = ctx.getImageData(0, 0, 64, 64).data;
+
+        let r = 0, g = 0, b = 0;
+        for(let i = 0; i < data.length; i += 4) {
+            r += data[i]; g += data[i+1]; b += data[i+2];
+        }
+        const pixelCount = data.length / 4;
+        r /= pixelCount; g /= pixelCount; b /= pixelCount;
+
+        let isSuccess = false;
+        let errorMessage = "";
+
+        if (missionIndex === 0) {
+            // Mission 1: Pool (Hanapin ang Blue na kulay)
+            if (b > r * 0.9 || b > g * 0.9) isSuccess = true;
+            else errorMessage = "I don't see enough BLUE water. Are you sure you're at the pool?";
+        } 
+        else if (missionIndex === 1) {
+            // Mission 2: Yellow Flower (Mataas ang Red at Green, mababa ang Blue)
+            if (r > 90 && g > 90 && b < (r + g) / 2) isSuccess = true;
+            else errorMessage = "I don't see a YELLOW flower. Try getting closer to the bloom!";
+        } 
+        else if (missionIndex === 2) {
+            // Mission 3: Selfie (Check kung Portrait / nakatayo ang camera)
+            if (imgEl.naturalHeight >= imgEl.naturalWidth) isSuccess = true;
+            else errorMessage = "Please hold your phone upright (Portrait) for a proper selfie!";
+        }
+
+        // PITY SYSTEM: Kung naka-3 tries na at fail pa rin dahil sa ilaw, ipasa na natin
+        if (!isSuccess && snapAttempts >= 2) {
+            isSuccess = true;
+            errorMessage = "";
+        }
+
+        return { success: isSuccess, error: errorMessage };
+    }
+
+    function handleSnap(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            const imgDisplay = document.getElementById('snapImageDisplay');
+            const placeholder = document.getElementById('snapIconPlaceholder');
+            const scanner = document.getElementById('scannerLine');
+            const feedback = document.getElementById('snap-feedback');
+            const btn = document.getElementById('btnOpenCamera');
+
+            reader.onload = function(e) {
+                imgDisplay.src = e.target.result;
+                
+                // Hintayin mag-load ang image sa memory bago i-analyze
+                imgDisplay.onload = function() {
+                    imgDisplay.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    btn.style.display = 'none'; 
+                    
+                    scanner.style.display = 'block';
+                    feedback.innerText = "Analyzing image pixels & environment...";
+                    feedback.style.color = "#d4af37";
+
+                    setTimeout(() => {
+                        scanner.style.display = 'none';
+                        
+                        // Patakbuhin ang Image Analyzer
+                        const result = analyzeImageColor(imgDisplay, currentSnap);
+
+                        if (result.success) {
+                            feedback.innerText = "Location Verified! Mission Accomplished.";
+                            feedback.style.color = "#4CAF50";
+
+                            setTimeout(() => {
+                                currentSnap++;
+                                if(currentSnap >= snapMissions.length) {
+                                    document.getElementById('game-camera').style.display = 'none';
+                                    document.getElementById('snap-complete').style.display = 'block';
+                                } else {
+                                    loadSnapMission();
+                                }
+                            }, 2000);
+                        } else {
+                            // KAPAG FAILED:
+                            snapAttempts++;
+                            feedback.innerText = result.error + " (Try again)";
+                            feedback.style.color = "#ff4c4c";
+                            btn.style.display = 'inline-block'; // Ipakita ulit ang button
+                            btn.innerHTML = `<span class="material-icons-outlined" style="vertical-align: middle; margin-right: 8px; font-size: 18px;">replay</span> Retake Photo`;
+                        }
+                    }, 2500); // 2.5 seconds scanning animation
+                };
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+        // --- 3. MEMORY MATCH LOGIC ---
+        const memoryImages = [
+            "https://res.cloudinary.com/dc7ff0sz2/image/upload/v1775027406/INfinity_Pool_z4y6l3.png",
+            "https://res.cloudinary.com/dc7ff0sz2/image/upload/v1775027381/Lakeview_1_xhz4ap.jpg",
+            "https://res.cloudinary.com/dc7ff0sz2/image/upload/v1775027707/atv_carla_vcgunq.png",
+            "https://res.cloudinary.com/dc7ff0sz2/image/upload/v1775027430/Resto_nurw8x.png"
+        ];
+        let memoryCards = []; let flippedCards = []; let matchedPairs = 0; let moves = 0; let locked = false;
+
+        function initMemoryGame() {
+            const grid = document.getElementById('memoryGrid');
+            grid.innerHTML = '';
+            document.getElementById('memoryWin').style.display = 'none';
+            document.getElementById('memoryResetBtn').style.display = 'none';
+            moves = 0; matchedPairs = 0; flippedCards = []; locked = false;
+            document.getElementById('memoryMoves').innerText = moves;
+
+            let deck = [...memoryImages, ...memoryImages];
+            deck.sort(() => Math.random() - 0.5);
+
+            deck.forEach((img, i) => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                card.dataset.val = img;
+                card.innerHTML = `
+                    <div class="memory-face memory-front"><img src="${img}"></div>
+                    <div class="memory-face memory-back"></div>
+                `;
+                card.onclick = () => flipCard(card);
+                grid.appendChild(card);
+            });
+        }
+
+        function flipCard(card) {
+            if (locked || card === flippedCards[0] || card.classList.contains('flip')) return;
+            card.classList.add('flip');
+            flippedCards.push(card);
+
+            if (flippedCards.length === 2) {
+                moves++; document.getElementById('memoryMoves').innerText = moves;
+                checkForMatch();
+            }
+        }
+
+        function checkForMatch() {
+            locked = true;
+            const isMatch = flippedCards[0].dataset.val === flippedCards[1].dataset.val;
+            if (isMatch) {
+                matchedPairs++;
+                flippedCards = []; locked = false;
+                if(matchedPairs === memoryImages.length) {
+                    setTimeout(() => {
+                        document.getElementById('memoryWin').style.display = 'block';
+                        document.getElementById('memoryResetBtn').style.display = 'block';
+                    }, 500);
+                }
+            } else {
+                setTimeout(() => {
+                    flippedCards[0].classList.remove('flip');
+                    flippedCards[1].classList.remove('flip');
+                    flippedCards = []; locked = false;
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+</html>
