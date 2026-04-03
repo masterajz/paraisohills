@@ -10,6 +10,25 @@
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  // 2. Ang iyong updated Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyAR5NKaiNwVpLuQm9OqKCOpJG7Ju_Y_6sM",
+    authDomain: "quest-e4e9f.firebaseapp.com",
+    databaseURL: "https://quest-e4e9f-default-rtdb.firebaseio.com/", // <--- Eto yung URL mo
+    projectId: "quest-e4e9f",
+    storageBucket: "quest-e4e9f.firebasestorage.app",
+    messagingSenderId: "397171901653",
+    appId: "1:397171901653:web:429d408ca5475e0beb8e5c"
+  };
+
+  // 3. Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+</script>
 
     <style>
         :root {
@@ -405,28 +424,101 @@
             simulateOthers();
         }
 
-        function updateMyPosition(position) {
-            const lat = position.coords.latitude; const lng = position.coords.longitude;
-            userMarker.setLatLng([lat, lng]);
-            userMarker.setPopupContent("<b style='color:#d4af37;'>You</b><br>Live location");
-            
-            if(!hasGPSFix) {
-                explorerMap.panTo([lat, lng]); 
-                hasGPSFix = true;
-            }
+        let myUserId = "Explorer_" + Math.floor(Math.random() * 999); 
+let otherMarkers = {}; 
 
-            // --- THE TWIST: Random chance to find something while moving ---
-            const now = Date.now();
-            if (hasGPSFix && (now - lastFindTime > 15000) && Math.random() < 0.15) {
-                lastFindTime = now;
-                const randomEncounter = encounters[Math.floor(Math.random() * encounters.length)];
-                showTreasurePopup(randomEncounter);
+function updateMyPosition(position) {
+    const lat = position.coords.latitude; 
+    const lng = position.coords.longitude;
+    
+    if(userMarker) {
+        userMarker.setLatLng([lat, lng]);
+        
+        // --- MULTIPLAYER SEND: I-save sa Firebase ---
+        database.ref('players/' + myUserId).set({
+            lat: lat,
+            lng: lng,
+            avatar: chosenAvatarUrl, // Gagamitin nito yung pinili mong avatar
+            name: myUserId,
+            lastSeen: Date.now()
+        });
+    }
+    
+    if(!hasGPSFix) {
+        explorerMap.panTo([lat, lng]); 
+        hasGPSFix = true;
+    }
+    
+    const statusEl = document.getElementById('hud-status');
+    statusEl.innerHTML = "<span class='material-icons-outlined' style='font-size:12px; vertical-align:middle;'>my_location</span> GPS Active"; 
+}
+
+function syncOtherPlayers() {
+    const playersRef = database.ref('players');
+    
+    playersRef.on('value', (snapshot) => {
+        const players = snapshot.val();
+        
+        // Burahin ang markers ng mga nawala na
+        for (let id in otherMarkers) {
+            if (!players || !players[id]) {
+                explorerMap.removeLayer(otherMarkers[id]);
+                delete otherMarkers[id];
             }
-            
-            const statusEl = document.getElementById('hud-status');
-            statusEl.innerHTML = "<span class='material-icons-outlined' style='font-size:12px; vertical-align:middle;'>my_location</span> GPS Active"; 
-            statusEl.style.color = "#d4af37"; statusEl.style.borderColor = "#d4af37"; statusEl.style.background = "rgba(212, 175, 55, 0.1)";
         }
+
+        for (let id in players) {
+            if (id === myUserId) continue; // Skip ang sarili mo
+
+            const p = players[id];
+            
+            // Auto-remove markers na hindi na gumagalaw ng 5 mins (Cleanup)
+            if (Date.now() - p.lastSeen > 300000) continue;
+
+            if (otherMarkers[id]) {
+                otherMarkers[id].setLatLng([p.lat, p.lng]);
+            } else {
+                // I-render ang ibang player gamit ang kanilang napiling avatar seed
+                otherMarkers[id] = L.marker([p.lat, p.lng], { icon: getOtherIconByUrl(p.avatar) })
+                    .addTo(explorerMap)
+                    .bindPopup(`<b style="color:#d4af37;">${p.name}</b>`);
+            }
+        }
+        
+        // Update HUD Online count
+        const onlineCount = Object.keys(players || {}).length;
+        document.getElementById('hud-title').innerHTML = `<span class="material-icons-outlined" style="color:var(--accent-gold); font-size:16px;">map</span> Resort Map (${onlineCount} Online)`;
+    });
+}
+
+// Helper para sa icons ng ibang players
+function getOtherIconByUrl(url) {
+    return L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div class="user-icon-container" style="width: 35px; height: 35px;">
+                   <img src="${url}" style="width: 100%; height: 100%; border-radius: 50%; border: 2px solid #fff; background: #333; box-shadow: 0 3px 10px rgba(0,0,0,0.5);">
+               </div>`,
+        iconSize: [35, 35], iconAnchor: [17, 17]
+    });
+}
+
+// I-update ang initExplorerMap para tawagin ang sync
+function initExplorerMap() {
+    explorerMap = L.map('explorer-map', { zoomControl: false, attributionControl: false }).setView([14.5353, 120.9842], 18);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20 }).addTo(explorerMap);
+    
+    userMarker = L.marker([14.5353, 120.9842], { icon: getUserIcon(chosenAvatarUrl) }).addTo(explorerMap);
+
+    if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(updateMyPosition, handleLocationError, { enableHighAccuracy: true });
+    }
+    
+    // Alisin na ang simulateOthers(); palitan ng:
+    syncOtherPlayers();
+    
+    // Burahin ang player data kapag sinara ang tab
+    database.ref('players/' + myUserId).onDisconnect().remove();
+}
 
         function handleLocationError(error) {
             const statusEl = document.getElementById('hud-status');
