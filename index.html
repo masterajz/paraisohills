@@ -1473,61 +1473,123 @@
 			}
 		}
 
-		// --- 2. SNAP QUEST (CAMERA GAME) LOGIC ---
-		const snapMissions = [
-			"Mission 1: Take a beautiful picture of the Grand Lagoon Pool.",
-			"Mission 2: Find a yellow flower in our garden and snap a macro shot.",
-			"Mission 3: Take a smiling selfie at the Treetop Viewpoint Lounge!"
-		];
-		let currentSnap = 0;
+		// --- 2. SNAP QUEST (SMART CAMERA LOGIC) ---
+    const snapMissions = [
+        "Mission 1: Take a beautiful picture of the Grand Lagoon Pool.",
+        "Mission 2: Find a yellow flower in our garden and snap a macro shot.",
+        "Mission 3: Take a smiling selfie at the Treetop Viewpoint Lounge!"
+    ];
+    let currentSnap = 0;
+    let snapAttempts = 0; // Para sa Pity System (max 3 tries)
 
-		function loadSnapMission() {
-			document.getElementById('snapProgress').innerText = `Mission ${currentSnap + 1} of ${snapMissions.length}`;
-			document.getElementById('snapMissionText').innerText = snapMissions[currentSnap];
-			document.getElementById('snapImageDisplay').style.display = 'none';
-			document.getElementById('snapIconPlaceholder').style.display = 'block';
-			document.getElementById('snap-feedback').innerText = "";
-			document.getElementById('btnOpenCamera').style.display = 'inline-block';
-		}
+    function loadSnapMission() {
+        document.getElementById('snapProgress').innerText = `Mission ${currentSnap + 1} of ${snapMissions.length}`;
+        document.getElementById('snapMissionText').innerText = snapMissions[currentSnap];
+        document.getElementById('snapImageDisplay').style.display = 'none';
+        document.getElementById('snapIconPlaceholder').style.display = 'block';
+        document.getElementById('snap-feedback').innerText = "";
+        document.getElementById('btnOpenCamera').style.display = 'inline-block';
+        snapAttempts = 0;
+    }
 
-		function handleSnap(input) {
-			if (input.files && input.files[0]) {
-				const reader = new FileReader();
-				const imgDisplay = document.getElementById('snapImageDisplay');
-				const placeholder = document.getElementById('snapIconPlaceholder');
-				const scanner = document.getElementById('scannerLine');
-				const feedback = document.getElementById('snap-feedback');
-				const btn = document.getElementById('btnOpenCamera');
+    function analyzeImageColor(imgEl, missionIndex) {
+        // Gumawa ng hidden canvas para basahin ang colors
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        canvas.width = 64; canvas.height = 64; // Paliitin para mabilis basahin
+        ctx.drawImage(imgEl, 0, 0, 64, 64);
+        const data = ctx.getImageData(0, 0, 64, 64).data;
 
-				reader.onload = function(e) {
-					imgDisplay.src = e.target.result;
-					imgDisplay.style.display = 'block';
-					placeholder.style.display = 'none';
-					btn.style.display = 'none'; 
-					
-					scanner.style.display = 'block';
-					feedback.innerText = "Analyzing image environment...";
-					feedback.style.color = "#d4af37";
+        let r = 0, g = 0, b = 0;
+        for(let i = 0; i < data.length; i += 4) {
+            r += data[i]; g += data[i+1]; b += data[i+2];
+        }
+        const pixelCount = data.length / 4;
+        r /= pixelCount; g /= pixelCount; b /= pixelCount;
 
-					setTimeout(() => {
-						scanner.style.display = 'none';
-						feedback.innerText = "Location Verified! Mission Accomplished.";
-						feedback.style.color = "#4CAF50";
+        let isSuccess = false;
+        let errorMessage = "";
 
-						setTimeout(() => {
-							currentSnap++;
-							if(currentSnap >= snapMissions.length) {
-								document.getElementById('game-camera').style.display = 'none';
-								document.getElementById('snap-complete').style.display = 'block';
-							} else {
-								loadSnapMission();
-							}
-						}, 2000);
-					}, 3000); 
-				};
-				reader.readAsDataURL(input.files[0]);
-			}
-		}
+        if (missionIndex === 0) {
+            // Mission 1: Pool (Hanapin ang Blue na kulay)
+            if (b > r * 0.9 || b > g * 0.9) isSuccess = true;
+            else errorMessage = "I don't see enough BLUE water. Are you sure you're at the pool?";
+        } 
+        else if (missionIndex === 1) {
+            // Mission 2: Yellow Flower (Mataas ang Red at Green, mababa ang Blue)
+            if (r > 90 && g > 90 && b < (r + g) / 2) isSuccess = true;
+            else errorMessage = "I don't see a YELLOW flower. Try getting closer to the bloom!";
+        } 
+        else if (missionIndex === 2) {
+            // Mission 3: Selfie (Check kung Portrait / nakatayo ang camera)
+            if (imgEl.naturalHeight >= imgEl.naturalWidth) isSuccess = true;
+            else errorMessage = "Please hold your phone upright (Portrait) for a proper selfie!";
+        }
+
+        // PITY SYSTEM: Kung naka-3 tries na at fail pa rin dahil sa ilaw, ipasa na natin
+        if (!isSuccess && snapAttempts >= 2) {
+            isSuccess = true;
+            errorMessage = "";
+        }
+
+        return { success: isSuccess, error: errorMessage };
+    }
+
+    function handleSnap(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            const imgDisplay = document.getElementById('snapImageDisplay');
+            const placeholder = document.getElementById('snapIconPlaceholder');
+            const scanner = document.getElementById('scannerLine');
+            const feedback = document.getElementById('snap-feedback');
+            const btn = document.getElementById('btnOpenCamera');
+
+            reader.onload = function(e) {
+                imgDisplay.src = e.target.result;
+                
+                // Hintayin mag-load ang image sa memory bago i-analyze
+                imgDisplay.onload = function() {
+                    imgDisplay.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    btn.style.display = 'none'; 
+                    
+                    scanner.style.display = 'block';
+                    feedback.innerText = "Analyzing image pixels & environment...";
+                    feedback.style.color = "#d4af37";
+
+                    setTimeout(() => {
+                        scanner.style.display = 'none';
+                        
+                        // Patakbuhin ang Image Analyzer
+                        const result = analyzeImageColor(imgDisplay, currentSnap);
+
+                        if (result.success) {
+                            feedback.innerText = "Location Verified! Mission Accomplished.";
+                            feedback.style.color = "#4CAF50";
+
+                            setTimeout(() => {
+                                currentSnap++;
+                                if(currentSnap >= snapMissions.length) {
+                                    document.getElementById('game-camera').style.display = 'none';
+                                    document.getElementById('snap-complete').style.display = 'block';
+                                } else {
+                                    loadSnapMission();
+                                }
+                            }, 2000);
+                        } else {
+                            // KAPAG FAILED:
+                            snapAttempts++;
+                            feedback.innerText = result.error + " (Try again)";
+                            feedback.style.color = "#ff4c4c";
+                            btn.style.display = 'inline-block'; // Ipakita ulit ang button
+                            btn.innerHTML = `<span class="material-icons-outlined" style="vertical-align: middle; margin-right: 8px; font-size: 18px;">replay</span> Retake Photo`;
+                        }
+                    }, 2500); // 2.5 seconds scanning animation
+                };
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
 
 		// --- 3. MEMORY MATCH LOGIC ---
 		const memoryImages = [
