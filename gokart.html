@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Paraiso Quest | Interactive Gamification</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;600;700;800&family=Playfair+Display:wght@700;900&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyAR5NKaiNwVpLuQm9OqKCOpJG7Ju_Y_6sM",
+        authDomain: "quest-e4e9f.firebaseapp.com",
+        databaseURL: "https://quest-e4e9f-default-rtdb.firebaseio.com/",
+        projectId: "quest-e4e9f",
+        storageBucket: "quest-e4e9f.firebasestorage.app",
+        messagingSenderId: "397171901653",
+        appId: "1:397171901653:web:429d408ca5475e0beb8e5c"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+    </script>
+
+    <style>
+        :root {
+            --accent-gold: #d4af37;
+            --bg-dark: #0a0a0a;
+            --zombie-green: #22c55e;
+            --sonar-blue: #3b82f6;
+            --atv-orange: #f97316;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-dark); color: #f4f4f4; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; min-height: 100vh; position: relative; touch-action: manipulation;}
+
+        .bg-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background-image: url('https://res.cloudinary.com/dc7ff0sz2/image/upload/v1775034238/Praiso_front_es9uow.png'); 
+            background-size: cover; background-position: center; 
+            filter: blur(10px) brightness(0.2); z-index: -2;
+        }
+
+        .btn-back-wrapper { padding: 30px 50px; position: relative; z-index: 10; }
+        .btn-back-home { display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; background: transparent; color: var(--accent-gold); border: 1px solid rgba(212, 175, 55, 0.5); border-radius: 30px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: 600;}
+        .btn-back-home:hover { background: var(--accent-gold); color: #000; transform: translateX(-5px); }
+
+        .game-container { max-width: 1000px; margin: 0 auto 50px; text-align: center; font-family: 'Outfit', sans-serif; position: relative; z-index: 5; padding: 0 20px;}
+        .game-title { font-size: 3.5rem; color: var(--accent-gold); font-family: 'Playfair Display', serif; font-weight: 900; letter-spacing: 5px; margin-bottom: 5px; text-transform: uppercase; filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.3));}
+        .game-subtitle { font-size: 0.9rem; color: #ccc; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 50px; font-weight: 300;}
+        
+        .quest-menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; margin-top: 30px; }
+        .quest-card { background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px; padding: 40px 25px; cursor: pointer; transition: all 0.4s ease; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        .quest-card:hover { transform: translateY(-10px); border-color: var(--accent-gold); background: rgba(20, 20, 20, 0.8); box-shadow: 0 20px 50px rgba(212, 175, 55, 0.15); }
+        .quest-card .material-icons-outlined { font-size: 3.5rem; color: var(--accent-gold); margin-bottom: 20px; transition: transform 0.4s ease; }
+        .quest-card:hover .material-icons-outlined { transform: scale(1.1); }
+        .quest-card h3 { font-family: 'Playfair Display', serif; color: #fff; font-size: 1.4rem; margin-bottom: 12px; letter-spacing: 1px; font-weight: 700; }
+        .quest-card p { font-size: 0.85rem; color: #aaa; line-height: 1.6; font-weight: 300; font-family: 'Plus Jakarta Sans', sans-serif;}
+
+        .game-box { display: none; background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(30px); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 15px; padding: 50px 40px; box-shadow: 0 30px 60px rgba(0,0,0,0.9); position: relative; margin-top: 20px; max-width: 650px; margin-left: auto; margin-right: auto;}
+        .btn-close-game { position: absolute; top: 25px; left: 25px; background: transparent; border: none; color: #aaa; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Outfit'; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; font-weight: 600; z-index:9999;}
+        .btn-close-game:hover { color: var(--accent-gold); }
+        .btn-game { background: transparent; color: var(--accent-gold); border: 1px solid var(--accent-gold); padding: 15px 40px; border-radius: 30px; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: 0.4s; font-weight: 600; display: inline-block; font-family: 'Outfit', sans-serif;}
+        .btn-game:hover { background: var(--accent-gold); color: #000; box-shadow: 0 0 25px rgba(212, 175, 55, 0.3); transform: translateY(-3px);}
+        
+        .auth-input { width: 100%; max-width: 350px; padding: 18px 25px; background: rgba(0,0,0,0.6); border: 1px solid rgba(212, 175, 55, 0.3); color: var(--accent-gold); font-size: 1.2rem; text-align: center; border-radius: 8px; outline: none; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 30px; font-family: 'Outfit', sans-serif; transition: border-color 0.3s;}
+        .auth-input:focus { border-color: var(--accent-gold); }
+        .riddle-text { font-size: 1.5rem; color: #f4f4f4; line-height: 1.7; font-family: 'Playfair Display', serif; font-style: italic; margin-bottom: 35px; letter-spacing: 1px;}
+        .answer-input { width: 100%; max-width: 300px; padding: 15px 20px; background: transparent; border: none; border-bottom: 2px solid rgba(212, 175, 55, 0.3); color: #fff; font-size: 1.2rem; text-align: center; outline: none; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 35px; transition: 0.3s; font-weight: 700;}
+        .answer-input:focus { border-bottom-color: var(--accent-gold); }
+
+        .memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; max-width: 500px; margin: 30px auto 0; perspective: 1000px; }
+        .memory-card { width: 100%; aspect-ratio: 1; position: relative; cursor: pointer; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
+        .memory-card.flip { transform: rotateY(180deg); }
+        .memory-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .memory-front { background: #111; border: 1px solid rgba(212, 175, 55, 0.5); transform: rotateY(180deg); }
+        .memory-front img { width: 100%; height: 100%; object-fit: cover; }
+        .memory-back { background: radial-gradient(circle, #1a1a1a, #000); border: 1px solid rgba(212, 175, 55, 0.2); }
+        .memory-back::after { content: 'PH'; font-family: 'Playfair Display'; color: rgba(212, 175, 55, 0.4); font-size: 2rem; font-weight: 900; }
+
+        .snap-preview { width: 100%; max-width: 350px; aspect-ratio: 4/3; background: rgba(0,0,0,0.4); border: 1px dashed rgba(212, 175, 55, 0.4); border-radius: 12px; margin: 25px auto; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+        .snap-preview img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .scanner-line { position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--accent-gold); box-shadow: 0 0 20px var(--accent-gold); display: none; animation: scan 2s linear infinite; }
+        @keyframes scan { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
+
+        .avatar-grid { display: flex; justify-content: center; gap: 15px; margin: 30px 0; flex-wrap: wrap; }
+        .avatar-card { width: 80px; height: 80px; border-radius: 50%; border: 3px solid rgba(212, 175, 55, 0.2); cursor: pointer; transition: all 0.3s ease; background: rgba(0,0,0,0.5); overflow: hidden; }
+        .avatar-card:hover { border-color: rgba(212, 175, 55, 0.6); transform: translateY(-5px); }
+        .avatar-card.selected { border-color: var(--accent-gold); transform: scale(1.1); box-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
+        .avatar-card img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* MULTIPLAYER MAPS Styles */
+        #game-explorer, #game-zombie, #game-radar, #game-atv { padding: 0; overflow: hidden; height: 75vh; min-height: 550px; max-width: 800px; display: none; border-radius: 15px; position: relative; margin-top:20px; margin-left:auto; margin-right:auto;}
+        #game-explorer { border: 1px solid var(--accent-gold); }
+        #game-zombie { border: 1px solid var(--zombie-green); }
+        #game-radar { border: 1px solid var(--sonar-blue); }
+        #game-atv { border: 1px solid var(--atv-orange); }
+        
+        /* Map background fallback */
+        #explorer-map, #zombie-map, #sonar-map, #atv-map { width: 100%; height: 100%; background: #e5e5e5; position: absolute; top: 0; left: 0; z-index: 1;}
+        
+        .hud-map {
+            position: absolute; top: 25px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 400px;
+            z-index: 1000; background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(12px);
+            padding: 15px 25px; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border: 1px solid rgba(212, 175, 55, 0.3); display: flex; align-items: center; justify-content: space-between;
+        }
+        .hud-title { font-weight: 700; color: #f4f4f4; font-size: 13px; font-family: 'Outfit', sans-serif; letter-spacing: 1px; display: flex; align-items: center; gap: 5px;}
+        .hud-status { font-size: 10px; color: var(--accent-gold); background: rgba(212, 175, 55, 0.1); padding: 6px 15px; border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.4); font-weight: 600; font-family: 'Outfit', sans-serif; letter-spacing: 1px; text-transform: uppercase;}
+
+        .leaflet-div-icon { background: transparent; border: none; }
+        .user-icon-container { width: 20px; height: 20px; position: relative; }
+        .user-pulse { width: 40px; height: 40px; background-color: rgba(212, 175, 55, 0.3); border-radius: 50%; position: absolute; top: -10px; left: -10px; z-index: 5; animation: pulse-wave-gold 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1); }
+        .zombie-pulse { background-color: rgba(34, 197, 94, 0.4); animation: pulse-wave-zombie 1.5s infinite; }
+        
+        @keyframes pulse-wave-gold { 0% { transform: scale(0.1); opacity: 1; } 70% { transform: scale(1.2); opacity: 0; } 100% { transform: scale(1.2); opacity: 0; } }
+        @keyframes pulse-wave-zombie { 0% { transform: scale(0.1); opacity: 1; } 70% { transform: scale(1.5); opacity: 0; } 100% { transform: scale(1.5); opacity: 0; } }
+
+        .leaflet-popup-content-wrapper { background: rgba(20, 20, 20, 0.95); color: #f4f4f4; border: 1px solid var(--accent-gold); box-shadow: 0 10px 25px rgba(0,0,0,0.8); font-family: 'Outfit', sans-serif; border-radius: 8px;}
+        .leaflet-popup-tip { background: rgba(20, 20, 20, 0.95); border-top: 1px solid var(--accent-gold); }
+        .leaflet-container a.leaflet-popup-close-button { color: #aaa; }
+
+        .treasure-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); background: rgba(10, 10, 10, 0.95); border: 2px solid var(--accent-gold); border-radius: 20px; padding: 40px 30px; text-align: center; z-index: 9999; box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 30px rgba(212, 175, 55, 0.3); transition: transform 0.5s; pointer-events: none; opacity: 0; width: 90%; max-width: 350px; }
+        .treasure-popup.show { transform: translate(-50%, -50%) scale(1); pointer-events: auto; opacity: 1; }
+        .treasure-emoji { font-size: 5rem; margin-bottom: 15px; animation: floatTreasure 3s ease-in-out infinite; }
+        @keyframes floatTreasure { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .sonar-wave { animation: expandSonar 2s ease-out; fill-opacity: 0; stroke-width: 3; }
+        @keyframes expandSonar { 0% { radius: 0; opacity: 1; } 100% { radius: 150px; opacity: 0; } }
+        .emote-marker { animation: floatEmote 2s forwards ease-out; font-size: 35px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.8)); z-index: 9999 !important; text-align: center; margin-top:-20px; margin-left:-5px;}
+        @keyframes floatEmote { 0% { transform: translateY(0) scale(1); opacity: 1;} 100% {transform: translateY(-60px) scale(1.5); opacity: 0;} }
+
+        /* UI PANELS */
+        .hud-actions { position: absolute; left: 10px; top: 80px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+        .btn-action { background: rgba(10,10,10,0.8); border: 1px solid var(--accent-gold); color: var(--accent-gold); padding: 10px; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; transition: 0.3s;}
+        .btn-action:hover { background: var(--accent-gold); color: #000; transform: scale(1.1); }
+        #leaderboardPanel { display: none; position: absolute; left: 60px; top: 80px; width: 220px; background: rgba(10,10,10,0.95); border: 1px solid var(--accent-gold); border-radius: 10px; padding: 15px; z-index: 2000; font-family: 'Outfit'; box-shadow: 0 10px 25px rgba(0,0,0,0.8); color: #fff; text-align: left;}
+        .weapon-hud { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 1px solid var(--accent-gold); padding: 10px 20px; border-radius: 20px; z-index: 1000; font-family: 'Outfit'; font-size: 12px; color: #fff; font-weight: bold; letter-spacing: 1px; display: flex; align-items: center; gap: 10px;}
+        .cabana-zone { fill-opacity: 0.2; animation: glowCabana 3s infinite alternate; }
+        @keyframes glowCabana { 0% { fill-opacity: 0.2; stroke-opacity: 0.5; } 100% { fill-opacity: 0.4; stroke-opacity: 1; } }
+
+        /* DEATH SCREEN & MODALS */
+        #deathScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(150, 0, 0, 0.95); z-index: 10000; color: #fff; justify-content: center; align-items: center; flex-direction: column; font-family: 'Playfair Display'; text-align: center; padding: 20px;}
+        #deathScreen h1 { font-size: 5rem; letter-spacing: 10px; margin-bottom: 10px; text-shadow: 0 0 20px #000; }
+        #deathScreen p { font-family: 'Outfit'; font-size: 1.2rem; margin-bottom: 30px; }
+        #deathTimer { font-size: 2.5rem; color: var(--accent-gold); font-weight: 900; }
+
+        .custom-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100000; justify-content: center; align-items: center; backdrop-filter: blur(5px); padding: 20px;}
+        .custom-modal-box { background: #111; border: 2px solid var(--accent-gold); border-radius: 15px; padding: 30px; max-width: 400px; width: 100%; text-align: center; font-family: 'Outfit', sans-serif; box-shadow: 0 15px 40px rgba(0,0,0,0.8); }
+        .custom-modal-title { color: var(--accent-gold); font-family: 'Playfair Display', serif; font-size: 1.8rem; margin-bottom: 15px; }
+        .custom-modal-text { color: #ddd; font-size: 1rem; line-height: 1.6; margin-bottom: 25px; }
+        .custom-modal-btns { display: flex; gap: 15px; justify-content: center; }
+
+        /* --- ATV RACING STYLES --- */
+        .atv-leaflet-marker { transition: transform 0.1s linear !important; z-index: 1000 !important;}
+        .atv-body { width: 36px; height: 54px; border-radius: 8px; position:relative; box-shadow: 0 4px 10px rgba(0,0,0,0.8); z-index: 10; border: 2px solid #222; transition: background 0.3s;}
+        .atv-rider { width:28px; height:28px; border-radius:50%; border:2px solid #fff; position:absolute; top:10px; left:2px; background:#111; z-index: 15; }
+        .atv-tire { width: 10px; height: 20px; position: absolute; border-radius: 4px; z-index: 5; }
+        
+        .tire-normal { background: #222; border: 1px solid #000; }
+        .tire-offroad { background: #111; border: 2px dashed #666; }
+        .tire-neon { background: #111; box-shadow: 0 0 12px #0ff, 0 0 12px #0ff inset; border: 1px solid #0ff; }
+        .tire-magma { background: #111; box-shadow: 0 0 12px #f00, 0 0 12px #f00 inset; border: 1px solid #f00; }
+        .wheel-spin { animation: spinTire 0.2s linear infinite; }
+        @keyframes spinTire { 100% { transform: scaleY(-1); } }
+        
+        .color-btn { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.3s;}
+        .color-btn:hover { transform: scale(1.2); }
+        .tire-btn { padding: 5px 10px; background: #222; border: 1px solid #444; color: #fff; cursor: pointer; border-radius: 5px; font-size: 0.8rem; transition: 0.2s;}
+        .tire-btn.active { border-color: var(--atv-orange); color: var(--atv-orange); }
+
+        /* ATV CONTROLS */
+        #atv-controls { position: absolute; bottom: 20px; left: 0; width: 100%; z-index: 1000; padding: 0 15px; display: flex; justify-content: space-between; align-items: flex-end; user-select: none; touch-action: manipulation; }
+        .atv-btn-steer { background: rgba(20,20,20,0.8); border: 2px solid var(--atv-orange); color: var(--atv-orange); width: 60px; height: 60px; border-radius: 50%; font-size: 24px; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.8); outline:none;}
+        .atv-btn-pedal { background: rgba(20,20,20,0.8); border: 2px solid #fff; color: #fff; width: 60px; height: 75px; border-radius: 10px; font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center; flex-direction: column; text-transform: uppercase; box-shadow: 0 5px 15px rgba(0,0,0,0.8); outline:none;}
+        .pedal-gas { border-color: #22c55e; color: #22c55e; }
+        .pedal-rev { border-color: #eab308; color: #eab308; height: 65px; }
+        .pedal-brake { border-color: #ef4444; color: #ef4444; height: 55px;}
+
+        button { -webkit-touch-callout: none; -webkit-user-select: none; }
+
+        @media (max-width: 900px) {
+            .btn-back-wrapper { padding: 20px; }
+            .quest-menu-grid { grid-template-columns: 1fr; }
+            #game-explorer, #game-zombie, #game-radar, #game-atv { height: 80vh; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="customModal" class="custom-modal-overlay">
+        <div class="custom-modal-box">
+            <h3 id="customModalTitle" class="custom-modal-title">Notification</h3>
+            <p id="customModalText" class="custom-modal-text">Message goes here.</p>
+            <div class="custom-modal-btns">
+                <button id="customModalBtnNo" class="btn-game" style="border-color:#ff4c4c; color:#ff4c4c; display:none;">Cancel</button>
+                <button id="customModalBtnYes" class="btn-game">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="garageModal" class="custom-modal-overlay">
+        <div class="custom-modal-box" style="max-width: 350px; border-color:var(--atv-orange);">
+            <h3 class="custom-modal-title" style="color:var(--atv-orange);"><span class="material-icons-outlined" style="vertical-align:middle;">garage</span> ATV Garage</h3>
+            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 10px;">Paint Job</p>
+            <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;">
+                <div class="color-btn" style="background:#ef4444;" onclick="myAtvColor='#ef4444'; updateGaragePreview(event);"></div>
+                <div class="color-btn" style="background:#d4af37;" onclick="myAtvColor='#d4af37'; updateGaragePreview(event);"></div>
+                <div class="color-btn" style="background:#3b82f6;" onclick="myAtvColor='#3b82f6'; updateGaragePreview(event);"></div>
+                <div class="color-btn" style="background:#8b5cf6;" onclick="myAtvColor='#8b5cf6'; updateGaragePreview(event);"></div>
+                <div class="color-btn" style="background:#22c55e;" onclick="myAtvColor='#22c55e'; updateGaragePreview(event);"></div>
+                <div class="color-btn" style="background:#111; border: 1px solid #555;" onclick="myAtvColor='#222'; updateGaragePreview(event);"></div>
+            </div>
+            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 10px;">Tires</p>
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 25px;" id="tireOptions">
+                <button class="tire-btn" onclick="myAtvTire='tire-normal'; updateGaragePreview(event);">Normal</button>
+                <button class="tire-btn" onclick="myAtvTire='tire-offroad'; updateGaragePreview(event);">Off-Road</button>
+                <button class="tire-btn" onclick="myAtvTire='tire-neon'; updateGaragePreview(event);">Neon</button>
+                <button class="tire-btn" onclick="myAtvTire='tire-magma'; updateGaragePreview(event);">Magma</button>
+            </div>
+            <div class="custom-modal-btns">
+                <button class="btn-game" style="border-color:#ff4c4c; color:#ff4c4c; padding: 10px 20px;" onclick="document.getElementById('garageModal').style.display='none';">Close</button>
+                <button class="btn-game" style="border-color:var(--atv-orange); color:var(--atv-orange); padding: 10px 20px;" onclick="saveGarage()">Equip</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="deathScreen">
+        <h1>WASTED</h1>
+        <p id="deathCause">You were eliminated by an enemy.</p>
+        <div id="deathTimer">05:00</div>
+        <p style="margin-top:20px; font-size:0.9rem; color:#aaa;">You will respawn automatically.</p>
+    </div>
+
+    <div id="maintenanceOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 10, 10, 0.98); z-index: 99999; justify-content: center; align-items: center; flex-direction: column; font-family: 'Outfit', sans-serif; text-align: center; padding: 20px;">
+        <span class="material-icons-outlined" style="font-size: 6rem; color: var(--accent-gold); margin-bottom: 20px; animation: pulseRed 2s infinite;">engineering</span>
+        <h1 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 3rem; margin-bottom: 15px;">Under Maintenance</h1>
+        <p style="color: #aaa; font-size: 1.1rem; max-width: 400px; line-height: 1.6;">The Paraiso Quest servers are currently being upgraded for a better experience. Please check back shortly!</p>
+    </div>
+
+    <div class="bg-overlay"></div>
+    <div class="btn-back-wrapper"><button class="btn-back-home" onclick="window.location.href='https://sites.google.com/reacrevenuesolutions.com/rtxtestsites/home?authuser=0'"><span class="material-icons-outlined">arrow_back</span> Back to PARAISO</button></div>
+
+    <div class="game-container">
+        <h2 class="game-title">Paraiso Quest</h2>
+        <p class="game-subtitle" id="gameSubtitle">Choose Your Adventure</p>
+
+        <div id="quest-menu" class="quest-menu-grid">
+            <div class="quest-card" onclick="openGame('scavenger')"><span class="material-icons-outlined">explore</span><h3>The Explorer's Path</h3><p>Physical scavenger hunt around the resort. Solve riddles to uncover our hidden secrets.</p></div>
+            <div class="quest-card" onclick="openGame('explorer')"><span class="material-icons-outlined">my_location</span><h3>Resort Rumble Map</h3><p>Access the VIP interactive map. Find weapons, chat, and fight others.</p></div>
+            <div class="quest-card" onclick="openGame('zombie')" style="border-color: var(--zombie-green);"><span class="material-icons-outlined" style="color: var(--zombie-green);">coronavirus</span><h3 style="color: var(--zombie-green);">Zombie Outbreak</h3><p>Survival Tag! Avoid infected AI bots and guests, or volunteer as Patient Zero.</p></div>
+            <div class="quest-card" onclick="openGame('atv')" style="border-color: var(--atv-orange);"><span class="material-icons-outlined" style="color: var(--atv-orange);">sports_motorsports</span><h3 style="color: var(--atv-orange);">Go-Kart Racing</h3><p>Customize your animated ATV, steer, drive, and race in a virtual map with traffic!</p></div>
+            <div class="quest-card" onclick="openGame('radar')" style="border-color: var(--sonar-blue);"><span class="material-icons-outlined" style="color: var(--sonar-blue);">cell_tower</span><h3 style="color: var(--sonar-blue);">Relic Sonar</h3><p>Use your GPS and map scanner to ping and locate the daily hidden treasure.</p></div>
+            <div class="quest-card" onclick="openGame('camera')"><span class="material-icons-outlined">photo_camera</span><h3>Snap Quest</h3><p>Use your phone's camera to capture beautiful spots around the resort.</p></div>
+            <div class="quest-card" onclick="openGame('memory')"><span class="material-icons-outlined">dashboard</span><h3>Paraiso Match</h3><p>Test your memory with resort sights. Perfect while waiting for your meal.</p></div>
+        </div>
+
+        <div id="game-auth" class="game-box">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <span class="material-icons-outlined" style="font-size: 3.5rem; color: var(--accent-gold); margin-bottom: 15px; font-weight: 100;">vpn_key</span>
+            <p style="color: #bbb; margin-bottom: 30px; font-size: 0.95rem;">Enter the physical <strong>Passkey</strong> provided by front desk.</p>
+            <input type="text" id="voucherInput" class="auth-input" placeholder="PASSKEY" autocomplete="off"><br><button class="btn-game" onclick="verifyVoucher()">Unlock Game</button><div id="auth-error" class="game-feedback"></div>
+        </div>
+
+        <div id="game-character-select" class="game-box">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <h3 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 1.8rem; margin-bottom: 10px;">Choose Your Explorer</h3>
+            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 25px;">Select your avatar and enter your alias.</p>
+            <input type="text" id="playerAlias" class="auth-input" placeholder="ALIAS (MAX 6)" maxlength="6" autocomplete="off" style="margin-bottom: 25px; font-size: 1.2rem; padding: 15px; letter-spacing: 3px; width: 100%;">
+            <div class="avatar-grid" id="avatarGrid">
+                <div class="avatar-card selected" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Abby')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Abby" alt="Avatar"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Buster')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Buster" alt="Avatar"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Jack')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Jack" alt="Avatar"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Luna')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Luna" alt="Avatar"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Felix')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Felix" alt="Avatar"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Molly')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Molly" alt="Avatar"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Sam')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Sam" alt="Avatar"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Toby')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Toby" alt="Avatar"></div>
+            </div>
+            <button class="btn-game" style="margin-top: 20px;" onclick="enterGPSGame()">Enter World</button>
+        </div>
+
+        <div id="game-explorer" class="game-box map-box" style="border-color: var(--accent-gold);">
+            <button class="btn-close-game" onclick="quitGPSGame()" style="z-index: 1001;"><span class="material-icons-outlined">arrow_back</span> Flee</button>
+            <div id="explorer-map" class="map-layer"></div>
+            <div class="hud-map"><div class="hud-title"><span class="material-icons-outlined" style="color:var(--accent-gold); font-size:16px;">map</span> Resort Rumble</div><div class="hud-status" id="hud-status">Locating...</div></div>
+            <div class="weapon-hud" style="bottom: 20px;"><span id="weaponIcon">🖐️</span> <span id="weaponName">Unarmed</span></div>
+            <div class="hud-actions">
+                <button class="btn-action" title="Leaderboard" onclick="toggleLeaderboard()"><span class="material-icons-outlined">emoji_events</span></button>
+                <button class="btn-action" title="Chat" onclick="openChatBox('global', 'Global Chat')"><span class="material-icons-outlined">forum</span></button>
+                <button class="btn-action" title="Drop Flare" onclick="dropFlare()"><span class="material-icons-outlined">flare</span></button>
+                <div style="background: rgba(10,10,10,0.8); border: 1px solid var(--accent-gold); border-radius: 20px; padding: 5px; display: flex; flex-direction: column; gap: 5px; margin-top: 10px;">
+                    <button style="background:none; border:none; cursor:pointer; font-size:18px;" onclick="sendEmote('❤️')">❤️</button>
+                    <button style="background:none; border:none; cursor:pointer; font-size:18px;" onclick="sendEmote('😂')">😂</button>
+                    <button style="background:none; border:none; cursor:pointer; font-size:18px;" onclick="sendEmote('😮')">😮</button>
+                </div>
+            </div>
+            <div id="leaderboardPanel"><h4 style="color:var(--accent-gold); margin-bottom:10px; border-bottom:1px solid rgba(212, 175, 55, 0.4); padding-bottom:5px; font-size: 12px;">TOP EXPLORERS</h4><div id="leaderboardList">Loading...</div></div>
+            <div id="chatNotify" onclick="openChatBox('global', 'Global Chat')" style="display:none; position:absolute; right:25px; top:20px; background:red; color:white; border-radius:50%; width:24px; height:24px; font-size:14px; font-weight:bold; line-height:24px; z-index:1001; animation:pulse-wave-gold 1s infinite; cursor:pointer;">!</div>
+            
+            <div id="chatPanel" style="display:none; position:absolute; right:20px; top:75px; width:240px; height:300px; background:rgba(10,10,10,0.95); border:1px solid var(--accent-gold); z-index:2000; border-radius:10px; flex-direction:column; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
+                <div style="padding:10px; background:var(--accent-gold); color:#000; font-weight:bold; font-size:12px; display:flex; justify-content:space-between; align-items:center; border-radius:8px 8px 0 0;">
+                    <button id="btnChatBack" onclick="openChatBox('global', 'Global Chat')" style="display:none; background:none; border:none; cursor:pointer; font-weight:bold; font-size:14px;">&lt;</button>
+                    <span id="chatTitle" style="font-family:'Outfit'; text-transform:uppercase;">GLOBAL CHAT</span>
+                    <button onclick="document.getElementById('chatPanel').style.display='none'" style="background:none; border:none; cursor:pointer; font-weight:bold; font-size:14px;">X</button>
+                </div>
+                <div id="chatMessages" style="flex:1; overflow-y:auto; padding:10px; font-size:12px; text-align:left; font-family:'Plus Jakarta Sans'; color:#fff; word-wrap: break-word;"></div>
+                <div style="display:flex; padding:8px; border-top:1px solid rgba(212, 175, 55, 0.3);"><input type="text" id="chatInput" placeholder="Message..." autocomplete="off" style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:8px; font-size:12px; border-radius:4px; outline:none;"><button onclick="sendChatMessage()" style="background:var(--accent-gold); color:#000; border:none; padding:8px 12px; cursor:pointer; margin-left:5px; border-radius:4px; font-weight:bold;">Send</button></div>
+            </div>
+
+            <div id="treasurePopup" class="treasure-popup">
+                <div class="treasure-emoji" id="treasureEmoji">🎁</div>
+                <h3 style="color: var(--accent-gold); margin-bottom: 10px; font-family: 'Playfair Display'; font-size: 1.8rem;" id="treasureTitle">Item Found!</h3>
+                <p id="treasureText" style="color: #f4f4f4; font-size: 1.1rem; line-height: 1.5; margin-bottom: 25px;"></p>
+                <button class="btn-game" id="btnTreasureAction" style="padding: 10px 30px; font-size: 0.9rem;" onclick="closeTreasure()">Awesome!</button>
+            </div>
+        </div>
+
+        <div id="game-zombie" class="game-box map-box" style="border-color: var(--zombie-green);">
+            <button class="btn-close-game" onclick="quitGPSGame()" style="z-index: 1001;"><span class="material-icons-outlined">arrow_back</span> Escape</button>
+            <div id="zombie-map" class="map-layer"></div>
+            <div class="hud-map" style="border-color: var(--zombie-green);"><div class="hud-title" style="color:var(--zombie-green);"><span class="material-icons-outlined" style="font-size:16px;">coronavirus</span> Zombie Outbreak</div><div class="hud-status" id="zombie-status" style="color:var(--zombie-green); border-color:var(--zombie-green);">HUMAN</div></div>
+            <div class="weapon-hud" style="border-color: var(--zombie-green); bottom: 20px;"><span id="zWeaponIcon">🖐️</span> <span id="zWeaponName">Unarmed</span></div>
+            <div class="hud-actions">
+                <button class="btn-action" title="Chat" onclick="openChatBox('global', 'Zombie Chat')" style="border-color:var(--zombie-green); color:var(--zombie-green);"><span class="material-icons-outlined">forum</span></button>
+                <div style="background: rgba(10,10,10,0.8); border: 1px solid var(--zombie-green); border-radius: 20px; padding: 5px; display: flex; flex-direction: column; gap: 5px; margin-top: 10px;">
+                    <button style="background:none; border:none; cursor:pointer; font-size:18px;" onclick="sendEmote('😱')">😱</button>
+                    <button style="background:none; border:none; cursor:pointer; font-size:18px;" onclick="sendEmote('🏃')">🏃</button>
+                </div>
+            </div>
+            <button id="zombieActionBtn" class="btn-game" onclick="zombieAction()" style="position:absolute; bottom: 80px; left:50%; transform:translateX(-50%); z-index:1000; border-color:var(--zombie-green); color:var(--zombie-green); width: 80%; max-width: 300px; background:rgba(0,0,0,0.9);">Volunteer as Patient Zero</button>
+        </div>
+
+        <div id="game-atv" class="game-box map-box" style="border-color: var(--atv-orange);">
+            <button class="btn-close-game" onclick="quitGPSGame()" style="z-index: 1001;"><span class="material-icons-outlined">arrow_back</span> Park</button>
+            <div id="atv-map" class="map-layer"></div>
+            <div class="hud-map" style="border-color: var(--atv-orange);"><div class="hud-title" style="color:var(--atv-orange);"><span class="material-icons-outlined" style="font-size:16px;">sports_motorsports</span> Virtual ATV</div><div class="hud-status" style="color:var(--atv-orange); border-color:var(--atv-orange);">Engine On</div></div>
+            
+            <div class="hud-actions">
+                <button class="btn-action" onclick="document.getElementById('garageModal').style.display='flex';" style="border-color:var(--atv-orange); color:var(--atv-orange);"><span class="material-icons-outlined">garage</span></button>
+                <button class="btn-action" onclick="openChatBox('global', 'Racing Chat')" style="border-color:var(--atv-orange); color:var(--atv-orange);"><span class="material-icons-outlined">forum</span></button>
+                <div style="background: rgba(10,10,10,0.8); border: 1px solid var(--atv-orange); border-radius: 20px; padding: 5px; display: flex; flex-direction: column; gap: 5px; margin-top: 10px;">
+                    <button style="background:none; border:none; cursor:pointer; font-size:18px;" onclick="sendEmote('💨')">💨</button>
+                    <button style="background:none; border:none; cursor:pointer; font-size:18px;" onclick="sendEmote('🏁')">🏁</button>
+                </div>
+            </div>
+
+            <div id="atv-controls">
+                <div style="display:flex; gap:10px; align-items:flex-end;">
+                    <button class="atv-btn-steer" id="btn-left">◀</button>
+                    <button class="atv-btn-steer" id="btn-right">▶</button>
+                </div>
+                <div style="display:flex; gap:10px; align-items:flex-end;">
+                    <button class="atv-btn-pedal pedal-brake" id="btn-brake">BRK</button>
+                    <button class="atv-btn-pedal pedal-rev" id="btn-rev">REV</button>
+                    <button class="atv-btn-pedal pedal-gas" id="btn-gas">GAS</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-radar" class="game-box map-box" style="border-color: var(--sonar-blue);">
+            <button class="btn-close-game" onclick="quitGPSGame()" style="z-index: 1001;"><span class="material-icons-outlined">arrow_back</span> Flee</button>
+            <div id="sonar-map" class="map-layer"></div>
+            <div class="hud-map" style="border-color: var(--sonar-blue);"><div class="hud-title" style="color:var(--sonar-blue);"><span class="material-icons-outlined" style="font-size:16px;">cell_tower</span> Relic Sonar</div><div class="hud-status" id="sonar-status" style="color:var(--sonar-blue); border-color:var(--sonar-blue);">READY</div></div>
+            <button class="btn-game" onclick="triggerSonar()" style="position:absolute; bottom: 40px; left:50%; transform:translateX(-50%); z-index:1000; border-color:var(--sonar-blue); color:var(--sonar-blue); width: 80%; max-width: 300px; background:rgba(0,0,0,0.9);"><span class="material-icons-outlined" style="vertical-align:middle; margin-right:5px;">radar</span> SCAN AREA</button>
+        </div>
+
+        <div id="game-quest" class="game-box" style="animation: floatQuest 6s infinite ease-in-out;">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <div style="font-size: 0.8rem; color: var(--accent-gold); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 20px; font-weight: 700;" id="questProgress">Chapter 1 of 3</div>
+            <div class="material-icons-outlined" style="font-size: 3rem; color: var(--accent-gold); margin-bottom: 20px; opacity: 0.9;">explore</div>
+            <div class="riddle-text" id="riddleText">"Loading riddle..."</div>
+            <input type="text" id="questAnswer" class="answer-input" placeholder="Secret Word" autocomplete="off"><br><button class="btn-game" onclick="checkAnswer()">Submit</button><div id="quest-feedback" class="game-feedback"></div>
+        </div>
+
+        <div id="game-complete" class="game-box">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <span class="material-icons-outlined" style="font-size: 5rem; color: var(--accent-gold); margin-bottom: 20px;">emoji_events</span>
+            <h3 style="font-size: 2.5rem; color: var(--accent-gold); font-family: 'Playfair Display', serif; margin-bottom: 15px;">Quest Complete</h3>
+            <p style="color: #ddd; font-size: 1.1rem; line-height: 1.8; margin-bottom: 30px;">Show this glowing seal to The Brew Umbrella Cafe for your reward.</p>
+            <div style="padding: 15px 30px; border: 2px dashed var(--accent-gold); display: inline-block; letter-spacing: 5px; font-weight: bold; color: var(--accent-gold); font-size: 1.5rem; border-radius: 10px; background: rgba(212, 175, 55, 0.1);">VIP-SEAL-2026</div>
+        </div>
+
+        <div id="game-camera" class="game-box">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <div style="font-size: 0.8rem; color: var(--accent-gold); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 20px; font-weight: 700;" id="snapProgress">Mission 1 of 3</div>
+            <div class="riddle-text" id="snapMissionText">"Capture the beauty."</div>
+            <div class="snap-preview" id="snapPreview"><span class="material-icons-outlined" id="snapIconPlaceholder" style="font-size: 4rem; color: rgba(212, 175, 55, 0.3);">add_a_photo</span><img id="snapImageDisplay" src=""><div class="scanner-line" id="scannerLine"></div></div>
+            <label class="btn-game" id="btnOpenCamera" style="cursor: pointer;"><input type="file" accept="image/*" capture="environment" style="display: none;" onchange="handleSnap(this)"><span class="material-icons-outlined" style="vertical-align: middle; margin-right: 8px; font-size: 18px;">camera_alt</span> Open Camera</label>
+            <div id="snap-feedback" class="game-feedback"></div>
+        </div>
+
+        <div id="snap-complete" class="game-box">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <span class="material-icons-outlined" style="font-size: 5rem; color: var(--accent-gold); margin-bottom: 20px;">collections</span>
+            <h3 style="font-size: 2.5rem; color: var(--accent-gold); font-family: 'Playfair Display', serif; margin-bottom: 15px;">Master Photographer</h3>
+            <p style="color: #ddd; font-size: 1.1rem; line-height: 1.8; margin-bottom: 30px;">Show this badge to the Front Desk to claim your exclusive token.</p>
+            <div style="padding: 15px 30px; border: 2px dashed var(--accent-gold); display: inline-block; letter-spacing: 5px; font-weight: bold; color: var(--accent-gold); font-size: 1.5rem; border-radius: 10px; background: rgba(212, 175, 55, 0.1);">PHOTO-VIP-26</div>
+        </div>
+
+        <div id="game-memory" class="game-box" style="max-width: 800px;">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <h3 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 1.8rem; margin-bottom: 5px;">Paraiso Match</h3>
+            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 20px;">Find all matching pairs.</p>
+            <div style="color: #fff; letter-spacing: 2px; font-size: 0.9rem;">MOVES: <span id="memoryMoves" style="color: var(--accent-gold); font-weight: bold;">0</span></div>
+            <div class="memory-grid" id="memoryGrid"></div>
+            <h4 id="memoryWin" style="display:none; color: var(--accent-gold); font-family: 'Playfair Display'; font-size: 1.5rem; margin-top: 20px;">Brilliant Mind! You matched them all!</h4>
+            <button id="memoryResetBtn" class="btn-game" style="display:none; margin: 20px auto 0; padding: 10px 30px; font-size: 0.8rem;" onclick="initMemoryGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // --- AUDIO CONTROLLER (SFX) ---
+        const sfx = {
+            start: new Audio('https://actions.google.com/sounds/v1/transportation/car_engine_start.ogg'),
+            drive: new Audio('https://actions.google.com/sounds/v1/transportation/car_driving_fast.ogg'),
+            crash: new Audio('https://actions.google.com/sounds/v1/impacts/crash.ogg')
+        };
+        sfx.drive.loop = true;
+        sfx.drive.volume = 0.4;
+        sfx.crash.volume = 0.7;
+
+        // --- CUSTOM MODALS ---
+        function showAlert(title, message, callback) {
+            document.getElementById('customModalTitle').innerText = title; document.getElementById('customModalText').innerHTML = message;
+            document.getElementById('customModalBtnNo').style.display = 'none';
+            document.getElementById('customModalBtnYes').onclick = () => { document.getElementById('customModal').style.display = 'none'; if(callback) callback(); };
+            document.getElementById('customModal').style.display = 'flex';
+        }
+        function showConfirm(title, message, yesCallback) {
+            document.getElementById('customModalTitle').innerText = title; document.getElementById('customModalText').innerHTML = message;
+            document.getElementById('customModalBtnNo').style.display = 'inline-block'; document.getElementById('customModalBtnNo').onclick = () => document.getElementById('customModal').style.display = 'none';
+            document.getElementById('customModalBtnYes').onclick = () => { document.getElementById('customModal').style.display = 'none'; if(yesCallback) yesCallback(); };
+            document.getElementById('customModal').style.display = 'flex';
+        }
+
+        database.ref('settings/maintenance').on('value', snap => { document.getElementById('maintenanceOverlay').style.display = snap.val() ? 'flex' : 'none'; });
+
+        // --- GLOBAL AUTHENTICATION ---
+        const VALID_VOUCHERS = ["EXPLORE26", "PARAISOVIP", "PARAISO1"]; let isAuthorized = false, pendingGame = "";
+
+        function openGame(type) { document.getElementById('quest-menu').style.display = 'none'; if (!isAuthorized) { pendingGame = type; document.getElementById('game-auth').style.display = 'block'; } else launchGame(type); }
+        function verifyVoucher() { if(VALID_VOUCHERS.includes(document.getElementById('voucherInput').value.toUpperCase().trim())) { isAuthorized = true; document.getElementById('game-auth').style.display = 'none'; launchGame(pendingGame); } else document.getElementById('auth-error').innerText = "Invalid Passkey."; }
+        function backToMenu() { document.querySelectorAll('.game-box').forEach(b => b.style.display = 'none'); document.getElementById('quest-menu').style.display = 'grid'; }
+
+        let chosenAvatarUrl = 'https://api.dicebear.com/8.x/adventurer/svg?seed=Abby'; 
+        let myUserId = "ID_" + Math.floor(Math.random() * 9999);
+        let myAlias = "", myScore = 0, lastLat = null, lastLng = null, globalWatchId = null, activeMapObj = null;
+        let myWeapon = null, isDead = false, deadTimerInterval = null, cabanaLayer = null;
+        const cabanaZone = { lat: 14.5355, lng: 120.9845, radius: 15 }; 
+
+        // ATV Customization Vars
+        let myAtvColor = '#ef4444'; let myAtvTire = 'tire-normal'; let myAtvHeading = 0;
+
+        function selectAvatar(el, url) { document.querySelectorAll('.avatar-card').forEach(e => e.classList.remove('selected')); el.classList.add('selected'); chosenAvatarUrl = url; }
+        function addScore(points) { myScore += points; if(isAuthorized) database.ref('players/' + myUserId).update({ score: myScore }); }
+
+        function launchGame(type) {
+            pendingGame = type; 
+            if(type === 'scavenger') { document.getElementById('game-quest').style.display = 'block'; loadQuest(); } 
+            else if(type === 'camera') { document.getElementById('game-camera').style.display = 'block'; loadSnapMission(); } 
+            else if(type === 'memory') { document.getElementById('game-memory').style.display = 'block'; initMemoryGame(); } 
+            else if(['explorer', 'zombie', 'radar', 'atv'].includes(type)) {
+                if(myAlias === "") document.getElementById('game-character-select').style.display = 'block';
+                else enterGPSGame();
+            }
+        }
+
+        function enterGPSGame() {
+            if(myAlias === "") {
+                const aliasInput = document.getElementById('playerAlias').value.trim();
+                if (!/^[a-z0-9]{1,6}$/i.test(aliasInput)) return showAlert("Invalid", "Alias: Max 6 letters/numbers only.");
+                myAlias = aliasInput.toUpperCase(); 
+            }
+            document.getElementById('game-character-select').style.display = 'none';
+            
+            if(pendingGame === 'explorer') {
+                document.getElementById('game-explorer').style.display = 'block';
+                setTimeout(() => { if (!explorerMap) initExplorerMap(); else if(userMarker) userMarker.setIcon(getIcon(chosenAvatarUrl, myAlias, true, null)); activeMapObj = explorerMap; explorerMap.invalidateSize(); }, 100);
+            } else if (pendingGame === 'zombie') {
+                document.getElementById('game-zombie').style.display = 'block';
+                setTimeout(() => { if (!zombieMap) initZombieMap(); activeMapObj = zombieMap; zombieMap.invalidateSize(); }, 100);
+            } else if (pendingGame === 'radar') {
+                document.getElementById('game-radar').style.display = 'block';
+                setTimeout(() => { if (!sonarMap) initSonarMap(); activeMapObj = sonarMap; sonarMap.invalidateSize(); }, 100);
+            } else if (pendingGame === 'atv') {
+                document.getElementById('game-atv').style.display = 'block';
+                sfx.start.play().catch(e=>{}); // Play engine start sound
+                setTimeout(() => { if (!atvMap) initATVMap(); activeMapObj = atvMap; atvMap.invalidateSize(); }, 100);
+            }
+        }
+
+        function quitGPSGame() {
+            if(globalWatchId) navigator.geolocation.clearWatch(globalWatchId);
+            database.ref('players/' + myUserId).remove(); database.ref('zombie_players/' + myUserId).remove(); database.ref('atv_players/' + myUserId).remove();
+            activeMapObj = null; atvDriveMode = false; sfx.drive.pause(); backToMenu();
+        }
+
+        // --- SHARED ICONS ---
+        function getIcon(url, name, isMe, zState) {
+            let color = zState ? (zState === 'zombie' ? '#ef4444' : '#22c55e') : (isMe ? 'var(--accent-gold)' : '#fff');
+            let pulse = isMe ? (zState ? (zState === 'zombie' ? 'pulse-wave-gold' : 'zombie-pulse') : 'pulse-wave-gold') : '';
+            if(isMe && zState === 'zombie') pulse = 'pulse-wave-gold'; 
+            if(url === 'zombie_bot') { url = "https://api.dicebear.com/8.x/bottts/svg?seed=Zombie"; color = "#ef4444"; pulse = "zombie-pulse"; }
+            return L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div class="user-icon-container" style="width: ${isMe?45:35}px; height: ${isMe?45:35}px;">
+                           <div class="${pulse}" style="width: ${isMe?65:0}px; height: ${isMe?65:0}px; top: -10px; left: -10px; position:absolute; z-index:5; border-radius:50%; ${zState==='zombie'&&isMe?'background-color:rgba(239,68,68,0.4);':''}"></div>
+                           <div style="position:absolute; top:-20px; left:50%; transform:translateX(-50%); text-align:center; z-index:20;">
+                               <div style="background:${color}; color:${color==='#fff'?'#000':'#fff'}; font-size:10px; padding:2px 5px; border-radius:3px; font-weight:700;">${name}</div>
+                           </div>
+                           <img src="${url}" style="width: 100%; height: 100%; border-radius: 50%; border: 2px solid ${color}; background: #222; position:relative; z-index:10;">
+                       </div>`, iconSize: [isMe?45:35, isMe?45:35], iconAnchor: [isMe?22:17, isMe?22:17]
+            });
+        }
+
+        // --- ATV ANIMATED ICON ---
+        function getATVIcon(url, name, color, tire, heading, id) {
+            return L.divIcon({
+                className: 'atv-leaflet-marker',
+                html: `<div id="atv-rotate-${id}" style="transform: rotate(${heading}deg); position: relative;">
+                           <div class="atv-body" style="background:${color};">
+                               <div class="atv-tire ${tire} wheel-spin" style="top:5px; left:-5px;"></div>
+                               <div class="atv-tire ${tire} wheel-spin" style="top:5px; right:-5px;"></div>
+                               <div class="atv-tire ${tire} wheel-spin" style="bottom:5px; left:-5px;"></div>
+                               <div class="atv-tire ${tire} wheel-spin" style="bottom:5px; right:-5px;"></div>
+                               <img src="${url}" class="atv-rider">
+                           </div>
+                           <div style="position:absolute; top:60px; left:50%; transform:translateX(-50%); background:${color}; color:#fff; font-size:9px; padding:2px 4px; border-radius:4px; font-weight:bold; white-space:nowrap; border:1px solid #000;">${name}</div>
+                       </div>`,
+                iconSize: [36, 54], iconAnchor: [18, 27]
+            });
+        }
+
+        // --- GLOBAL/PRIVATE CHAT (FIXED EXPLICIT GLOBAL EXPORT) ---
+        let currentChatTarget = 'global', chatListeners = [];
+        window.openChatBox = function(tid, tname) { 
+            currentChatTarget = tid; 
+            document.getElementById('chatTitle').innerText = tname; 
+            document.getElementById('chatPanel').style.display = 'flex'; 
+            document.getElementById('chatNotify').style.display = 'none'; 
+            document.getElementById('btnChatBack').style.display = tid === 'global' ? 'none' : 'block'; 
+            loadChatMessages(); 
+        }
+        window.sendChatMessage = function() { 
+            const i = document.getElementById('chatInput'); const msg = i.value.trim(); if(msg === "") return; 
+            database.ref(currentChatTarget === 'global' ? 'chats/global' : `chats/private/${[myUserId, currentChatTarget].sort().join('_')}`).push({ sender: myAlias, msg: msg, time: Date.now() }); i.value = ""; 
+        }
+        function loadChatMessages() {
+            const div = document.getElementById('chatMessages'); div.innerHTML = ""; chatListeners.forEach(r => r.off()); chatListeners = [];
+            const ref = database.ref(currentChatTarget === 'global' ? 'chats/global' : `chats/private/${[myUserId, currentChatTarget].sort().join('_')}`).limitToLast(20); chatListeners.push(ref);
+            ref.on('child_added', snap => { const c = snap.val(); div.innerHTML += `<div style="margin-bottom:6px;"><span style="color:var(--accent-gold); font-weight:bold;">${c.sender}:</span> <span style="color:#ddd;">${c.msg}</span></div>`; div.scrollTop = div.scrollHeight; if(document.getElementById('chatPanel').style.display === 'none') document.getElementById('chatNotify').style.display = 'block'; });
+        }
+        database.ref('chats/global').limitToLast(1).on('child_added', snap => { if(document.getElementById('chatPanel').style.display === 'none' && Date.now() - snap.val().time < 5000) document.getElementById('chatNotify').style.display = 'block'; });
+
+        // --- EMOTES ---
+        function sendEmote(emoji) { database.ref('emotes').push({ senderId: myUserId, emoji: emoji, time: Date.now() }); }
+        database.ref('emotes').limitToLast(1).on('child_added', snap => {
+            const e = snap.val(); if(!activeMapObj || Date.now() - e.time > 5000) return;
+            let pos = null;
+            if(e.senderId === myUserId && lastLat) pos = [lastLat, lastLng];
+            else if(otherMarkers[e.senderId]) pos = otherMarkers[e.senderId].getLatLng();
+            else if(zOthers[e.senderId]) pos = zOthers[e.senderId].getLatLng();
+            else if(atvOthers[e.senderId]) pos = atvOthers[e.senderId].getLatLng();
+            if(pos) { const m = L.marker(pos, { icon: L.divIcon({ className: 'emote-marker', html: e.emoji }) }).addTo(activeMapObj); setTimeout(() => activeMapObj.removeLayer(m), 2000); }
+        });
+
+
+        // --- 1. RESORT RUMBLE ---
+        function initExplorerMap() {
+            explorerMap = L.map('explorer-map', { zoomControl: false, attributionControl: false }).setView([14.5353, 120.9842], 18); L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(explorerMap);
+            cabanaLayer = L.circle([cabanaZone.lat, cabanaZone.lng], { radius: cabanaZone.radius, color: '#d4af37', fillColor: '#d4af37', className: 'cabana-zone' }).addTo(explorerMap).bindPopup("<b>👑 VIP CABANA</b>");
+            userMarker = L.marker([14.5353, 120.9842], { icon: getIcon(chosenAvatarUrl, myAlias, true, null) }).addTo(explorerMap);
+            if (navigator.geolocation) globalWatchId = navigator.geolocation.watchPosition(updateMyPosition, e=>{}, { enableHighAccuracy: true });
+            
+            database.ref('attacks/' + myUserId).on('value', snap => { if(snap.val() && !isDead) { triggerDeath(snap.val()); database.ref('attacks/' + myUserId).remove(); }});
+            database.ref('players').on('value', snap => {
+                const ps = snap.val(); if(!ps) return; let leaderArr = [];
+                for (let id in otherMarkers) if (!ps[id]) { explorerMap.removeLayer(otherMarkers[id]); delete otherMarkers[id]; }
+                for (let id in ps) {
+                    leaderArr.push({name: ps[id].name, score: ps[id].score || 0}); if (id === myUserId || Date.now() - ps[id].lastSeen > 300000) continue; 
+                    if (otherMarkers[id]) otherMarkers[id].setLatLng([ps[id].lat, ps[id].lng]);
+                    else otherMarkers[id] = L.marker([ps[id].lat, ps[id].lng], { icon: getIcon(ps[id].avatar, ps[id].name, false, null) }).addTo(explorerMap).bindPopup(`<div style="text-align:center;"><b>${ps[id].name}</b><br><button onclick="window.openChatBox('${id}', 'Chat with ${ps[id].name}')" style="background:#111; color:#fff; border:1px solid var(--accent-gold); padding:5px; margin-top:5px; width:100%; border-radius:4px; cursor:pointer;">PRIVATE CHAT</button><button onclick="attackPlayer('${id}', ${ps[id].lat}, ${ps[id].lng})" style="background:red; color:#fff; border:none; padding:5px; margin-top:5px; width:100%; font-weight:bold; border-radius:4px; cursor:pointer;">ATTACK ⚔️</button></div>`);
+                }
+                leaderArr.sort((a,b) => b.score - a.score); let lbHTML = ""; leaderArr.slice(0,5).forEach((l, i) => lbHTML += `<div style="margin-bottom:5px;">${i+1}. ${l.name} <span style="color:var(--accent-gold); float:right;">${l.score} XP</span></div>`); document.getElementById('leaderboardList').innerHTML = lbHTML || "No explorers yet.";
+            });
+            setInterval(() => { if(!isDead && lastLat && L.latLng(lastLat, lastLng).distanceTo(L.latLng(cabanaZone.lat, cabanaZone.lng)) <= cabanaZone.radius) { addScore(5); database.ref('zones/cabana').set({ owner: myAlias }); } }, 10000); 
+        }
+
+        function updateMyPosition(pos) {
+            if(isDead) return; lastLat = pos.coords.latitude; lastLng = pos.coords.longitude;
+            if(userMarker) { userMarker.setLatLng([lastLat, lastLng]); explorerMap.panTo([lastLat, lastLng]); }
+            database.ref('players/' + myUserId).set({ lat: lastLat, lng: lastLng, avatar: chosenAvatarUrl, name: myAlias, score: myScore, lastSeen: Date.now() });
+        }
+
+        window.attackPlayer = function(tid, tLat, tLng) {
+            if(!myWeapon) return showAlert("Notice", "You don't have a weapon! Walk around to find one."); if(L.latLng(lastLat, lastLng).distanceTo(L.latLng(tLat, tLng)) > 15) return showAlert("Notice", "Target is too far! Get within 15 meters.");
+            database.ref('attacks/' + tid).set({ attacker: myAlias, weapon: myWeapon.name }); showAlert("Victory!", `You defeated them using your ${myWeapon.name}! +100 XP`); addScore(100); myWeapon = null; document.getElementById('weaponIcon').innerText = "🖐️"; document.getElementById('weaponName').innerText = "Unarmed";
+        }
+
+        function triggerDeath(info) {
+            isDead = true; document.getElementById('deathCause').innerText = `Eliminated by ${info.attacker} using ${info.weapon}`; document.getElementById('deathScreen').style.display = 'flex';
+            database.ref('players/' + myUserId).remove(); let t = 300; clearInterval(deadTimerInterval);
+            deadTimerInterval = setInterval(() => { t--; document.getElementById('deathTimer').innerText = `${Math.floor(t/60)}:${(t%60).toString().padStart(2,'0')}`; if(t<=0){ clearInterval(deadTimerInterval); isDead=false; document.getElementById('deathScreen').style.display='none'; showAlert("Respawn", "You respawned! Get back in the fight."); } }, 1000);
+        }
+
+        // --- GAME 2: ZOMBIE OUTBREAK ---
+        let zombieMap = null, zMarker = null, zOthers = {}, myZStatus = 'human', zGpsFix = false, aiZombies = [], aiMarkers = {};
+        function initZombieMap() {
+            zombieMap = L.map('zombie-map', { zoomControl: false, attributionControl: false }).setView([14.5353, 120.9842], 18); L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(zombieMap);
+            zMarker = L.marker([14.5353, 120.9842], { icon: getIcon(chosenAvatarUrl, myAlias, true, myZStatus) }).addTo(zombieMap);
+            if (navigator.geolocation) globalWatchId = navigator.geolocation.watchPosition(updateZPosition, e=>{}, { enableHighAccuracy: true });
+
+            for(let i=0; i<8; i++) aiZombies.push({ id: 'ai_'+i, lat: 14.5353 + (Math.random()-0.5)*0.003, lng: 120.9842 + (Math.random()-0.5)*0.003 });
+            aiZombies.forEach(ai => { aiMarkers[ai.id] = L.marker([ai.lat, ai.lng], { icon: getIcon('zombie_bot', 'AI ZOMBIE', false, 'zombie') }).addTo(zombieMap); });
+
+            setInterval(() => {
+                if(myZStatus === 'human' && lastLat) {
+                    aiZombies.forEach(ai => {
+                        ai.lat += (lastLat - ai.lat) * 0.15; ai.lng += (lastLng - ai.lng) * 0.15; aiMarkers[ai.id].setLatLng([ai.lat, ai.lng]);
+                        if(L.latLng(lastLat, lastLng).distanceTo(L.latLng(ai.lat, ai.lng)) < 5) {
+                            myZStatus = 'zombie'; database.ref('zombie_players/' + myUserId).update({zStatus: 'zombie'}); showAlert("Game Over", "YOU WERE CAUGHT BY AN AI ZOMBIE!"); updateZUI(); 
+                        }
+                    });
+                }
+            }, 1500);
+            database.ref('zombie_players/' + myUserId + '/zStatus').on('value', snap => { if(snap.val() === 'zombie' && myZStatus !== 'zombie') { myZStatus = 'zombie'; showAlert("Infected!", "INFECTED by a player! You are now a Zombie."); updateZUI(); } });
+            database.ref('zombie_players').on('value', snap => {
+                const ps = snap.val(); if(!ps) return; for (let id in zOthers) if (!ps[id]) { zombieMap.removeLayer(zOthers[id]); delete zOthers[id]; }
+                for (let id in ps) {
+                    if (id === myUserId || Date.now() - ps[id].lastSeen > 300000) continue;
+                    if (zOthers[id]) { zOthers[id].setLatLng([ps[id].lat, ps[id].lng]); zOthers[id].setIcon(getIcon(ps[id].avatar, ps[id].name, false, ps[id].zStatus)); }
+                    else zOthers[id] = L.marker([ps[id].lat, ps[id].lng], { icon: getIcon(ps[id].avatar, ps[id].name, false, ps[id].zStatus) }).addTo(zombieMap).bindPopup(`<b>${ps[id].name}</b><br><button onclick="window.openChatBox('${id}', 'Chat with ${ps[id].name}')" style="background:#111; color:#fff; border:1px solid var(--zombie-green); padding:5px; margin-top:5px; width:100%; border-radius:4px; cursor:pointer;">PRIVATE CHAT</button>`);
+                }
+            });
+            setInterval(() => { if(myZStatus === 'human' && lastLat) addScore(5); }, 15000); database.ref('zombie_players/' + myUserId).onDisconnect().remove();
+        }
+        function updateZUI() { document.getElementById('zombieActionBtn').innerText = "🧟 INFECT NEARBY 🧟"; document.getElementById('zombieActionBtn').style.background = "#ef4444"; document.getElementById('zombieActionBtn').style.borderColor = "#ef4444"; zMarker.setIcon(getIcon(chosenAvatarUrl, myAlias, true, myZStatus)); document.getElementById('zombie-status').innerText = "ZOMBIE"; }
+        function updateZPosition(pos) { lastLat = pos.coords.latitude; lastLng = pos.coords.longitude; if(zMarker) zMarker.setLatLng([lastLat, lastLng]); if(!zGpsFix) { zombieMap.panTo([lastLat, lastLng]); zGpsFix = true; } database.ref('zombie_players/' + myUserId).set({ lat: lastLat, lng: lastLng, avatar: chosenAvatarUrl, name: myAlias, zStatus: myZStatus, lastSeen: Date.now() }); }
+        function zombieAction() {
+            if(myZStatus === 'human') { showConfirm("Patient Zero", "Volunteer to become Patient Zero? There is no cure!", () => { myZStatus = 'zombie'; database.ref('zombie_players/' + myUserId).update({zStatus: 'zombie'}); updateZUI(); }); } 
+            else {
+                database.ref('zombie_players').once('value', snap => {
+                    let hit = false; const ps = snap.val();
+                    for(let id in ps) { if(id !== myUserId && ps[id].zStatus === 'human' && L.latLng(lastLat, lastLng).distanceTo(L.latLng(ps[id].lat, ps[id].lng)) <= 15) { database.ref('zombie_players/' + id).update({zStatus: 'zombie'}); hit = true; addScore(50); } }
+                    if(hit) showAlert("Success", "Infected humans nearby! +50 XP"); else showAlert("Failed", "No humans within 15 meters.");
+                });
+            }
+        }
+
+        // --- GAME 3: RELIC SONAR ---
+        let sonarMap = null, sonarMarker = null, relicMarker = null;
+        function initSonarMap() {
+            sonarMap = L.map('sonar-map', { zoomControl: false, attributionControl: false }).setView([14.5353, 120.9842], 18); L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(sonarMap);
+            sonarMarker = L.marker([14.5353, 120.9842], { icon: getIcon(chosenAvatarUrl, myAlias, true, null) }).addTo(sonarMap);
+            if (navigator.geolocation) globalWatchId = navigator.geolocation.watchPosition(pos => { lastLat = pos.coords.latitude; lastLng = pos.coords.longitude; sonarMarker.setLatLng([lastLat, lastLng]); sonarMap.panTo([lastLat, lastLng]); }, e=>{}, { enableHighAccuracy: true });
+        }
+        function triggerSonar() {
+            if(!lastLat) return;
+            const ping = L.circle([lastLat, lastLng], { radius: 0, color: 'var(--sonar-blue)', weight: 2, fillOpacity: 0.1 }).addTo(sonarMap); let r = 0; const expand = setInterval(() => { r += 5; ping.setRadius(r); if(r > 150) { clearInterval(expand); sonarMap.removeLayer(ping); } }, 50);
+            const dist = L.latLng(lastLat, lastLng).distanceTo(L.latLng(cabanaZone.lat, cabanaZone.lng)); document.getElementById('sonar-status').innerText = "SCANNING...";
+            setTimeout(() => {
+                if(dist <= 150) {
+                    document.getElementById('sonar-status').innerText = "RELIC DETECTED!"; if(!relicMarker) { relicMarker = L.marker([cabanaZone.lat, cabanaZone.lng], { icon: L.divIcon({className:'', html:'<div style="font-size:30px; filter:drop-shadow(0 0 10px #3b82f6);">🏺</div>'})}).addTo(sonarMap); } setTimeout(() => { if(relicMarker) { sonarMap.removeLayer(relicMarker); relicMarker = null; } document.getElementById('sonar-status').innerText = "READY"; }, 4000);
+                    if(dist <= 15) { showAlert("Found!", "You found the Relic! +200 XP"); addScore(200); }
+                } else { document.getElementById('sonar-status').innerText = "NO SIGNAL"; setTimeout(()=> document.getElementById('sonar-status').innerText = "READY", 2000); }
+            }, 1000);
+        }
+
+        // --- NEW GAME 4: VIRTUAL ATV RACING (WITH AI CARS & REVERSE) ---
+        let atvMap = null, atvMarker = null, atvOthers = {};
+        let myAtvColor = '#ef4444', myAtvTire = 'tire-normal', myAtvHeading = 0;
+        let atvLat = 14.5353, atvLng = 120.9842, atvSpeed = 0, atvDriveMode = false;
+        let atvKeys = { gas: false, rev: false, brake: false, left: false, right: false };
+        let npcCars = []; let npcMarkers = {};
+
+        function initATVMap() {
+            atvMap = L.map('atv-map', { zoomControl: false, attributionControl: false }).setView([atvLat, atvLng], 19);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 22 }).addTo(atvMap);
+            
+            if(lastLat && lastLng) { atvLat = lastLat; atvLng = lastLng; }
+            atvMarker = L.marker([atvLat, atvLng], { icon: getATVIcon(chosenAvatarUrl, myAlias, myAtvColor, myAtvTire, myAtvHeading, myUserId) }).addTo(atvMap);
+
+            // Spawn Traffic Cars
+            for(let i=0; i<4; i++) {
+                npcCars.push({
+                    id: 'npc_'+i, lat: atvLat + (Math.random()-0.5)*0.005, lng: atvLng + (Math.random()-0.5)*0.005,
+                    heading: Math.random() * 360, speed: 0.0000004 + Math.random() * 0.0000003, color: '#'+Math.floor(Math.random()*16777215).toString(16)
+                });
+            }
+
+            setupATVControls();
+            atvDriveMode = true;
+            requestAnimationFrame(atvLoop);
+
+            database.ref('atv_players').on('value', snap => {
+                const ps = snap.val(); if(!ps) return;
+                for (let id in atvOthers) if (!ps[id]) { atvMap.removeLayer(atvOthers[id]); delete atvOthers[id]; }
+                for (let id in ps) {
+                    if (id === myUserId || Date.now() - ps[id].lastSeen > 10000) continue;
+                    if (atvOthers[id]) {
+                        atvOthers[id].setLatLng([ps[id].lat, ps[id].lng]);
+                        let rotDiv = document.getElementById('atv-rotate-'+id);
+                        if(rotDiv) rotDiv.style.transform = `rotate(${ps[id].heading}deg)`;
+                        else atvOthers[id].setIcon(getATVIcon(ps[id].avatar, ps[id].name, ps[id].color, ps[id].tire, ps[id].heading, id));
+                    } else {
+                        atvOthers[id] = L.marker([ps[id].lat, ps[id].lng], { icon: getATVIcon(ps[id].avatar, ps[id].name, ps[id].color, ps[id].tire, ps[id].heading, id) }).addTo(atvMap)
+                         .bindPopup(`<b>${ps[id].name}</b><br><button onclick="window.openChatBox('${id}', 'Chat with ${ps[id].name}')" style="background:#111; color:#fff; border:1px solid var(--atv-orange); padding:5px; margin-top:5px; width:100%; border-radius:4px; cursor:pointer;">RACE CHAT</button>`);
+                    }
+                }
+            });
+            database.ref('atv_players/' + myUserId).onDisconnect().remove();
+        }
+
+        function setupATVControls() {
+            const bindBtn = (id, key) => {
+                const btn = document.getElementById(id); if(!btn) return;
+                const down = (e) => { e.preventDefault(); atvKeys[key] = true; if(key==='gas' || key==='rev'){ sfx.drive.play().catch(e=>{}); }};
+                const up = (e) => { e.preventDefault(); atvKeys[key] = false; if(!atvKeys.gas && !atvKeys.rev){ sfx.drive.pause(); }};
+                btn.addEventListener('mousedown', down); btn.addEventListener('touchstart', down, {passive:false});
+                btn.addEventListener('mouseup', up); btn.addEventListener('mouseleave', up); btn.addEventListener('touchend', up);
+            };
+            bindBtn('btn-gas', 'gas'); bindBtn('btn-rev', 'rev'); bindBtn('btn-brake', 'brake'); bindBtn('btn-left', 'left'); bindBtn('btn-right', 'right');
+        }
+
+        let frameCount = 0;
+        function atvLoop() {
+            if (!atvDriveMode) return;
+
+            const acc = 0.0000008; const friction = 0.95; const turnSpeed = 3.5;
+            
+            if (atvKeys.gas) atvSpeed += acc;
+            if (atvKeys.rev) atvSpeed -= acc * 0.8; // Reverse speed
+            if (atvKeys.brake) atvSpeed *= 0.85; // Brake hard
+            
+            atvSpeed *= friction;
+            if (Math.abs(atvSpeed) < 0.0000001) atvSpeed = 0;
+
+            if (Math.abs(atvSpeed) > 0) {
+                if (atvKeys.left) myAtvHeading -= turnSpeed * Math.sign(atvSpeed);
+                if (atvKeys.right) myAtvHeading += turnSpeed * Math.sign(atvSpeed);
+            }
+
+            atvLat += Math.cos(myAtvHeading * Math.PI / 180) * atvSpeed;
+            atvLng += Math.sin(myAtvHeading * Math.PI / 180) * atvSpeed;
+
+            // Move NPCs & Crash Logic
+            npcCars.forEach(npc => {
+                npc.lat += Math.cos(npc.heading * Math.PI/180) * npc.speed;
+                npc.lng += Math.sin(npc.heading * Math.PI/180) * npc.speed;
+                
+                if(!npcMarkers[npc.id]) {
+                    npcMarkers[npc.id] = L.marker([npc.lat, npc.lng], {icon: getATVIcon('https://api.dicebear.com/8.x/bottts/svg?seed='+npc.id, 'Traffic', npc.color, 'tire-normal', npc.heading, npc.id)}).addTo(atvMap);
+                } else {
+                    npcMarkers[npc.id].setLatLng([npc.lat, npc.lng]);
+                    let rD = document.getElementById('atv-rotate-'+npc.id);
+                    if(rD) rD.style.transform = `rotate(${npc.heading}deg)`;
+                }
+
+                // Crash detection
+                if (L.latLng(atvLat, atvLng).distanceTo(L.latLng(npc.lat, npc.lng)) < 3) {
+                    if(Math.abs(atvSpeed) > 0.0000002) {
+                        sfx.crash.currentTime = 0; sfx.crash.play().catch(e=>{});
+                        atvSpeed = -atvSpeed * 0.8; // Bounce back
+                        myAtvHeading += (Math.random() - 0.5) * 60; // Spin out
+                        npc.heading += 180; // Make NPC turn around
+                    }
+                }
+            });
+
+            if(atvMarker) {
+                atvMarker.setLatLng([atvLat, atvLng]);
+                atvMap.panTo([atvLat, atvLng]);
+                let rotDiv = document.getElementById('atv-rotate-' + myUserId);
+                if(rotDiv) {
+                    rotDiv.style.transform = `rotate(${myAtvHeading}deg)`;
+                    if(Math.abs(atvSpeed) > 0.0000005) { rotDiv.querySelectorAll('.atv-tire').forEach(t => t.style.animationPlayState = 'running'); } 
+                    else { rotDiv.querySelectorAll('.atv-tire').forEach(t => t.style.animationPlayState = 'paused'); }
+                }
+            }
+
+            frameCount++;
+            if(frameCount % 10 === 0) { // Network sync
+                database.ref('atv_players/' + myUserId).set({ lat: atvLat, lng: atvLng, heading: myAtvHeading, avatar: chosenAvatarUrl, name: myAlias, color: myAtvColor, tire: myAtvTire, lastSeen: Date.now() });
+                lastLat = atvLat; lastLng = atvLng;
+                database.ref('players/' + myUserId).set({ lat: atvLat, lng: atvLng, avatar: chosenAvatarUrl, name: myAlias, score: myScore, lastSeen: Date.now() });
+            }
+
+            requestAnimationFrame(atvLoop);
+        }
+
+        function saveGarage() {
+            document.getElementById('garageModal').style.display='none';
+            if(atvMarker) atvMarker.setIcon(getATVIcon(chosenAvatarUrl, myAlias, myAtvColor, myAtvTire, myAtvHeading, myUserId));
+            database.ref('atv_players/' + myUserId).update({ color: myAtvColor, tire: myAtvTire });
+        }
+
+        // --- MINIGAMES (Quest, Snap, Memory) ---
+        const qs = [{ icon: "water", riddle: "Lagoon Pool tile color?", answer: "BLUE" }]; let cQ = 0;
+        function loadQuest() { document.getElementById('riddleText').innerText = qs[cQ].riddle; }
+        function checkAnswer() { if (document.getElementById('questAnswer').value.toUpperCase().trim() === qs[cQ].answer) { addScore(50); document.getElementById('game-quest').style.display='none'; document.getElementById('game-complete').style.display='block'; } else showAlert("Notice", "Incorrect answer."); }
+        function handleSnap(i) { if(i.files && i.files[0]) { const r=new FileReader(); r.onload=e=>{ document.getElementById('snapImageDisplay').src=e.target.result; document.getElementById('snapImageDisplay').style.display='block'; setTimeout(()=>{addScore(50); document.getElementById('game-camera').style.display='none'; document.getElementById('snap-complete').style.display='block';}, 2000); }; r.readAsDataURL(i.files[0]); } }
+        const memImgs = ["https://res.cloudinary.com/dc7ff0sz2/image/upload/v1775027406/INfinity_Pool_z4y6l3.png", "https://res.cloudinary.com/dc7ff0sz2/image/upload/v1775027381/Lakeview_1_xhz4ap.jpg"]; let fCards=[], mPairs=0;
+        function initMemoryGame() { const g=document.getElementById('memoryGrid'); g.innerHTML=''; mPairs=0; fCards=[]; [...memImgs,...memImgs].sort(()=>Math.random()-0.5).forEach(img=>{ const c=document.createElement('div'); c.className='memory-card'; c.dataset.val=img; c.innerHTML=`<div class="memory-face memory-front"><img src="${img}"></div><div class="memory-face memory-back"></div>`; c.onclick=()=>flipCard(c); g.appendChild(c); }); }
+        function flipCard(c) { if(c.classList.contains('flip') || fCards.length>=2) return; c.classList.add('flip'); fCards.push(c); if(fCards.length===2) setTimeout(checkMatch, 800); }
+        function checkMatch() { if(fCards[0].dataset.val===fCards[1].dataset.val){ mPairs++; if(mPairs===memImgs.length) { document.getElementById('memoryWin').style.display='block'; addScore(50); } } else { fCards[0].classList.remove('flip'); fCards[1].classList.remove('flip'); } fCards=[]; }
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
+</body>
+</html>
