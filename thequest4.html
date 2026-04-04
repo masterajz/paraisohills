@@ -32,6 +32,7 @@
         :root {
             --accent-gold: #d4af37;
             --bg-dark: #0a0a0a;
+            --zombie-red: #ef4444;
             --zombie-green: #22c55e;
             --sonar-blue: #3b82f6;
         }
@@ -57,9 +58,9 @@
         .game-title { font-size: 3.5rem; color: var(--accent-gold); font-family: 'Playfair Display', serif; font-weight: 900; letter-spacing: 5px; margin-bottom: 5px; text-transform: uppercase; filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.3));}
         .game-subtitle { font-size: 0.9rem; color: #ccc; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 50px; font-weight: 300;}
         
-        /* Menu Cards */
-        .quest-menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; margin-top: 30px; }
-        .quest-card { background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px; padding: 40px 25px; cursor: pointer; transition: all 0.4s ease; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        /* Menu Cards (Flexbox layout) */
+        .quest-menu-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; margin-top: 30px; }
+        .quest-card { flex: 1 1 250px; max-width: 300px; background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px; padding: 40px 25px; cursor: pointer; transition: all 0.4s ease; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
         .quest-card:hover { transform: translateY(-10px); border-color: var(--accent-gold); background: rgba(20, 20, 20, 0.8); box-shadow: 0 20px 50px rgba(212, 175, 55, 0.15); }
         .quest-card .material-icons-outlined { font-size: 3.5rem; color: var(--accent-gold); margin-bottom: 20px; transition: transform 0.4s ease; }
         .quest-card:hover .material-icons-outlined { transform: scale(1.1); }
@@ -67,7 +68,7 @@
         .quest-card p { font-size: 0.85rem; color: #aaa; line-height: 1.6; font-weight: 300; font-family: 'Plus Jakarta Sans', sans-serif;}
 
         /* Shared Game Box Styles */
-        .game-box { display: none; background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 15px; padding: 50px 40px; box-shadow: 0 30px 60px rgba(0,0,0,0.9); position: relative; margin-top: 20px; max-width: 650px; margin-left: auto; margin-right: auto;}
+        .game-box { display: none; background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 15px; padding: 50px 40px; box-shadow: 0 30px 60px rgba(0,0,0,0.9); position: relative; margin-top: 20px; max-width: 850px; margin-left: auto; margin-right: auto;}
         .btn-close-game { position: absolute; top: 25px; left: 25px; background: transparent; border: none; color: #aaa; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Outfit'; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; font-weight: 600; z-index:9999;}
         .btn-close-game:hover { color: var(--accent-gold); }
         .btn-game { background: transparent; color: var(--accent-gold); border: 1px solid var(--accent-gold); padding: 15px 40px; border-radius: 30px; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: 0.4s; font-weight: 600; display: inline-block; font-family: 'Outfit', sans-serif;}
@@ -98,19 +99,22 @@
         @keyframes scan { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
 
         /* Avatar Selection Styles */
-        .avatar-grid { display: flex; justify-content: center; gap: 15px; margin: 30px 0; flex-wrap: wrap; }
-        .avatar-card { width: 80px; height: 80px; border-radius: 50%; border: 3px solid rgba(212, 175, 55, 0.2); cursor: pointer; transition: all 0.3s ease; background: rgba(0,0,0,0.5); overflow: hidden; }
+        .avatar-grid { display: flex; justify-content: center; gap: 15px; margin: 30px 0; flex-wrap: wrap; max-height: 250px; overflow-y: auto; padding: 10px; border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 10px; background: rgba(0,0,0,0.4); }
+        .avatar-card { width: 70px; height: 70px; border-radius: 50%; border: 3px solid rgba(212, 175, 55, 0.2); cursor: pointer; transition: all 0.3s ease; background: rgba(0,0,0,0.5); overflow: hidden; flex-shrink: 0;}
         .avatar-card:hover { border-color: rgba(212, 175, 55, 0.6); transform: translateY(-5px); }
         .avatar-card.selected { border-color: var(--accent-gold); transform: scale(1.1); box-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
         .avatar-card img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* Avatar Bobbing Animation on Map */
+        @keyframes avatarBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        .avatar-img-animate { animation: avatarBob 1.5s infinite ease-in-out; pointer-events: none; -webkit-touch-callout: none; user-select: none; }
 
         /* MULTIPLAYER MAPS Styles */
-        #game-explorer, #game-zombie, #game-radar { padding: 0; overflow: hidden; height: 65vh; min-height: 550px; max-width: 800px; display: none; border-radius: 15px; position: relative; margin-top:20px; margin-left:auto; margin-right:auto;}
+        #game-explorer, #game-radar { padding: 0; overflow: hidden; height: 70vh; min-height: 550px; max-width: 100%; display: none; border-radius: 15px; position: relative; margin-top:20px; margin-left:auto; margin-right:auto;}
         #game-explorer { border: 1px solid var(--accent-gold); }
-        #game-zombie { border: 1px solid var(--zombie-green); }
-        #game-radar { border: 1px solid var(--sonar-blue); }
+        #game-radar { border: 1px solid var(--accent-gold); }
         
-        #explorer-map, #zombie-map, #sonar-map { width: 100%; height: 100%; background: #0a0a0a; position: absolute; top: 0; left: 0; z-index: 1;}
+        #explorer-map, #sonar-map { width: 100%; height: 100%; background: #0a0a0a; position: absolute; top: 0; left: 0; z-index: 1;}
         
         .hud-map {
             position: absolute; top: 25px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 400px;
@@ -122,18 +126,20 @@
         .hud-status { font-size: 10px; color: var(--accent-gold); background: rgba(212, 175, 55, 0.1); padding: 6px 15px; border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.4); font-weight: 600; font-family: 'Outfit', sans-serif; letter-spacing: 1px; text-transform: uppercase;}
 
         .leaflet-div-icon { background: transparent; border: none; }
-        .user-icon-container { width: 20px; height: 20px; position: relative; }
-        .user-pulse { width: 40px; height: 40px; background-color: rgba(212, 175, 55, 0.3); border-radius: 50%; position: absolute; top: -10px; left: -10px; z-index: 5; animation: pulse-wave-gold 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1); }
-        
-        /* ADDED ZOMBIE PULSE */
-        .zombie-pulse { background-color: rgba(34, 197, 94, 0.4); animation: pulse-wave-zombie 1.5s infinite; }
+        .user-icon-container { width: 20px; height: 20px; position: relative; cursor: pointer; display: flex; justify-content: center; align-items: center;}
+        .user-pulse { width: 40px; height: 40px; background-color: rgba(212, 175, 55, 0.3); border-radius: 50%; position: absolute; top: -10px; left: -10px; z-index: 5; animation: pulse-wave-gold 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1); pointer-events: none;}
+        .zombie-pulse { background-color: rgba(239, 68, 68, 0.4); animation: pulse-wave-zombie 1s infinite; pointer-events: none; position: absolute; width: 60px; height: 60px; border-radius: 50%; z-index: 5;}
         
         @keyframes pulse-wave-gold { 0% { transform: scale(0.1); opacity: 1; } 70% { transform: scale(1.2); opacity: 0; } 100% { transform: scale(1.2); opacity: 0; } }
-        @keyframes pulse-wave-zombie { 0% { transform: scale(0.1); opacity: 1; } 70% { transform: scale(1.5); opacity: 0; } 100% { transform: scale(1.5); opacity: 0; } }
+        @keyframes pulse-wave-zombie { 0% { transform: scale(0.1); opacity: 1; } 70% { transform: scale(1.6); opacity: 0; } 100% { transform: scale(1.6); opacity: 0; } }
 
         .leaflet-popup-content-wrapper { background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px); color: #f4f4f4; border: 1px solid var(--accent-gold); box-shadow: 0 10px 25px rgba(0,0,0,0.8); font-family: 'Outfit', sans-serif; border-radius: 8px;}
         .leaflet-popup-tip { background: rgba(20, 20, 20, 0.95); border-top: 1px solid var(--accent-gold); border-left: 1px solid var(--accent-gold); }
         .leaflet-container a.leaflet-popup-close-button { color: #aaa; }
+
+        /* Hit Animation */
+        .hit-anim { position:absolute; top:-20px; right:-15px; color:#ef4444; font-weight:900; font-size:26px; font-family:'Outfit'; text-shadow: 0 2px 5px #000; animation: floatHit 0.8s forwards; z-index:100; pointer-events:none;}
+        @keyframes floatHit { 0% { transform:translateY(0) scale(0.5); opacity:1; } 50% { transform:translateY(-25px) scale(1.8); opacity:1; } 100% { transform:translateY(-40px) scale(1); opacity:0; } }
 
         /* Treasure Hunt Twist Styles */
         .treasure-popup {
@@ -155,13 +161,12 @@
 
         @media (max-width: 900px) {
             .btn-back-wrapper { padding: 20px; }
-            .quest-menu-grid { grid-template-columns: 1fr; }
-            #game-explorer, #game-zombie, #game-radar { height: 75vh; }
+            #game-explorer, #game-radar { height: 75vh; }
         }
 
         /* --- UPGRADE STYLES --- */
-        .emote-marker { animation: floatEmote 2s forwards ease-out; font-size: 30px; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)); z-index: 1000 !important; text-align: center;}
-        @keyframes floatEmote { 0% { transform: translateY(0) scale(1); opacity: 1;} 100% {transform: translateY(-50px) scale(1.5); opacity: 0;} }
+        .emote-marker { animation: floatEmote 2s forwards ease-out; font-size: 35px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.8)); z-index: 1000 !important; text-align: center;}
+        @keyframes floatEmote { 0% { transform: translateY(0) scale(1); opacity: 1;} 100% {transform: translateY(-60px) scale(1.8); opacity: 0;} }
         
         .pulse-flare { animation: pulseRed 1.5s infinite; fill-opacity: 0.4; }
         @keyframes pulseRed { 0% { stroke-width: 1; opacity: 1; } 100% { stroke-width: 15; opacity: 0; } }
@@ -173,23 +178,86 @@
         #leaderboardPanel { display: none; position: absolute; left: 60px; top: 80px; width: 220px; background: rgba(10,10,10,0.95); border: 1px solid var(--accent-gold); border-radius: 10px; padding: 15px; z-index: 2000; font-family: 'Outfit'; box-shadow: 0 10px 25px rgba(0,0,0,0.8); color: #fff; text-align: left;}
 
         /* RESORT RUMBLE & CABANA STYLES */
-        .weapon-hud { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 1px solid var(--accent-gold); padding: 10px 20px; border-radius: 20px; z-index: 1000; font-family: 'Outfit'; font-size: 12px; color: #fff; font-weight: bold; letter-spacing: 1px; display: flex; align-items: center; gap: 10px;}
+        .weapon-hud { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 1px solid var(--accent-gold); padding: 10px 20px; border-radius: 20px; z-index: 1000; font-family: 'Outfit'; font-size: 14px; color: #fff; font-weight: bold; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);}
         
-        .cabana-zone { fill-opacity: 0.2; animation: glowCabana 3s infinite alternate; }
+        .cabana-zone { fill-opacity: 0.2; animation: glowCabana 3s infinite alternate; pointer-events: none;}
         @keyframes glowCabana { 0% { fill-opacity: 0.2; stroke-opacity: 0.5; } 100% { fill-opacity: 0.4; stroke-opacity: 1; } }
 
         #deathScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(150, 0, 0, 0.95); z-index: 10000; color: #fff; justify-content: center; align-items: center; flex-direction: column; font-family: 'Playfair Display'; text-align: center; padding: 20px;}
         #deathScreen h1 { font-size: 5rem; letter-spacing: 10px; margin-bottom: 10px; text-shadow: 0 0 20px #000; }
         #deathScreen p { font-family: 'Outfit'; font-size: 1.2rem; margin-bottom: 30px; }
         #deathTimer { font-size: 2.5rem; color: var(--accent-gold); font-weight: 900; }
+
+        /* Custom Alert Modal */
+        #customModalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 100000; justify-content: center; align-items: center; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
+        .custom-modal-box { background: #111; border: 1px solid var(--accent-gold); border-radius: 12px; padding: 30px 25px; max-width: 350px; width: 90%; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.8); color: #fff; font-family: 'Outfit', sans-serif; }
+        .custom-modal-box h3 { color: var(--accent-gold); font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 15px; letter-spacing: 1px;}
+        .custom-modal-box p { font-size: 0.95rem; color: #ccc; margin-bottom: 25px; line-height: 1.5; }
+        .modal-btn-container { display: flex; gap: 15px; justify-content: center; }
+
+        /* Emoji Picker Modal */
+        #emojiPickerModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 200000; justify-content: center; align-items: center; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+        .emoji-box { background: #111; border: 1px solid var(--accent-gold); border-radius: 15px; padding: 20px; width: 85%; max-width: 320px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; text-align: center; font-size: 2.2rem; box-shadow: 0 15px 40px rgba(0,0,0,0.9);}
+        .emoji-box span { cursor: pointer; transition: transform 0.2s ease; display: inline-block; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)); }
+        .emoji-box span:hover { transform: scale(1.3); }
+        .emoji-title { grid-column: span 4; font-size: 1rem; color: #aaa; font-family: 'Outfit'; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding-bottom: 10px;}
+
+        /* Inventory Backpack Modal */
+        .inventory-item { background: rgba(0,0,0,0.6); border: 1px solid rgba(212, 175, 55, 0.3); padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; text-align: left; transition: 0.3s; }
+        .inventory-item:hover { border-color: var(--accent-gold); background: rgba(20,20,20,0.8); }
+        .inv-details { display: flex; flex-direction: column; }
+        .inv-name { font-weight: bold; color: var(--accent-gold); font-size: 1rem; }
+        .inv-dmg { font-size: 0.75rem; color: #aaa; }
     </style>
 </head>
 <body>
 
+    <div id="customModalOverlay">
+        <div class="custom-modal-box">
+            <h3 id="modalTitle">Alert</h3>
+            <p id="modalMsg">Message goes here.</p>
+            <div class="modal-btn-container">
+                <button id="modalBtnOk" class="btn-game" style="padding: 10px 25px; font-size: 0.85rem;">OK</button>
+                <button id="modalBtnCancel" class="btn-game" style="display:none; padding: 10px 25px; font-size: 0.85rem; background: transparent; color: #aaa; border-color: #555;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="emojiPickerModal">
+        <div class="emoji-box">
+            <div class="emoji-title">Send Reaction</div>
+            <span onclick="selectEmoji('😂')">😂</span>
+            <span onclick="selectEmoji('😁')">😁</span>
+            <span onclick="selectEmoji('❤️')">❤️</span>
+            <span onclick="selectEmoji('😮')">😮</span>
+            <span onclick="selectEmoji('😡')">😡</span>
+            <span onclick="selectEmoji('😭')">😭</span>
+            <span onclick="selectEmoji('👍')">👍</span>
+            <span onclick="selectEmoji('🔥')">🔥</span>
+            <span onclick="selectEmoji('🎉')">🎉</span>
+            <span onclick="selectEmoji('💩')">💩</span>
+            <span onclick="selectEmoji('💀')">💀</span>
+            <span onclick="selectEmoji('🤩')">🤩</span>
+        </div>
+    </div>
+
+    <div id="inventoryModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:200000; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
+        <div style="background:#111; border:1px solid var(--accent-gold); border-radius:12px; padding:20px; width:90%; max-width:350px; text-align:center; color:#fff; font-family:'Outfit'; box-shadow: 0 15px 40px rgba(0,0,0,0.9);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:15px; border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 10px;">
+                <h3 style="color:var(--accent-gold); font-family:'Playfair Display'; font-size:1.5rem; margin:0;">🎒 Backpack</h3>
+                <span id="invCount" style="font-size:0.8rem; color:#aaa;">0/10</span>
+            </div>
+            
+            <div id="inventoryList" style="max-height:300px; overflow-y:auto; margin-bottom:15px; display:flex; flex-direction:column; gap:10px;">
+                </div>
+            <button class="btn-game" onclick="document.getElementById('inventoryModal').style.display='none'" style="padding:8px 25px; font-size:0.85rem; width: 100%;">Close Bag</button>
+        </div>
+    </div>
+
     <div id="deathScreen">
         <h1>WASTED</h1>
         <p id="deathCause">You were eliminated by an enemy.</p>
-        <div id="deathTimer">05:00</div>
+        <div id="deathTimer">02:00</div>
         <p style="margin-top:20px; font-size:0.9rem; color:#aaa;">You will respawn automatically.</p>
     </div>
 
@@ -218,21 +286,16 @@
                 <h3>The Explorer's Path</h3>
                 <p>A physical scavenger hunt around the resort. Solve riddles to uncover our hidden secrets.</p>
             </div>
+            
             <div class="quest-card" onclick="openGame('explorer')">
                 <span class="material-icons-outlined">my_location</span>
-                <h3>Resort Rumble Map</h3>
-                <p>Access the exclusive VIP interactive map. Find weapons, fight, and locate others.</p>
+                <h3>Resort Zombie Outbreak</h3>
+                <p>Access the live interactive map. Fight off fast-moving infected Monsters, find weapons, and locate other players.</p>
             </div>
             
-            <div class="quest-card" onclick="openGame('zombie')" style="border-color: var(--zombie-green);">
-                <span class="material-icons-outlined" style="color: var(--zombie-green);">coronavirus</span>
-                <h3 style="color: var(--zombie-green);">Zombie Outbreak</h3>
-                <p>Survival Tag! Avoid infected AI bots and guests, or volunteer as Patient Zero.</p>
-            </div>
-            
-            <div class="quest-card" onclick="openGame('radar')" style="border-color: var(--sonar-blue);">
-                <span class="material-icons-outlined" style="color: var(--sonar-blue);">cell_tower</span>
-                <h3 style="color: var(--sonar-blue);">Relic Sonar</h3>
+            <div class="quest-card" onclick="openGame('radar')">
+                <span class="material-icons-outlined">cell_tower</span>
+                <h3>Relic Sonar</h3>
                 <p>Use your GPS and map scanner to ping and locate the daily invisible hidden treasure.</p>
             </div>
 
@@ -252,7 +315,7 @@
             <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
             <span class="material-icons-outlined" style="font-size: 3.5rem; color: var(--accent-gold); margin-bottom: 15px; font-weight: 100;">vpn_key</span>
             <p style="color: #bbb; margin-bottom: 30px; font-size: 0.95rem; line-height: 1.8;">To access this game, please enter the physical <strong>Passkey</strong> provided by our front desk upon your arrival.</p>
-            <input type="text" id="voucherInput" class="auth-input" placeholder="PASSKEY" autocomplete="off">
+            <input type="text" id="voucherInput" class="auth-input" placeholder="PASSKEY" autocomplete="off" onkeypress="if(event.key === 'Enter') verifyVoucher()">
             <br>
             <button class="btn-game" onclick="verifyVoucher()">Unlock Game</button>
             <div id="auth-error" class="game-feedback"></div>
@@ -261,16 +324,9 @@
         <div id="game-character-select" class="game-box">
             <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
             <h3 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 1.8rem; margin-bottom: 10px;">Choose Your Explorer</h3>
-            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 15px;">Select your avatar and enter your alias.</p>
+            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 25px;">Select your avatar and enter your alias.</p>
             
-            <input type="text" id="playerAlias" class="auth-input" placeholder="ALIAS (MAX 6)" maxlength="6" autocomplete="off" style="margin-bottom: 5px; font-size: 1rem; padding: 12px; letter-spacing: 3px; width: 48%; display: inline-block;">
-            
-            <select id="playerStatus" class="auth-input" style="margin-bottom: 20px; padding: 12px; font-size: 1rem; letter-spacing: 2px; cursor: pointer; background: #111; width: 48%; display: inline-block;">
-                <option value="🚶‍♂️ Exploring">🚶‍♂️ Exploring</option>
-                <option value="🍽️ Eating">🍽️ Eating</option>
-                <option value="🍹 Chilling">🍹 Chilling</option>
-                <option value="📸 Taking Photos">📸 Taking Photos</option>
-            </select>
+            <input type="text" id="playerAlias" class="auth-input" placeholder="ALIAS (MAX 6)" maxlength="6" autocomplete="off" style="margin-bottom: 20px; font-size: 1rem; padding: 15px; letter-spacing: 3px; max-width: 250px;" onkeypress="if(event.key === 'Enter') enterGPSGame()">
 
             <div class="avatar-grid" id="avatarGrid">
                 <div class="avatar-card selected" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Abby')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Abby"></div>
@@ -281,6 +337,14 @@
                 <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Molly')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Molly"></div>
                 <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Sam')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Sam"></div>
                 <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Toby')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Toby"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Chloe')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Chloe"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Max')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Max"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Bella')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Bella"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Oliver')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Oliver"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Leo')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Leo"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Zoe')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Zoe"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Oscar')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Oscar"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Mia')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Mia"></div>
             </div>
             
             <button class="btn-game" style="margin-top: 20px;" onclick="enterGPSGame()">Enter World</button>
@@ -289,22 +353,19 @@
         <div id="game-explorer" class="game-box">
             <div id="explorer-map"></div>
             <div id="hud-map">
-                <div class="hud-title" id="hud-title"><span class="material-icons-outlined" style="color:var(--accent-gold); font-size:16px;">map</span> Resort Rumble</div>
+                <div class="hud-title" id="hud-title"><span class="material-icons-outlined" style="color:var(--accent-gold); font-size:16px;">map</span> Resort Zombie Outbreak</div>
                 <div class="hud-status" id="hud-status">Locating...</div>
             </div>
 
-            <div class="weapon-hud">
-                <span id="weaponIcon">🖐️</span> <span id="weaponName">Unarmed</span>
+            <div class="weapon-hud" title="Click a Monster to Attack!">
+                <span id="weaponIcon">🪝</span> <span>Weapon: <span id="weaponName">Plastic Hanger</span></span>
             </div>
 
             <div class="hud-actions">
-                <button class="btn-action" title="Leaderboard" onclick="toggleLeaderboard()"><span class="material-icons-outlined">emoji_events</span></button>
+                <button class="btn-action" title="Leaderboard" onclick="toggleLeaderboard(event)"><span class="material-icons-outlined">emoji_events</span></button>
+                <button class="btn-action" title="Backpack" onclick="openInventory(event)"><span class="material-icons-outlined">inventory_2</span></button>
+                <button class="btn-action" title="Global Chat" id="btnToggleChat" onclick="toggleGlobalChat(event)"><span class="material-icons-outlined">forum</span></button>
                 <button class="btn-action" title="Drop Flare" onclick="dropFlare()"><span class="material-icons-outlined">flare</span></button>
-                <div style="background: rgba(10,10,10,0.8); border: 1px solid var(--accent-gold); border-radius: 20px; padding: 5px; display: flex; flex-direction: column; gap: 5px; margin-top: 10px;">
-                    <button style="background:none; border:none; cursor:pointer; font-size:18px;" onclick="sendEmote('❤️')">❤️</button>
-                    <button style="background:none; border:none; cursor:pointer; font-size:18px;" onclick="sendEmote('😂')">😂</button>
-                    <button style="background:none; border:none; cursor:pointer; font-size:18px;" onclick="sendEmote('😮')">😮</button>
-                </div>
             </div>
 
             <div id="leaderboardPanel">
@@ -312,17 +373,25 @@
                 <div id="leaderboardList" style="font-size:0.9rem; line-height:1.6;">Loading...</div>
             </div>
             
-            <div id="chatNotify" style="display:none; position:absolute; right:25px; top:20px; background:red; color:white; border-radius:50%; width:20px; height:20px; font-size:12px; font-weight:bold; line-height:20px; z-index:1001; animation:pulse-wave-gold 1s infinite;">!</div>
-            
-            <div id="chatPanel" style="display:none; position:absolute; right:20px; top:75px; width:220px; height:280px; background:rgba(10,10,10,0.95); border:1px solid var(--accent-gold); z-index:2000; border-radius:10px; flex-direction:column; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
-                <div style="padding:10px; background:var(--accent-gold); color:#000; font-weight:bold; font-size:12px; display:flex; justify-content:space-between; border-radius:8px 8px 0 0;">
+            <div id="chatPanel" style="display:none; position:absolute; right:15px; top:75px; width:220px; height:320px; background:rgba(10,10,10,0.95); border:1px solid var(--accent-gold); z-index:2000; border-radius:10px; flex-direction:column; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
+                <div style="padding:10px; background:var(--accent-gold); color:#000; font-weight:bold; font-size:12px; display:flex; justify-content:center; border-radius:8px 8px 0 0;">
                     <span style="font-family:'Outfit'">GLOBAL CHAT</span>
-                    <button onclick="document.getElementById('chatPanel').style.display='none'" style="background:none; border:none; cursor:pointer; font-weight:bold;">X</button>
                 </div>
                 <div id="chatMessages" style="flex:1; overflow-y:auto; padding:10px; font-size:11px; text-align:left; font-family:'Plus Jakarta Sans'; color:#fff;"></div>
                 <div style="display:flex; padding:8px; border-top:1px solid rgba(212, 175, 55, 0.3);">
-                    <input type="text" id="chatInput" placeholder="Message..." autocomplete="off" style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:6px; font-size:11px; border-radius:4px; outline:none;">
+                    <input type="text" id="chatInput" placeholder="Message..." autocomplete="off" style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:6px; font-size:11px; border-radius:4px; outline:none;" onkeypress="if(event.key === 'Enter') sendChatMessage()">
                     <button onclick="sendChatMessage()" style="background:var(--accent-gold); border:none; padding:6px 10px; cursor:pointer; margin-left:5px; border-radius:4px; font-weight:bold;">></button>
+                </div>
+            </div>
+
+            <div id="privateChatPanel" style="display:none; position:absolute; left:15px; top:120px; width:220px; height:280px; background:rgba(10,10,10,0.95); border:1px solid var(--sonar-blue); z-index:2001; border-radius:10px; flex-direction:column; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
+                <div style="padding:10px; background:var(--sonar-blue); color:#fff; font-weight:bold; font-size:12px; display:flex; justify-content:space-between; border-radius:8px 8px 0 0;">
+                    <span style="font-family:'Outfit'" id="privateChatTitle">PRIVATE CHAT</span>
+                </div>
+                <div id="privateChatMessages" style="flex:1; overflow-y:auto; padding:10px; font-size:11px; text-align:left; font-family:'Plus Jakarta Sans'; color:#fff;"></div>
+                <div style="display:flex; padding:8px; border-top:1px solid rgba(59, 130, 246, 0.3);">
+                    <input type="text" id="privateChatInput" placeholder="Message..." autocomplete="off" style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:6px; font-size:11px; border-radius:4px; outline:none;" onkeypress="if(event.key === 'Enter') sendPrivateMessage()">
+                    <button onclick="sendPrivateMessage()" style="background:var(--sonar-blue); border:none; padding:6px 10px; cursor:pointer; margin-left:5px; border-radius:4px; font-weight:bold; color: white;">></button>
                 </div>
             </div>
 
@@ -333,23 +402,7 @@
                 <button class="btn-game" id="btnTreasureAction" style="padding: 10px 30px; font-size: 0.9rem;" onclick="closeTreasure()">Awesome!</button>
             </div>
 
-            <button class="btn-close-game" onclick="quitGPSGame()" style="z-index: 1001; background: rgba(10,10,10,0.8); color: var(--accent-gold); padding: 10px 20px; border-radius: 30px; top: auto; bottom: 30px; left: 50%; transform: translateX(-50%); border: 1px solid var(--accent-gold); box-shadow: 0 5px 15px rgba(0,0,0,0.5); backdrop-filter: blur(5px);">Exit Rumble</button>
-        </div>
-
-        <div id="game-zombie" class="game-box" style="border-color: var(--zombie-green);">
-            <div id="zombie-map" style="width: 100%; height: 100%; background: #0a0a0a; position: absolute; top: 0; left: 0; z-index: 1;"></div>
-            <div class="hud-map" style="border-color: var(--zombie-green);">
-                <div class="hud-title" style="color:var(--zombie-green);"><span class="material-icons-outlined" style="font-size:16px;">coronavirus</span> Zombie Outbreak</div>
-                <div class="hud-status" id="zombie-status" style="color:var(--zombie-green); border-color:var(--zombie-green);">HUMAN</div>
-            </div>
-
-            <div class="weapon-hud" style="border-color: var(--zombie-green);">
-                <span id="zWeaponIcon">🖐️</span> <span id="zWeaponName">Unarmed</span>
-            </div>
-            
-            <button id="zombieActionBtn" class="btn-game" onclick="zombieAction()" style="position:absolute; bottom: 80px; left:50%; transform:translateX(-50%); z-index:1000; border-color:var(--zombie-green); color:var(--zombie-green); width: 80%; max-width: 300px; background:rgba(0,0,0,0.9);">Volunteer as Patient Zero</button>
-            
-            <button class="btn-close-game" onclick="quitGPSGame()" style="z-index: 1001; background: rgba(10,10,10,0.8); color: var(--zombie-green); padding: 10px 20px; border-radius: 30px; top: auto; bottom: 30px; left: 50%; transform: translateX(-50%); border: 1px solid var(--zombie-green); box-shadow: 0 5px 15px rgba(0,0,0,0.5); backdrop-filter: blur(5px);">Escape Map</button>
+            <button class="btn-close-game" onclick="quitGPSGame()" style="z-index: 1001; background: rgba(10,10,10,0.8); color: var(--accent-gold); padding: 10px 20px; border-radius: 30px; top: auto; bottom: 30px; left: 50%; transform: translateX(-50%); border: 1px solid var(--accent-gold); box-shadow: 0 5px 15px rgba(0,0,0,0.5); backdrop-filter: blur(5px);">Exit Outbreak</button>
         </div>
 
         <div id="game-radar" class="game-box" style="border-color: var(--sonar-blue);">
@@ -365,13 +418,12 @@
             <button class="btn-close-game" onclick="quitGPSGame()" style="z-index: 1001; background: rgba(10,10,10,0.8); color: var(--sonar-blue); padding: 10px 20px; border-radius: 30px; top: auto; bottom: 30px; left: 50%; transform: translateX(-50%); border: 1px solid var(--sonar-blue); box-shadow: 0 5px 15px rgba(0,0,0,0.5); backdrop-filter: blur(5px);">Power Off</button>
         </div>
 
-
         <div id="game-quest" class="game-box" style="animation: floatQuest 6s infinite ease-in-out;">
             <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
             <div style="font-size: 0.8rem; color: var(--accent-gold); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 20px; font-weight: 700;" id="questProgress">Chapter 1 of 3</div>
             <div class="material-icons-outlined" style="font-size: 3rem; color: var(--accent-gold); margin-bottom: 20px; opacity: 0.9;" id="questIcon">explore</div>
             <div class="riddle-text" id="riddleText">"Loading riddle..."</div>
-            <input type="text" id="questAnswer" class="answer-input" placeholder="Secret Word" autocomplete="off">
+            <input type="text" id="questAnswer" class="answer-input" placeholder="Secret Word" autocomplete="off" onkeypress="if(event.key === 'Enter') checkAnswer()">
             <br>
             <button class="btn-game" onclick="checkAnswer()">Submit</button>
             <div id="quest-feedback" class="game-feedback"></div>
@@ -424,6 +476,60 @@
     </div>
 
     <script>
+        // --- AUTO-CLOSE MODALS ON OUTSIDE CLICK ---
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('#leaderboardPanel') && !event.target.closest('.hud-actions') && !event.target.closest('.leaflet-popup')) {
+                document.getElementById('leaderboardPanel').style.display = 'none';
+            }
+            if (!event.target.closest('#privateChatPanel') && !event.target.closest('.leaflet-popup')) {
+                document.getElementById('privateChatPanel').style.display = 'none';
+            }
+            if (!event.target.closest('#chatPanel') && !event.target.closest('#btnToggleChat') && !event.target.closest('.leaflet-popup')) {
+                document.getElementById('chatPanel').style.display = 'none';
+            }
+            if (event.target.id === 'emojiPickerModal') {
+                document.getElementById('emojiPickerModal').style.display = 'none';
+            }
+            if (event.target.id === 'inventoryModal') {
+                document.getElementById('inventoryModal').style.display = 'none';
+            }
+        });
+
+        // --- CUSTOM MODAL LOGIC ---
+        function showModal(title, msg, isConfirm = false, confirmCallback = null) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMsg').innerText = msg;
+            document.getElementById('customModalOverlay').style.display = 'flex';
+            
+            const btnOk = document.getElementById('modalBtnOk');
+            const btnCancel = document.getElementById('modalBtnCancel');
+            
+            const newBtnOk = btnOk.cloneNode(true);
+            btnOk.parentNode.replaceChild(newBtnOk, btnOk);
+            
+            if (isConfirm) {
+                btnCancel.style.display = 'inline-block';
+                newBtnOk.onclick = () => { document.getElementById('customModalOverlay').style.display = 'none'; if(confirmCallback) confirmCallback(); };
+                btnCancel.onclick = () => { document.getElementById('customModalOverlay').style.display = 'none'; };
+            } else {
+                btnCancel.style.display = 'none';
+                newBtnOk.onclick = () => { document.getElementById('customModalOverlay').style.display = 'none'; if(confirmCallback) confirmCallback(); };
+            }
+        }
+
+        // --- EMOJI PICKER LOGIC ---
+        let currentEmoteTargetId = null;
+        function showEmojiPicker(targetId) {
+            currentEmoteTargetId = targetId;
+            document.getElementById('emojiPickerModal').style.display = 'flex';
+        }
+        
+        function selectEmoji(emoji) {
+            if(!currentEmoteTargetId) return;
+            database.ref('emotes').push({ emoji: emoji, senderId: myUserId, targetId: currentEmoteTargetId, timestamp: Date.now() });
+            document.getElementById('emojiPickerModal').style.display = 'none';
+        }
+
         // LISTEN TO ADMIN MAINTENANCE SWITCH
         database.ref('settings/maintenance').on('value', (snapshot) => {
             const isMaintenance = snapshot.val();
@@ -471,7 +577,7 @@
         function backToMenu() {
             const boxes = document.querySelectorAll('.game-box');
             boxes.forEach(box => box.style.display = 'none');
-            document.getElementById('quest-menu').style.display = 'grid';
+            document.getElementById('quest-menu').style.display = 'flex';
             document.getElementById('gameSubtitle').innerText = "Choose Your Adventure";
         }
 
@@ -480,15 +586,20 @@
         let myUserId = "ID_" + Math.floor(Math.random() * 9999);
         let myAlias = "";
         
-        let myStatus = "🚶‍♂️ Exploring";
         let myScore = 0;
         let lastLat = null;
         let lastLng = null;
+        let lastMoveTime = Date.now();
+        let currentSpeedMultiplier = 1;
         let flareLayers = {};
         let globalWatchId = null;
         
-        // RESORT RUMBLE VARS
-        let myWeapon = null; 
+        // --- INVENTORY & COMBAT SYSTEM ---
+        let myInventory = [
+            { name: "Plastic Hanger", emoji: "🪝", damage: 1, range: 12, type: "melee" },
+            { name: "Egg", emoji: "🥚", damage: 2, range: 35, type: "ranged", ammo: 5 } 
+        ];
+        let myWeapon = myInventory[0]; 
         let isDead = false;
         let deadTimerInterval = null;
         let cabanaLayer = null;
@@ -508,7 +619,7 @@
         }
 
         function launchGame(gameType) {
-            pendingGame = gameType; // Update pending to properly route later
+            pendingGame = gameType;
             if(gameType === 'scavenger') {
                 document.getElementById('game-quest').style.display = 'block';
                 loadQuest();
@@ -518,7 +629,7 @@
             } else if(gameType === 'memory') {
                 document.getElementById('game-memory').style.display = 'block';
                 initMemoryGame();
-            } else if(gameType === 'explorer' || gameType === 'zombie' || gameType === 'radar') {
+            } else if(gameType === 'explorer' || gameType === 'radar') {
                 if(myAlias === "") {
                     document.getElementById('game-character-select').style.display = 'block';
                 } else {
@@ -533,16 +644,14 @@
                 const isValid = /^[a-z0-9]{1,6}$/i.test(aliasInput);
                 
                 if (!isValid) {
-                    alert("Please enter a valid Alias (Max 6 letters/numbers, no spaces or special symbols).");
+                    showModal("Invalid Alias", "Please enter a valid Alias (Max 6 letters/numbers, no spaces or special symbols).");
                     return;
                 }
                 myAlias = aliasInput.toUpperCase();
-                myStatus = document.getElementById('playerStatus').value; 
             }
             
             document.getElementById('game-character-select').style.display = 'none';
             
-            // ROUTING LOGIC
             if(pendingGame === 'explorer') {
                 document.getElementById('game-explorer').style.display = 'block';
                 setTimeout(() => {
@@ -551,13 +660,6 @@
                     explorerMap.invalidateSize(); 
                 }, 100);
             } 
-            else if (pendingGame === 'zombie') {
-                document.getElementById('game-zombie').style.display = 'block';
-                setTimeout(() => {
-                    if (!zombieMap) { initZombieMap(); }
-                    zombieMap.invalidateSize();
-                }, 100);
-            }
             else if (pendingGame === 'radar') {
                 document.getElementById('game-radar').style.display = 'block';
                 setTimeout(() => {
@@ -567,73 +669,158 @@
             }
         }
 
-        // NEW QUIT GPS GAME LOGIC TO CLEAN UP TIMERS/FIREBASE
         function quitGPSGame() {
             if(globalWatchId) navigator.geolocation.clearWatch(globalWatchId);
             database.ref('players/' + myUserId).remove();
-            database.ref('zombie_players/' + myUserId).remove();
             backToMenu();
         }
 
-        // SHARED CUSTOM ICON FUNCTION
-        function getZombieIcon(url, name, isMe, zState) {
-            let color = zState ? (zState === 'zombie' ? '#ef4444' : '#22c55e') : (isMe ? 'var(--accent-gold)' : '#fff');
+        function getZombieIcon(urlOrId, name, isMe, zState, hp = null, isMonster = false) {
+            let color = zState ? (zState === 'zombie' ? 'var(--zombie-red)' : 'var(--zombie-green)') : (isMe ? 'var(--accent-gold)' : '#fff');
             let pulse = isMe ? (zState ? (zState === 'zombie' ? 'pulse-wave-gold' : 'zombie-pulse') : 'pulse-wave-gold') : '';
             if(isMe && zState === 'zombie') pulse = 'pulse-wave-gold'; 
+
+            let hpBarHTML = "";
+            let maxHp = hp ? Math.max(5, hp) : 5; 
+            if(hp !== null) {
+                hpBarHTML = `<div style="width:100%; height:4px; background:#ef4444; border-radius:2px; margin-top:3px; border:1px solid #000; overflow:hidden;"><div style="width:${(hp/maxHp)*100}%; height:100%; background:#22c55e; transition: width 0.3s;"></div></div>`;
+            }
             
-            // AI Bot Override
-            if(url === 'zombie_bot') {
-                url = "https://api.dicebear.com/8.x/bottts/svg?seed=Zombie";
-                color = "#ef4444"; pulse = "zombie-pulse";
+            let centerImageHTML = `<img src="${urlOrId}" class="avatar-img-animate" style="width: 100%; height: 100%; border-radius: 50%; border: 2px solid ${color}; background: #222; position:relative; z-index:10;">`;
+            
+            if(isMonster) {
+                color = "var(--zombie-red)"; pulse = "zombie-pulse";
+                centerImageHTML = `<div class="avatar-img-animate" style="width: 100%; height: 100%; border-radius: 50%; border: 2px solid ${color}; background: #000; position:relative; z-index:10; display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow: inset 0 0 10px #ef4444;">
+                                    <img src="${urlOrId}" style="width:110%; height:110%; object-fit:cover; filter: grayscale(1) brightness(0.5) sepia(1) hue-rotate(-50deg) saturate(3);">
+                                   </div>`;
             }
 
             return L.divIcon({
                 className: 'custom-div-icon',
                 html: `<div class="user-icon-container" style="width: ${isMe?45:35}px; height: ${isMe?45:35}px;">
-                           <div class="${pulse}" style="width: ${isMe?65:0}px; height: ${isMe?65:0}px; top: -10px; left: -10px; position:absolute; z-index:5; border-radius:50%; ${zState==='zombie'&&isMe?'background-color:rgba(239,68,68,0.4);':''}"></div>
-                           <div style="position:absolute; top:-25px; left:50%; transform:translateX(-50%); text-align:center; z-index:20;">
-                               <div style="background:${color}; color:${color==='#fff'?'#000':'#fff'}; font-size:9px; padding:2px 4px; border-radius:3px; font-weight:700;">${name}</div>
+                           <div class="${pulse}" style="width: ${isMe?65:0}px; height: ${isMe?65:0}px; top: -10px; left: -10px; position:absolute; z-index:5; border-radius:50%;"></div>
+                           <div style="position:absolute; top:-30px; left:50%; transform:translateX(-50%); text-align:center; z-index:20; min-width: 50px;">
+                               <div style="background:${color}; color:${color==='#fff'?'#000':'#fff'}; font-size:10px; padding:2px 5px; border-radius:4px; font-weight:800; white-space:nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.5); pointer-events: none;">${name}</div>
+                               ${hpBarHTML}
                            </div>
-                           <img src="${url}" style="width: 100%; height: 100%; border-radius: 50%; border: 2px solid ${color}; background: #222; position:relative; z-index:10;">
+                           ${centerImageHTML}
                        </div>`,
                 iconSize: [isMe?45:35, isMe?45:35], iconAnchor: [isMe?22:17, isMe?22:17]
             });
         }
 
 
-        // --- DARK LUXURY MAP EXPLORER & RESORT RUMBLE MULTIPLAYER ---
+        // --- COMBINED MAP EXPLORER & ZOMBIE SURVIVAL LOGIC ---
         let explorerMap = null;
         let userMarker = null;
         let otherMarkers = {};
         let hasGPSFix = false;
         let lastFindTime = 0;
+        
+        let aiZombies = [];
+        let zombieChaseInterval = null;
+        let lastSpawnLat = null;
+        let lastSpawnLng = null;
+        let idleRespawnTimer = null;
+        let hiddenMythicalSpawns = [];
+
+        const zombieType = { name: "Zombie", img: "https://api.dicebear.com/8.x/bottts/svg?seed=ScaryZombie&backgroundColor=0a0a0a", hp: 5 }; 
+
+        const mythicalTypes = [
+            { name: "Aswang", img: "https://api.dicebear.com/8.x/shapes/svg?seed=ScaryAswang&backgroundColor=0a0a0a", hp: 6 },
+            { name: "Tikbalang", img: "https://api.dicebear.com/8.x/icons/svg?seed=ScaryTikbalang&backgroundColor=0a0a0a", hp: 8 },
+            { name: "Syokoy", img: "https://api.dicebear.com/8.x/pixel-art-neutral/svg?seed=ScarySyokoy&backgroundColor=0a0a0a", hp: 5 },
+            { name: "Paniki", img: "https://api.dicebear.com/8.x/rings/svg?seed=ScaryPaniki&backgroundColor=0a0a0a", hp: 4 }
+        ];
 
         const encounters = [
             { name: "Golden Mango", emoji: "🥭", msg: "Sweet! +20 XP.", type: "xp", val: 20 },
             { name: "Shiny Pearl", emoji: "🔮", msg: "Rare find! +50 XP.", type: "xp", val: 50 },
-            { name: "Sandok ng Katotohanan", emoji: "🥄", msg: "Pang-hampas sa kalaban!", type: "weapon" },
-            { name: "Tsinelas ni Nanay", emoji: "🩴", msg: "Lethal Weapon!", type: "weapon" },
-            { name: "Water Bomb", emoji: "💣", msg: "Sabog lahat ng basa!", type: "weapon" },
-            { name: "Cursed Tinidor", emoji: "🍴", msg: "Tusok to the max!", type: "weapon" }
+            { name: "Sandok", emoji: "🥄", msg: "Damage: 2.", type: "weapon", dmg: 2, range: 12, wType: "melee" },
+            { name: "Tsinelas ni Nanay", emoji: "🩴", msg: "Damage: 3.", type: "weapon", dmg: 3, range: 12, wType: "melee" },
+            { name: "Medyas", emoji: "🧦", msg: "Damage: 1. Mabaho!", type: "weapon", dmg: 1, range: 12, wType: "melee" },
+            { name: "Walis Tambo", emoji: "🧹", msg: "Damage: 2. Walisin ang kalat!", type: "weapon", dmg: 2, range: 14, wType: "melee" },
+            { name: "Ref", emoji: "🥶", msg: "Damage: 10. Ihampas ang Ref?!", type: "weapon", dmg: 10, range: 12, wType: "melee" },
+            { name: "Kaldero", emoji: "🥘", msg: "Damage: 4. Pamalo sa ulo!", type: "weapon", dmg: 4, range: 12, wType: "melee" },
+            { name: "Egg", emoji: "🥚", msg: "Ranged Dmg: 2. Ammo: 5", type: "weapon", dmg: 2, range: 35, wType: "ranged", ammo: 5 },
+            { name: "Water Balloon", emoji: "🎈", msg: "Ranged Dmg: 2. Ammo: 5", type: "weapon", dmg: 2, range: 35, wType: "ranged", ammo: 5 }
         ];
+        
+        function updateHUDWeapon() {
+            document.getElementById('weaponIcon').innerText = myWeapon.emoji;
+            let ammoText = myWeapon.type === "ranged" ? ` (${myWeapon.ammo})` : "";
+            document.getElementById('weaponName').innerText = myWeapon.name + ammoText;
+        }
+
+        function openInventory(event) {
+            if(event) event.stopPropagation();
+            const list = document.getElementById('inventoryList');
+            document.getElementById('invCount').innerText = `${myInventory.length}/10`;
+            list.innerHTML = "";
+            
+            myInventory.forEach((item, index) => {
+                let btnHtml = `<button class="btn-game" style="padding: 5px 15px; font-size: 0.75rem;" onclick="equipWeapon(${index})">Equip</button>`;
+                if (myWeapon && myWeapon.name === item.name) {
+                    btnHtml = `<span style="color:#22c55e; font-size:0.8rem; font-weight:bold; padding-right:10px;">Equipped</span>`;
+                }
+                
+                let ammoText = item.type === "ranged" ? ` | Ammo: ${item.ammo}` : " | Infinite";
+                
+                list.innerHTML += `
+                    <div class="inventory-item">
+                        <div style="font-size:2rem; margin-right:15px; filter: drop-shadow(0 2px 4px #000);">${item.emoji}</div>
+                        <div class="inv-details" style="flex:1;">
+                            <span class="inv-name">${item.name}</span>
+                            <span class="inv-dmg">Dmg: ${item.damage} | Range: ${item.range}m${ammoText}</span>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:5px;">
+                            ${btnHtml}
+                            <button style="background:transparent; border:1px solid #ef4444; color:#ef4444; border-radius:4px; padding:3px; cursor:pointer;" onclick="dropWeapon(${index})">Drop</button>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('inventoryModal').style.display = 'flex';
+        }
+
+        function equipWeapon(index) {
+            myWeapon = myInventory[index];
+            updateHUDWeapon();
+            openInventory(); 
+        }
+        
+        function dropWeapon(index) {
+            if(myInventory.length <= 1) { showModal("Can't Drop", "You need at least one weapon to survive!"); return; }
+            if(myWeapon === myInventory[index]) { myWeapon = myInventory[0]; updateHUDWeapon(); } 
+            myInventory.splice(index, 1);
+            openInventory();
+        }
 
         function showTreasurePopup(encounter) {
             document.getElementById('treasureEmoji').innerText = encounter.emoji;
             if(encounter.type === 'weapon') {
-                document.getElementById('treasureTitle').innerText = "Weapon Found!";
-                document.getElementById('treasureText').innerHTML = `You picked up <strong>${encounter.name}</strong>!<br><span style="font-size:0.85rem; color:#aaa; margin-top:5px; display:block;">${encounter.msg}</span>`;
-                myWeapon = { name: encounter.name, emoji: encounter.emoji };
-                document.getElementById('weaponIcon').innerText = myWeapon.emoji;
-                document.getElementById('weaponName').innerText = myWeapon.name;
+                let existingItemIndex = myInventory.findIndex(w => w.name === encounter.name);
                 
-                // ALSO UPDATE ZOMBIE MAP WEAPON HUD IN CASE THEY PLAY IT NEXT
-                document.getElementById('zWeaponIcon').innerText = myWeapon.emoji;
-                document.getElementById('zWeaponName').innerText = myWeapon.name;
-                
-                // Standard Button Reset
-                document.getElementById('btnTreasureAction').innerText = "Awesome!";
-                document.getElementById('btnTreasureAction').onclick = () => closeTreasure();
-
+                if (myInventory.length >= 10 && existingItemIndex === -1) {
+                    document.getElementById('treasureTitle').innerText = "Backpack Full!";
+                    document.getElementById('treasureText').innerHTML = `You found <strong>${encounter.name}</strong> but your bag is full (10/10). Open inventory to drop an item, then find another!`;
+                    document.getElementById('btnTreasureAction').innerText = "OK";
+                    document.getElementById('btnTreasureAction').onclick = () => closeTreasure();
+                } else {
+                    document.getElementById('treasureTitle').innerText = "Weapon Found!";
+                    document.getElementById('treasureText').innerHTML = `You picked up <strong>${encounter.name}</strong>!<br><span style="font-size:0.85rem; color:#aaa; margin-top:5px; display:block;">${encounter.msg}</span>`;
+                    
+                    if(existingItemIndex > -1 && encounter.type === "ranged") {
+                        myInventory[existingItemIndex].ammo = encounter.ammo; 
+                    } else if (existingItemIndex === -1) {
+                        let newItem = { name: encounter.name, emoji: encounter.emoji, damage: encounter.dmg, range: encounter.range, type: encounter.wType };
+                        if(encounter.wType === "ranged") newItem.ammo = encounter.ammo;
+                        myInventory.push(newItem);
+                    }
+                    
+                    document.getElementById('btnTreasureAction').innerText = "Awesome!";
+                    document.getElementById('btnTreasureAction').onclick = () => closeTreasure();
+                }
             } else {
                 document.getElementById('treasureTitle').innerText = `+${encounter.val} XP FOUND!`;
                 document.getElementById('treasureText').innerHTML = `You found <strong>${encounter.name}</strong>!<br><span style="font-size:0.85rem; color:#aaa; margin-top:5px; display:block;">${encounter.msg}</span>`;
@@ -653,20 +840,23 @@
             explorerMap = L.map('explorer-map', { zoomControl: false, attributionControl: false }).setView([14.5353, 120.9842], 18);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20 }).addTo(explorerMap);
             
-            // DRAW CABANA TERRITORY
             cabanaLayer = L.circle([cabanaZone.lat, cabanaZone.lng], { radius: cabanaZone.radius, color: '#d4af37', fillColor: '#d4af37', className: 'cabana-zone' })
                            .addTo(explorerMap).bindPopup("<b>👑 VIP CABANA</b><br>Stand here to claim territory and earn passive XP!");
 
             userMarker = L.marker([14.5353, 120.9842], { icon: getZombieIcon(chosenAvatarUrl, myAlias, true, null) }).addTo(explorerMap);
+            
+            userMarker.on('contextmenu', function(e) {
+                showEmojiPicker(myUserId);
+            });
 
             if (navigator.geolocation) {
                 globalWatchId = navigator.geolocation.watchPosition(updateMyPosition, handleLocationError, { enableHighAccuracy: true, maximumAge: 5000, timeout: 5000 });
             }
             
+            updateHUDWeapon();
             syncOtherPlayers();
             database.ref('players/' + myUserId).onDisconnect().remove();
 
-            // PASSIVE XP CABANA TIMER
             setInterval(() => {
                 if(isDead || !lastLat) return;
                 const dist = L.latLng(lastLat, lastLng).distanceTo(L.latLng(cabanaZone.lat, cabanaZone.lng));
@@ -675,6 +865,122 @@
                     database.ref('zones/cabana').set({ owner: myAlias });
                 }
             }, 10000); 
+        }
+        
+        function checkIdleRespawn() {
+            if(aiZombies.length === 0 && !idleRespawnTimer) {
+                idleRespawnTimer = setTimeout(() => {
+                    if(!isDead && lastLat) spawnHorde(lastLat, lastLng);
+                    idleRespawnTimer = null;
+                }, 60000); // 1 MINUTE IDLE RESPAWN
+            }
+        }
+
+        function spawnHorde(lat, lng) {
+            if(!lat || !lng) return;
+            if(idleRespawnTimer) { clearTimeout(idleRespawnTimer); idleRespawnTimer = null; }
+            
+            aiZombies.forEach(z => { if(z.marker) explorerMap.removeLayer(z.marker); });
+            aiZombies = [];
+            lastSpawnLat = lat;
+            lastSpawnLng = lng;
+
+            // 3 PERSISTENT ZOMBIES
+            const speeds = [0.000015, 0.000008, 0.000004];
+            for(let i=0; i<3; i++) { 
+                let zLat = lat + (Math.random() * 0.003 - 0.0015);
+                let zLng = lng + (Math.random() * 0.003 - 0.0015);
+                createAIMonster('zom_' + Date.now() + '_' + i, zLat, zLng, speeds[i], zombieType);
+            }
+            startChaseInterval();
+        }
+        
+        function trySpawnMythicalPoint(lat, lng) {
+            if (Math.random() < 0.25) {
+                let angle = Math.random() * Math.PI * 2;
+                let dist = 0.00015 + (Math.random() * 0.0001); 
+                let pLat = lat + Math.sin(angle) * dist;
+                let pLng = lng + Math.cos(angle) * dist;
+                
+                let mType = mythicalTypes[Math.floor(Math.random() * mythicalTypes.length)];
+                hiddenMythicalSpawns.push({ lat: pLat, lng: pLng, type: mType, active: true, spawned: false });
+            }
+        }
+
+        function createAIMonster(id, initialLat, initialLng, speed, mType) {
+            let marker = L.marker([initialLat, initialLng], { icon: getZombieIcon(mType.img, mType.name.toUpperCase(), false, 'zombie', mType.hp, true) }).addTo(explorerMap);
+            
+            marker.on('click', function(e) {
+                L.DomEvent.stopPropagation(e);
+                if(isDead) return;
+                
+                let zIndex = aiZombies.findIndex(z => z.id === id);
+                if(zIndex === -1) return;
+                let z = aiZombies[zIndex];
+                
+                let dist = L.latLng(lastLat, lastLng).distanceTo(L.latLng(z.lat, z.lng));
+                let weaponRange = myWeapon ? (myWeapon.range || 12) : 12;
+
+                if(dist > weaponRange) {
+                    showModal("Too Far!", `You are too far away! Get closer to use your ${myWeapon ? myWeapon.name : 'weapon'} (within ${weaponRange}m).`);
+                    return;
+                }
+                
+                let dmg = myWeapon ? myWeapon.damage : 1;
+                z.hp -= dmg;
+                
+                let iconDiv = marker.getElement();
+                if(iconDiv) {
+                    let hitEl = document.createElement('div');
+                    hitEl.className = 'hit-anim';
+                    hitEl.innerText = `💥-${dmg}`;
+                    iconDiv.appendChild(hitEl);
+                    setTimeout(() => hitEl.remove(), 800);
+                }
+                
+                if(myWeapon.type === "ranged") {
+                    myWeapon.ammo--;
+                    updateHUDWeapon();
+                    if(myWeapon.ammo <= 0) {
+                        myInventory = myInventory.filter(w => w !== myWeapon); 
+                        myWeapon = myInventory[0]; 
+                        updateHUDWeapon();
+                        showModal("Out of Ammo!", "Your ranged weapon broke/ran out! Switched back to Default Weapon.");
+                    }
+                }
+                
+                if(z.hp <= 0) {
+                    explorerMap.removeLayer(marker);
+                    aiZombies.splice(zIndex, 1);
+                    addScore(25);
+                    checkIdleRespawn(); 
+                } else {
+                    marker.setIcon(getZombieIcon(z.img, z.name.toUpperCase(), false, 'zombie', z.hp, true));
+                }
+            });
+            
+            aiZombies.push({ id: id, lat: initialLat, lng: initialLng, hp: mType.hp, speed: speed, name: mType.name, img: mType.img, marker: marker });
+        }
+
+        function startChaseInterval() {
+             if(!zombieChaseInterval) {
+                zombieChaseInterval = setInterval(() => {
+                    if(isDead || !lastLat) return;
+                    
+                    aiZombies.forEach(z => {
+                        let angle = Math.atan2(lastLat - z.lat, lastLng - z.lng);
+                        let activeSpeed = z.speed * currentSpeedMultiplier;
+                        z.lat += Math.sin(angle) * activeSpeed;
+                        z.lng += Math.cos(angle) * activeSpeed;
+                        z.marker.setLatLng([z.lat, z.lng]);
+                        
+                        let distToPlayer = L.latLng(lastLat, lastLng).distanceTo(L.latLng(z.lat, z.lng));
+                        if(distToPlayer <= 3) { 
+                            triggerDeath({attacker: `a horrific ${z.name}`, weapon: "Bites & Scratches"});
+                        }
+                    });
+                }, 500);
+            }
         }
 
         function updateMyPosition(position) {
@@ -685,9 +991,8 @@
             
             if(userMarker) {
                 userMarker.setLatLng([lat, lng]);
-                
                 database.ref('players/' + myUserId).set({
-                    lat: lat, lng: lng, avatar: chosenAvatarUrl, name: myAlias, status: myStatus, score: myScore, lastSeen: Date.now()
+                    lat: lat, lng: lng, avatar: chosenAvatarUrl, name: myAlias, score: myScore, lastSeen: Date.now()
                 });
             }
             
@@ -696,10 +1001,53 @@
                 hasGPSFix = true;
             }
 
+            let now = Date.now();
+            let isWalking = true;
+            if(lastLat !== null && lastLng !== null) {
+                let distTraveled = L.latLng(lastLat, lastLng).distanceTo(L.latLng(lat, lng));
+                let timeDiff = (now - lastMoveTime) / 1000; 
+                
+                if(timeDiff > 0) {
+                    let speed_m_s = distTraveled / timeDiff;
+                    if (speed_m_s > 5) {
+                        currentSpeedMultiplier = 4; 
+                        isWalking = false;
+                    } else {
+                        currentSpeedMultiplier = 1;
+                        isWalking = true;
+                    }
+                }
+            }
+            lastMoveTime = now;
+
+            if(lastSpawnLat === null) {
+                spawnHorde(lat, lng);
+            } else {
+                let distFromSpawn = L.latLng(lat, lng).distanceTo(L.latLng(lastSpawnLat, lastSpawnLng));
+                if (distFromSpawn >= 10) {
+                    spawnHorde(lat, lng);
+                }
+            }
+
+            if(isWalking) {
+                trySpawnMythicalPoint(lat, lng);
+                
+                hiddenMythicalSpawns.forEach(point => {
+                    if(point.active && !point.spawned) {
+                        let dist = L.latLng(lat, lng).distanceTo(L.latLng(point.lat, point.lng));
+                        if(dist <= 10) {
+                            point.spawned = true;
+                            point.active = false;
+                            createAIMonster('myth_' + Date.now(), point.lat, point.lng, 0.000018, point.type);
+                            startChaseInterval(); 
+                        }
+                    }
+                });
+            }
+
             if (lastLat !== null && lastLng !== null) {
                 const dist = L.latLng(lastLat, lastLng).distanceTo(L.latLng(lat, lng));
                 if (dist > 3) { 
-                    const now = Date.now();
                     if (now - lastFindTime > 15000 && Math.random() < 0.20) {
                         lastFindTime = now;
                         const randomEncounter = encounters[Math.floor(Math.random() * encounters.length)];
@@ -721,23 +1069,18 @@
             statusEl.style.color = "#aaa"; statusEl.style.borderColor = "rgba(255, 255, 255, 0.2)"; statusEl.style.background = "rgba(0, 0, 0, 0.5)";
         }
 
-        // PVP ATTACK LOGIC
         function attackPlayer(targetId, tLat, tLng) {
             if(isDead) return;
-            if(!myWeapon) { alert("You don't have a weapon! Walk around to find one."); return; }
+            if(!myWeapon) { showModal("No Weapon", "You don't have a weapon! Walk around to find one."); return; }
             if(!lastLat) return;
             
             const dist = L.latLng(lastLat, lastLng).distanceTo(L.latLng(tLat, tLng));
-            if(dist > 15) { alert("Target is too far! Get closer (within 15 meters)."); return; }
+            if(dist > 15) { showModal("Out of Range", "Target is too far! Get closer (within 15 meters)."); return; }
 
             database.ref('attacks/' + targetId).set({ attacker: myAlias, weapon: myWeapon.name, time: Date.now() });
             
-            alert(`You defeated them using your ${myWeapon.name}! +100 XP`);
+            showModal("Victory!", `You defeated them using your ${myWeapon.name}! +100 XP`);
             addScore(100);
-            
-            myWeapon = null;
-            document.getElementById('weaponIcon').innerText = "🖐️";
-            document.getElementById('weaponName').innerText = "Unarmed";
         }
 
         function triggerDeath(attackInfo) {
@@ -746,8 +1089,13 @@
             document.getElementById('deathScreen').style.display = 'flex';
             
             database.ref('players/' + myUserId).remove();
+            
+            if(zombieChaseInterval) { clearInterval(zombieChaseInterval); zombieChaseInterval = null; }
+            aiZombies.forEach(z => { if(z.marker) explorerMap.removeLayer(z.marker); });
+            aiZombies = [];
+            hiddenMythicalSpawns = [];
 
-            let timeLeft = 300; // 5 mins
+            let timeLeft = 120; // 2 mins
             const timerEl = document.getElementById('deathTimer');
             
             clearInterval(deadTimerInterval);
@@ -761,14 +1109,14 @@
                     clearInterval(deadTimerInterval);
                     isDead = false;
                     document.getElementById('deathScreen').style.display = 'none';
-                    alert("You respawned! Get back in the fight.");
+                    showModal("Respawned", "You respawned! Get back in the fight.");
+                    lastSpawnLat = null; 
                     if(lastLat) updateMyPosition({coords:{latitude:lastLat, longitude:lastLng}});
                 }
             }, 1000);
         }
 
         function syncOtherPlayers() {
-            
             database.ref('attacks/' + myUserId).on('value', (snapshot) => {
                 const attack = snapshot.val();
                 if(attack && !isDead) {
@@ -812,15 +1160,20 @@
                             .bindPopup(`
                                 <div style="text-align:center; font-family:'Outfit'">
                                     <b style="color:var(--accent-gold); font-size:15px; letter-spacing:1px;">${p.name}</b><br>
-                                    <button onclick="openChatBox()" style="background:#111; color:#fff; border:1px solid var(--accent-gold); padding:5px 10px; margin-top:5px; cursor:pointer; width:100%; border-radius:4px;">CHAT</button>
+                                    <span style="font-size:10px; color:#aaa; display:block; margin-top:2px;">(Long-press avatar to React!)</span>
+                                    <button onclick="openPrivateChat('${id}', '${p.name}')" style="background:#111; color:#fff; border:1px solid var(--sonar-blue); padding:5px 10px; margin-top:5px; cursor:pointer; width:100%; border-radius:4px;">CHAT</button>
                                     <button onclick="attackPlayer('${id}', ${p.lat}, ${p.lng})" style="background:red; color:#fff; border:none; padding:5px 10px; margin-top:5px; cursor:pointer; width:100%; border-radius:4px; font-weight:bold;">ATTACK ⚔️</button>
                                 </div>
                             `);
+                        
+                        otherMarkers[id].on('contextmenu', function(e) {
+                            showEmojiPicker(id);
+                        });
                     }
                 }
                 
                 const onlineCount = Object.keys(players).length;
-                document.getElementById('hud-title').innerHTML = `<span class="material-icons-outlined" style="color:var(--accent-gold); font-size:16px;">map</span> Resort Rumble (${onlineCount} Online)`;
+                document.getElementById('hud-title').innerHTML = `<span class="material-icons-outlined" style="color:var(--accent-gold); font-size:16px;">map</span> Resort Zombie Outbreak (${onlineCount} Online)`;
 
                 leaderArr.sort((a,b) => b.score - a.score);
                 let lbHTML = ""; 
@@ -833,19 +1186,17 @@
                 const chatDiv = document.getElementById('chatMessages');
                 chatDiv.innerHTML += `<div style="margin-bottom:6px;"><span style="color:var(--accent-gold); font-weight:bold;">${chat.sender}:</span> <span style="color:#ddd;">${chat.msg}</span></div>`;
                 chatDiv.scrollTop = chatDiv.scrollHeight;
-
-                if(document.getElementById('chatPanel').style.display === 'none') {
-                    document.getElementById('chatNotify').style.display = 'block';
-                }
             });
 
             database.ref('emotes').on('child_added', (snapshot) => {
                 const e = snapshot.val(); 
-                const id = snapshot.key;
-                let targetLatLng = null;
+                if(Date.now() - e.timestamp > 3000) return; 
                 
-                if(id === myUserId && lastLat) targetLatLng = [lastLat, lastLng];
-                else if(otherMarkers[id]) targetLatLng = otherMarkers[id].getLatLng();
+                let targetLatLng = null;
+                let attachToId = e.targetId || e.senderId;
+                
+                if(attachToId === myUserId && lastLat) targetLatLng = [lastLat, lastLng];
+                else if(otherMarkers[attachToId]) targetLatLng = otherMarkers[attachToId].getLatLng();
                 
                 if(targetLatLng) {
                     const emoteMarker = L.marker(targetLatLng, { icon: L.divIcon({ className: 'emote-marker', html: e.emoji, iconSize: [30, 30] }) }).addTo(explorerMap);
@@ -866,26 +1217,30 @@
         }
 
         // ADDED ACTION FUNCTIONS
-        function toggleLeaderboard() { 
+        function toggleLeaderboard(event) { 
+            if(event) event.stopPropagation(); 
             const p = document.getElementById('leaderboardPanel'); 
             p.style.display = p.style.display === 'block' ? 'none' : 'block'; 
         }
-        function sendEmote(emoji) { 
-            database.ref('emotes/' + myUserId).set({ emoji: emoji }); 
-            setTimeout(() => database.ref('emotes/' + myUserId).remove(), 2500); 
+        
+        function toggleGlobalChat(event) {
+            if(event) event.stopPropagation();
+            const p = document.getElementById('chatPanel'); 
+            if(p.style.display === 'none' || p.style.display === '') {
+                p.style.display = 'flex';
+                document.getElementById('chatInput').focus();
+            } else {
+                p.style.display = 'none';
+            }
         }
+        
         function dropFlare() { 
             if(!lastLat) return; 
             database.ref('flares/' + myUserId).set({ lat: lastLat, lng: lastLng, name: myAlias }); 
             setTimeout(() => database.ref('flares/' + myUserId).remove(), 30000); 
         }
 
-        function openChatBox() {
-            document.getElementById('chatPanel').style.display = 'flex';
-            document.getElementById('chatNotify').style.display = 'none';
-            document.getElementById('chatInput').focus();
-        }
-
+        // GLOBAL CHAT
         function sendChatMessage() {
             const input = document.getElementById('chatInput');
             const msg = input.value.trim();
@@ -895,152 +1250,50 @@
             input.value = "";
         }
 
+        // PRIVATE CHAT
+        let activePrivateChatId = null;
+        let privateChatRef = null;
 
-        // --- NEW GAME: ZOMBIE OUTBREAK MAP LOGIC (WITH AI BOTS) ---
-        let zombieMap = null;
-        let zMarker = null;
-        let zOthers = {};
-        let myZStatus = 'human'; 
-        let zGpsFix = false;
-        let aiZombies = [];
-        let aiMarkers = {};
+        function getChatRoomId(id1, id2) {
+            return id1 < id2 ? `${id1}_${id2}` : `${id2}_${id1}`;
+        }
 
-        function initZombieMap() {
-            zombieMap = L.map('zombie-map', { zoomControl: false, attributionControl: false }).setView([14.5353, 120.9842], 18);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20 }).addTo(zombieMap);
+        function openPrivateChat(targetId, targetName) {
+            document.getElementById('privateChatPanel').style.display = 'flex';
+            document.getElementById('privateChatTitle').innerText = targetName.toUpperCase();
+            activePrivateChatId = targetId;
+            document.getElementById('privateChatMessages').innerHTML = "";
             
-            zMarker = L.marker([14.5353, 120.9842], { icon: getZombieIcon(chosenAvatarUrl, myAlias, true, myZStatus) }).addTo(zombieMap);
-
-            if (navigator.geolocation) {
-                globalWatchId = navigator.geolocation.watchPosition(updateZPosition, e=>{}, { enableHighAccuracy: true, maximumAge: 5000 });
-            }
-
-            // SPAWN AI ZOMBIES
-            aiZombies = [ {id: 'ai_1', lat: 14.5350, lng: 120.9840}, {id: 'ai_2', lat: 14.5356, lng: 120.9844}, {id: 'ai_3', lat: 14.5352, lng: 120.9848} ];
-            aiZombies.forEach(ai => { aiMarkers[ai.id] = L.marker([ai.lat, ai.lng], { icon: getZombieIcon('zombie_bot', 'AI ZOMBIE', false, 'zombie') }).addTo(zombieMap); });
-
-            // AI MOVEMENT LOOP (CHASE THE PLAYER)
-            setInterval(() => {
-                if(myZStatus === 'human' && lastLat) {
-                    aiZombies.forEach(ai => {
-                        // Move ~5% closer to player every 3 seconds
-                        ai.lat += (lastLat - ai.lat) * 0.05;
-                        ai.lng += (lastLng - ai.lng) * 0.05;
-                        aiMarkers[ai.id].setLatLng([ai.lat, ai.lng]);
-                        
-                        if(L.latLng(lastLat, lastLng).distanceTo(L.latLng(ai.lat, ai.lng)) < 5) {
-                            // CAUGHT BY AI ZOMBIE!
-                            if(myWeapon) {
-                                // Fight off logic
-                                document.getElementById('treasureEmoji').innerText = "🧟"; 
-                                document.getElementById('treasureTitle').innerText = "ZOMBIE ATTACK!";
-                                document.getElementById('treasureText').innerText = `Use your ${myWeapon.name} to survive!`;
-                                
-                                document.getElementById('btnTreasureAction').innerText = "FIGHT OFF!";
-                                document.getElementById('btnTreasureAction').onclick = () => {
-                                    alert("Zombie Defeated! Weapon broke."); 
-                                    myWeapon = null; 
-                                    document.getElementById('zWeaponIcon').innerText = "🖐️"; 
-                                    document.getElementById('zWeaponName').innerText = "Unarmed";
-                                    document.getElementById('weaponIcon').innerText = "🖐️"; 
-                                    document.getElementById('weaponName').innerText = "Unarmed";
-                                    ai.lat += 0.001; ai.lng += 0.001; // Push zombie away
-                                    closeTreasure(); 
-                                };
-                                document.getElementById('treasurePopup').classList.add('show');
-                            } else {
-                                myZStatus = 'zombie'; 
-                                database.ref('zombie_players/' + myUserId).update({zStatus: 'zombie'});
-                                alert("YOU WERE CAUGHT BY AN AI ZOMBIE!"); 
-                                updateZUI();
-                            }
-                        }
-                    });
-                }
-            }, 3000);
-
-
-            // Zombie Status Listener (if someone infected me)
-            database.ref('zombie_players/' + myUserId + '/zStatus').on('value', snap => {
-                const newStatus = snap.val();
-                if(newStatus === 'zombie' && myZStatus !== 'zombie') {
-                    myZStatus = 'zombie'; 
-                    alert("INFECTED by a player! You are now a Zombie.");
-                    updateZUI();
-                }
+            if(privateChatRef) privateChatRef.off();
+            
+            const roomId = getChatRoomId(myUserId, targetId);
+            privateChatRef = database.ref('private_chats/' + roomId);
+            
+            privateChatRef.limitToLast(15).on('child_added', (snapshot) => {
+                const chat = snapshot.val();
+                const chatDiv = document.getElementById('privateChatMessages');
+                const isMe = chat.sender === myAlias;
+                const color = isMe ? '#3b82f6' : '#fff';
+                chatDiv.innerHTML += `<div style="margin-bottom:6px; text-align:${isMe ? 'right' : 'left'};"><span style="color:${color}; font-weight:bold;">${chat.sender}:</span> <span style="color:#ddd;">${chat.msg}</span></div>`;
+                chatDiv.scrollTop = chatDiv.scrollHeight;
             });
-
-            // Zombie Others Sync
-            database.ref('zombie_players').on('value', snap => {
-                const ps = snap.val(); if(!ps) return;
-                for (let id in zOthers) if (!ps[id]) { zombieMap.removeLayer(zOthers[id]); delete zOthers[id]; }
-                for (let id in ps) {
-                    if (id === myUserId || Date.now() - ps[id].lastSeen > 300000) continue;
-                    if (zOthers[id]) { 
-                        zOthers[id].setLatLng([ps[id].lat, ps[id].lng]); 
-                        zOthers[id].setIcon(getZombieIcon(ps[id].avatar, ps[id].name, false, ps[id].zStatus)); 
-                    }
-                    else zOthers[id] = L.marker([ps[id].lat, ps[id].lng], { icon: getZombieIcon(ps[id].avatar, ps[id].name, false, ps[id].zStatus) }).addTo(zombieMap);
-                }
-            });
-
-            // Passive XP for staying Human
-            setInterval(() => { 
-                if(myZStatus === 'human' && lastLat) { addScore(5); } 
-            }, 15000);
-            
-            database.ref('zombie_players/' + myUserId).onDisconnect().remove();
+        }
+        
+        function closePrivateChat() {
+            document.getElementById('privateChatPanel').style.display = 'none';
+            activePrivateChatId = null;
+            if(privateChatRef) { privateChatRef.off(); privateChatRef = null; }
         }
 
-        function updateZUI() {
-            document.getElementById('zombieActionBtn').innerText = "🧟 INFECT NEARBY 🧟"; 
-            document.getElementById('zombieActionBtn').style.background = "#ef4444"; 
-            document.getElementById('zombieActionBtn').style.color = "#fff";
-            document.getElementById('zombieActionBtn').style.borderColor = "#ef4444";
-            zMarker.setIcon(getZombieIcon(chosenAvatarUrl, myAlias, true, myZStatus));
-            document.getElementById('zombie-status').innerText = "ZOMBIE";
-        }
-
-        function updateZPosition(pos) {
-            const lat = pos.coords.latitude, lng = pos.coords.longitude;
-            if(zMarker) zMarker.setLatLng([lat, lng]); 
-            database.ref('zombie_players/' + myUserId).set({ lat: lat, lng: lng, avatar: chosenAvatarUrl, name: myAlias, zStatus: myZStatus, lastSeen: Date.now() });
+        function sendPrivateMessage() {
+            if(!activePrivateChatId) return;
+            const input = document.getElementById('privateChatInput');
+            const msg = input.value.trim();
+            if(msg === "") return;
             
-            if(!zGpsFix) { zombieMap.panTo([lat, lng]); zGpsFix = true; } 
-            lastLat = lat; lastLng = lng;
-            
-            // Random Weapon Drop for Zombies Map too
-            if (Date.now() - lastFindTime > 15000 && Math.random() < 0.1) {
-                lastFindTime = Date.now(); 
-                myWeapon = { name: "Tsinelas ni Nanay", emoji: "🩴" };
-                document.getElementById('zWeaponIcon').innerText = "🩴"; 
-                document.getElementById('zWeaponName').innerText = "Tsinelas";
-                document.getElementById('weaponIcon').innerText = "🩴"; 
-                document.getElementById('weaponName').innerText = "Tsinelas";
-            }
-        }
-
-        function zombieAction() {
-            if(myZStatus === 'human') {
-                if(confirm("Volunteer to become Patient Zero? There is no cure!")) {
-                    myZStatus = 'zombie'; 
-                    database.ref('zombie_players/' + myUserId).update({zStatus: 'zombie'});
-                    updateZUI();
-                }
-            } else {
-                let hit = false;
-                database.ref('zombie_players').once('value', snap => {
-                    const ps = snap.val();
-                    for(let id in ps) {
-                        if(id !== myUserId && ps[id].zStatus === 'human' && L.latLng(lastLat, lastLng).distanceTo(L.latLng(ps[id].lat, ps[id].lng)) <= 15) {
-                            database.ref('zombie_players/' + id).update({zStatus: 'zombie'}); 
-                            hit = true; 
-                            addScore(50);
-                        }
-                    }
-                    if(hit) alert("Infected humans nearby! +50 XP"); else alert("No humans within 15 meters.");
-                });
-            }
+            const roomId = getChatRoomId(myUserId, activePrivateChatId);
+            database.ref('private_chats/' + roomId).push({ sender: myAlias, msg: msg, time: Date.now() });
+            input.value = "";
         }
 
 
@@ -1048,7 +1301,7 @@
         let sonarMap = null;
         let sonarMarker = null;
         let relicMarker = null;
-        const secretRelic = cabanaZone; // Using the cabanaZone location as the demo secret spot
+        const secretRelic = cabanaZone;
 
         function initSonarMap() {
             sonarMap = L.map('sonar-map', { zoomControl: false, attributionControl: false }).setView([14.5353, 120.9842], 18);
@@ -1069,7 +1322,6 @@
         function triggerSonar() {
             if(!lastLat) return;
             
-            // Draw Ping Circle Animation
             const ping = L.circle([lastLat, lastLng], { radius: 0, color: 'var(--sonar-blue)', weight: 2, fillOpacity: 0.1 }).addTo(sonarMap);
             let r = 0; 
             const expand = setInterval(() => { 
@@ -1091,10 +1343,10 @@
                     setTimeout(() => { 
                         if(relicMarker) { sonarMap.removeLayer(relicMarker); relicMarker = null; } 
                         document.getElementById('sonar-status').innerText = "READY"; 
-                    }, 4000); // Disappears after 4 seconds
+                    }, 4000);
                     
                     if(dist <= 15) { 
-                        alert("You found the Relic! +200 XP"); 
+                        showModal("Relic Found!", "You found the Relic! +200 XP"); 
                         addScore(200); 
                     }
                 } else {
@@ -1103,7 +1355,6 @@
                 }
             }, 1000);
         }
-
 
         // --- SCAVENGER HUNT LOGIC ---
         const quests = [
@@ -1127,13 +1378,13 @@
             const feedback = document.getElementById('quest-feedback');
             if (input === quests[currentQuest].answer) {
                 feedback.innerText = "Correct! Unlocking the next clue..."; feedback.style.color = "#4CAF50";
-                addScore(10); // Reward per answer
+                addScore(10); 
                 setTimeout(() => {
                     currentQuest++;
                     if (currentQuest >= quests.length) {
                         document.getElementById('game-quest').style.display = 'none';
                         document.getElementById('game-complete').style.display = 'block';
-                        addScore(50); // Big reward for finishing
+                        addScore(50);
                     } else { loadQuest(); }
                 }, 1500);
             } else {
@@ -1227,14 +1478,14 @@
                         if (result.success) {
                             feedback.innerText = "Location Verified! Mission Accomplished.";
                             feedback.style.color = "#4CAF50";
-                            addScore(10); // Reward per snap
+                            addScore(10); 
 
                             setTimeout(() => {
                                 currentSnap++;
                                 if(currentSnap >= snapMissions.length) {
                                     document.getElementById('game-camera').style.display = 'none';
                                     document.getElementById('snap-complete').style.display = 'block';
-                                    addScore(50); // Big reward for finishing
+                                    addScore(50); 
                                 } else {
                                     loadSnapMission();
                                 }
@@ -1307,7 +1558,7 @@
                     setTimeout(() => {
                         document.getElementById('memoryWin').style.display = 'block';
                         document.getElementById('memoryResetBtn').style.display = 'block';
-                        addScore(50); // Big reward for finishing memory game
+                        addScore(50); 
                     }, 500);
                 }
             } else {
