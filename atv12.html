@@ -123,9 +123,10 @@
         /* OPTIMIZATION: CSS Smoothing for Leaflet Markers */
         .leaflet-marker-icon { transition: transform 0.3s linear; }
 
-        #game-explorer, #game-radar { padding: 0; overflow: hidden; height: 70vh; min-height: 550px; max-width: 100%; display: none; border-radius: 15px; position: relative; margin-top:20px; margin-left:auto; margin-right:auto;}
+        #game-explorer, #game-radar, #game-hangout { padding: 0; overflow: hidden; height: 70vh; min-height: 550px; max-width: 100%; display: none; border-radius: 15px; position: relative; margin-top:20px; margin-left:auto; margin-right:auto;}
         #game-explorer { border: 1px solid var(--accent-gold); }
         #game-radar { border: 1px solid var(--accent-gold); }
+        #game-hangout { border: 1px solid var(--plaza-pink); position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100dvh !important; max-width: none !important; z-index: 99999 !important; border-radius: 0 !important; margin: 0 !important; border: none !important; touch-action: none; background: #eee; }
         
         #explorer-map, #sonar-map, #hangout-map { width: 100%; height: 100%; background: #eee; position: absolute; top: 0; left: 0; z-index: 1;} 
         
@@ -142,7 +143,7 @@
         .leaflet-popup-tip { background: rgba(20, 20, 20, 0.95); border-top: 1px solid var(--accent-gold); border-left: 1px solid var(--accent-gold); }
 
         /* ============================================================== */
-        /* BRAND NEW ROBLOX-STYLE BLOCKY AVATAR (PURE CSS FULL BODY)      */
+        /* FULL-BODY CSS SPRITE AVATAR (Roblox-Style)                     */
         /* ============================================================== */
         .blocky-wrapper { position: relative; width: 40px; height: 60px; display: flex; justify-content: center; align-items: flex-end; }
         .blocky-character { position: relative; width: 30px; height: 50px; transform-origin: bottom center; transition: transform 0.2s; }
@@ -174,6 +175,7 @@
         @keyframes spinAnim { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes shakeAnim { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px) rotate(-10deg); } 75% { transform: translateX(8px) rotate(10deg); } }
 
+        /* Chat bubbles for Roblox Hangout mode */
         .chat-bubble {
             position: absolute; top: -55px; left: 50%; transform: translateX(-50%);
             background: rgba(255,255,255,0.95); color: #000; padding: 6px 10px;
@@ -251,9 +253,6 @@
         .inv-name { font-weight: bold; color: var(--accent-gold); font-size: 1rem; }
         .inv-dmg { font-size: 0.75rem; color: #aaa; }
 
-        /* ROBLOX / HANGOUT SPECIFIC STYLES */
-        #game-hangout { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100dvh !important; max-width: none !important; z-index: 99999 !important; border-radius: 0 !important; margin: 0 !important; border: none !important; touch-action: none; background: #eee; display: none; overflow: hidden; }
-
         /* ATV SPECIFIC STYLES */
         #game-atv { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100dvh !important; max-width: none !important; z-index: 99999 !important; border-radius: 0 !important; margin: 0 !important; border: none !important; touch-action: none; background: #eee; display: none; overflow: hidden; }
 
@@ -274,11 +273,11 @@
 </head>
 <body>
 
-    <div id="btnGlobalScore" style="position: fixed; top: 100px; left: 15px; background: rgba(10, 10, 10, 0.85); border: 1px solid var(--accent-gold); padding: 10px; border-radius: 50%; z-index: 100000; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;" onclick="document.getElementById('globalScoreModal').style.display='flex'">
+    <div id="btnGlobalScore" style="display: none; position: fixed; top: 100px; left: 15px; background: rgba(10, 10, 10, 0.85); border: 1px solid var(--accent-gold); padding: 10px; border-radius: 50%; z-index: 100000; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); align-items: center; justify-content: center; font-size: 1.5rem;" onclick="document.getElementById('globalScoreModal').style.display='flex'">
         🏆
     </div>
     
-    <div id="btnGarageGlobal" style="position: fixed; top: 160px; left: 15px; background: rgba(10, 10, 10, 0.85); border: 1px solid #f97316; padding: 10px; border-radius: 50%; z-index: 100000; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #f97316;" onclick="document.getElementById('atvCustomizeModal').style.display='flex'">
+    <div id="btnGarageGlobal" style="display: none; position: fixed; top: 160px; left: 15px; background: rgba(10, 10, 10, 0.85); border: 1px solid #f97316; padding: 10px; border-radius: 50%; z-index: 100000; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); align-items: center; justify-content: center; font-size: 1.5rem; color: #f97316;" onclick="document.getElementById('atvCustomizeModal').style.display='flex'">
         <span class="material-icons-outlined">garage</span>
     </div>
 
@@ -463,7 +462,7 @@
             <h3 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 1.8rem; margin-bottom: 10px;">Choose Your Avatar</h3>
             <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 25px;">Select your look and enter your alias for the virtual world.</p>
             
-            <input type="text" id="playerAlias" class="auth-input" placeholder="ALIAS (MAX 6)" maxlength="6" autocomplete="off" style="margin-bottom: 20px; font-size: 1rem; padding: 15px; letter-spacing: 3px; max-width: 250px;" onkeypress="if(event.key === 'Enter') enterGPSGame()">
+            <input type="text" id="playerAlias" class="auth-input" placeholder="ALIAS (MAX 6)" maxlength="6" autocomplete="off" style="margin-bottom: 20px; font-size: 1rem; padding: 15px; letter-spacing: 3px; max-width: 250px;" onkeypress="if(event.key === 'Enter') triggerLoadingAndLaunch(pendingGame)">
 
             <div class="avatar-grid" id="avatarGrid">
                 <div class="avatar-card selected" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Abby')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Abby"></div>
@@ -484,7 +483,7 @@
                 <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Mia')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Mia"></div>
             </div>
             
-            <button class="btn-game" style="margin-top: 20px;" onclick="enterGPSGame()">Enter World</button>
+            <button class="btn-game" style="margin-top: 20px;" onclick="triggerLoadingAndLaunch(pendingGame)">Enter World</button>
         </div>
 
         <div id="game-loading" class="game-box" style="text-align: center; padding: 70px 40px; max-width: 600px;">
@@ -790,7 +789,34 @@
 
         function openGame(gameType) {
             pendingGame = gameType;
+            document.getElementById('quest-menu').style.display = 'none';
+            document.getElementById('gameSubtitle').style.display = 'none'; 
             
+            if (!isAuthorized) {
+                document.getElementById('game-auth').style.display = 'block';
+                document.getElementById('voucherInput').value = '';
+                document.getElementById('auth-error').innerText = '';
+            } else {
+                triggerLoadingAndLaunch(pendingGame);
+            }
+        }
+
+        function verifyVoucher() {
+            const input = document.getElementById('voucherInput').value.toUpperCase().trim();
+            const errorDiv = document.getElementById('auth-error');
+            
+            if(VALID_VOUCHERS.includes(input)) {
+                errorDiv.innerHTML = "";
+                isAuthorized = true; 
+                document.getElementById('game-auth').style.display = 'none';
+                triggerLoadingAndLaunch(pendingGame);
+            } else {
+                errorDiv.innerText = "Invalid Passkey. Please check with the front desk."; 
+                errorDiv.style.color = "#ff4c4c";
+            }
+        }
+
+        function triggerLoadingAndLaunch(gameType) {
             // INTRO LOADING SCREEN WITH DEV CREDITS
             const titles = {
                 'hangout': 'Paraiso Plaza',
@@ -802,7 +828,6 @@
                 'memory': 'Paraiso Match'
             };
             
-            document.getElementById('quest-menu').style.display = 'none';
             const boxes = document.querySelectorAll('.game-box');
             boxes.forEach(box => box.style.display = 'none'); 
             
@@ -812,37 +837,23 @@
             // 2.5 Second Loading Wait
             setTimeout(() => {
                 document.getElementById('game-loading').style.display = 'none';
-                
-                if (!isAuthorized) {
-                    document.getElementById('game-auth').style.display = 'block';
-                    document.getElementById('voucherInput').value = '';
-                    document.getElementById('auth-error').innerText = '';
-                } else {
-                    launchGame(pendingGame);
-                }
+                // SHOW HIDDEN MENU ICONS ONCE IN-GAME
+                document.getElementById('btnGlobalScore').style.display = 'flex'; 
+                document.getElementById('btnGarageGlobal').style.display = 'flex'; 
+                launchGame(gameType);
             }, 2500); 
-        }
-
-        function verifyVoucher() {
-            const input = document.getElementById('voucherInput').value.toUpperCase().trim();
-            const errorDiv = document.getElementById('auth-error');
-            
-            if(VALID_VOUCHERS.includes(input)) {
-                errorDiv.innerHTML = "";
-                isAuthorized = true; 
-                document.getElementById('game-auth').style.display = 'none';
-                launchGame(pendingGame);
-            } else {
-                errorDiv.innerText = "Invalid Passkey. Please check with the front desk."; 
-                errorDiv.style.color = "#ff4c4c";
-            }
         }
 
         function backToMenu() {
             const boxes = document.querySelectorAll('.game-box');
             boxes.forEach(box => box.style.display = 'none');
             document.getElementById('quest-menu').style.display = 'flex';
+            document.getElementById('gameSubtitle').style.display = 'block';
             document.getElementById('gameSubtitle').innerText = "Choose Your Adventure";
+            
+            // HIDE TROPHY & GARAGE ON MAIN MENU
+            document.getElementById('btnGlobalScore').style.display = 'none'; 
+            document.getElementById('btnGarageGlobal').style.display = 'none'; 
             
             document.getElementById('chatPanel').style.display = 'none';
             document.getElementById('privateChatPanel').style.display = 'none';
