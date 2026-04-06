@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>Paraiso GoKart | Multiplayer Lobby Sandbox</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;600;700;800&family=Playfair+Display:wght@700;900&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyAR5NKaiNwVpLuQm9OqKCOpJG7Ju_Y_6sM",
+        authDomain: "quest-e4e9f.firebaseapp.com",
+        databaseURL: "https://quest-e4e9f-default-rtdb.firebaseio.com/",
+        projectId: "quest-e4e9f",
+        storageBucket: "quest-e4e9f.firebasestorage.app",
+        messagingSenderId: "397171901653",
+        appId: "1:397171901653:web:429d408ca5475e0beb8e5c"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+    </script>
+
+    <style>
+        :root {
+            --accent-gold: #d4af37;
+            --bg-dark: #0a0a0a;
+            --track-asphalt: #2a2a2a;
+            --grass-green: #0f1f0f;
+            --rumble-red: #ef4444;
+            --atv-orange: #f97316;
+            --sonar-blue: #3b82f6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background-color: var(--bg-dark); font-family: 'Outfit', sans-serif; touch-action: none; color: #fff; }
+
+        /* LOBBY / MENU SCREENS */
+        #menu-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #1a1a1a, #000); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;}
+        
+        .menu-panel { background: rgba(20,20,20,0.9); border: 1px solid var(--accent-gold); border-radius: 15px; padding: 30px; width: 100%; max-width: 400px; text-align: center; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .menu-panel.active { display: block; }
+        
+        .menu-title { font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 2rem; margin-bottom: 20px; }
+        
+        .auth-input { width: 100%; padding: 15px; background: rgba(0,0,0,0.6); border: 1px solid rgba(212, 175, 55, 0.4); color: var(--accent-gold); font-size: 1.2rem; text-align: center; border-radius: 8px; outline: none; text-transform: uppercase; margin-bottom: 20px; font-family: 'Outfit'; }
+        
+        .menu-btn { background: transparent; color: var(--accent-gold); border: 1px solid var(--accent-gold); padding: 15px 20px; border-radius: 30px; font-size: 1rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-weight: 700; width: 100%; margin-bottom: 15px; font-family: 'Outfit';}
+        .menu-btn:hover, .menu-btn:active { background: var(--accent-gold); color: #000; }
+        .menu-btn.outline { border-style: dashed; color: #ccc; border-color: #555; }
+        
+        .server-list-item { background: rgba(0,0,0,0.6); border: 1px solid #444; border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .server-join-btn { background: var(--sonar-blue); color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        
+        .player-req-item { background: #222; padding: 10px; border-radius: 5px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 14px;}
+        .acc-btn { background: var(--zombie-green); color: #000; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;}
+        .rej-btn { background: var(--zombie-red); color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;}
+
+        /* Game Container */
+        #game-container { width: 100%; height: 100%; margin: 0 auto; position: relative; overflow: hidden; background: var(--bg-dark); display: none; }
+        @media (min-width: 600px) { #game-container { width: 500px; max-height: 90vh; top: 5vh; border: 2px solid #333; border-radius: 15px;} }
+        #gameCanvas { display: block; width: 100%; height: 100%; }
+
+        /* Floating UI Panel */
+        .side-ui { position: absolute; top: 20px; left: 15px; display: flex; flex-direction: column; gap: 12px; z-index: 1000; }
+        .ui-btn { background: rgba(10, 10, 10, 0.95); border: 2px solid var(--accent-gold); color: var(--accent-gold); width: 45px; height: 45px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.8); transition: 0.2s; }
+        .ui-btn:active { transform: scale(0.9); }
+        .ui-btn.orange { border-color: var(--atv-orange); color: var(--atv-orange); }
+        .ui-btn.blue { border-color: var(--sonar-blue); color: var(--sonar-blue); }
+
+        #speedometer { position: absolute; top: 20px; right: 20px; text-align: right; z-index: 1000;}
+        #speed-val { font-size: 32px; font-weight: 900; color: #fff; text-shadow: 0 2px 5px #000; font-family: 'Playfair Display', serif; }
+        #speed-unit { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-top:-5px; font-family: 'Outfit';}
+
+        /* Controls */
+        #atv-bottom-controls { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 1000; width: 95%; justify-content: center; }
+        .atv-ctrl-btn { background: rgba(30, 30, 30, 0.95); border: 2px solid; color: white; font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 14px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.8); transition: 0.1s; touch-action: none; -webkit-tap-highlight-color: transparent;}
+        .atv-ctrl-btn:active { transform: scale(0.85); }
+        .atv-ctrl-btn.round { width: 55px; height: 55px; border-radius: 50%; }
+        .atv-ctrl-btn.square { width: 60px; height: 70px; border-radius: 12px; }
+        .atv-ctrl-btn.orange { border-color: #f97316; color: #f97316; }
+        .atv-ctrl-btn.red { border-color: #ef4444; color: #ef4444; }
+        .atv-ctrl-btn.yellow { border-color: #eab308; color: #eab308; }
+        .atv-ctrl-btn.green { border-color: #22c55e; color: #22c55e; }
+
+        /* Modals */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 6000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content { background: #111; border: 1px solid var(--accent-gold); border-radius: 12px; padding: 25px; width: 90%; max-width: 350px; text-align: center; color: #fff; position: relative; box-shadow: 0 15px 40px rgba(0,0,0,0.9); font-family: 'Outfit', sans-serif;}
+        .close-btn { position: absolute; top: 10px; right: 15px; background: transparent; border: none; color: #aaa; font-size: 1.2rem; cursor: pointer; font-weight: bold; }
+        
+        .chat-container { display: flex; flex-direction: column; height: 300px; }
+        .chat-msgs { flex: 1; overflow-y: auto; text-align: left; font-size: 12px; font-family: 'Plus Jakarta Sans'; background: #050505; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #333;}
+        .chat-input-row { display: flex; gap: 5px; }
+        .chat-input-row input { flex: 1; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 6px; font-family: 'Outfit'; outline: none;}
+        .chat-input-row button { padding: 10px 15px; background: var(--accent-gold); border: none; font-weight: bold; border-radius: 6px; cursor: pointer;}
+    </style>
+</head>
+<body>
+
+    <div id="menu-layer">
+        
+        <div id="screen-alias" class="menu-panel active">
+            <h2 class="menu-title">Racer Profile</h2>
+            <p style="color:#aaa; font-size:14px; margin-bottom:20px;">Enter your Alias to continue.</p>
+            <input type="text" id="playerAlias" class="auth-input" placeholder="ALIAS (MAX 6)" maxlength="6">
+            <button class="menu-btn" onclick="submitAlias()">Next</button>
+        </div>
+
+        <div id="screen-mode" class="menu-panel">
+            <h2 class="menu-title">Select Mode</h2>
+            <button class="menu-btn" onclick="showScreen('screen-single')">Single Player</button>
+            <button class="menu-btn orange" onclick="showScreen('screen-multi')">Multi Player</button>
+        </div>
+
+        <div id="screen-single" class="menu-panel">
+            <h2 class="menu-title">Single Player</h2>
+            <button class="menu-btn" onclick="startGame('bot')">Versus Bot</button>
+            <button class="menu-btn" onclick="startGame('training')">Training Mode</button>
+            <button class="menu-btn" onclick="startGame('time')">Time Race</button>
+            <button class="menu-btn outline" onclick="showScreen('screen-mode')">Back</button>
+        </div>
+
+        <div id="screen-multi" class="menu-panel">
+            <h2 class="menu-title">Multi Player</h2>
+            <button class="menu-btn orange" onclick="createServer()">Create Server</button>
+            <button class="menu-btn orange" onclick="openJoinServer()">Join Server</button>
+            <button class="menu-btn outline" onclick="showScreen('screen-mode')">Back</button>
+        </div>
+
+        <div id="screen-host" class="menu-panel">
+            <h2 class="menu-title">My Server</h2>
+            <p style="color:#aaa; font-size:12px; margin-bottom:15px;">Waiting for players to join...</p>
+            <div id="host-requests" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
+            <button class="menu-btn orange" onclick="startMultiplayerGame()">Start Race</button>
+            <button class="menu-btn outline" onclick="closeServer()">Close Server</button>
+        </div>
+
+        <div id="screen-join" class="menu-panel">
+            <h2 class="menu-title">Server List</h2>
+            <p style="color:#aaa; font-size:12px; margin-bottom:15px;" id="join-status">Looking for active games...</p>
+            <div id="server-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
+            <button class="menu-btn outline" id="btn-join-back" onclick="showScreen('screen-multi')">Back</button>
+        </div>
+
+    </div>
+
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="speedometer">
+            <div id="speed-val">0</div>
+            <div id="speed-unit">KPH</div>
+            <div id="mode-badge" style="font-size:10px; color:var(--accent-gold); margin-top:5px; border:1px solid; padding:2px 5px; border-radius:4px;">TRAINING</div>
+        </div>
+
+        <div class="side-ui">
+            <div class="ui-btn" title="Leaderboard" onclick="openModal('trophyModal')">🏆</div>
+            <div class="ui-btn orange" title="Garage" onclick="openModal('garageModal')"><span class="material-icons-outlined">format_paint</span></div>
+            <div class="ui-btn blue" title="Global Chat" onclick="openModal('chatModal')"><span class="material-icons-outlined">forum</span></div>
+        </div>
+
+        <div id="atv-bottom-controls">
+            <button class="atv-ctrl-btn round orange" onmousedown="inputs.left=true" onmouseup="inputs.left=false" ontouchstart="inputs.left=true" ontouchend="inputs.left=false"><span class="material-icons-outlined">navigate_before</span></button>
+            <button class="atv-ctrl-btn round orange" onmousedown="inputs.right=true" onmouseup="inputs.right=false" ontouchstart="inputs.right=true" ontouchend="inputs.right=false"><span class="material-icons-outlined">navigate_next</span></button>
+            
+            <div style="width: 15px;"></div>
+
+            <button class="atv-ctrl-btn square red" onmousedown="inputs.brake=true" onmouseup="inputs.brake=false" ontouchstart="inputs.brake=true" ontouchend="inputs.brake=false">BRK</button>
+            <button class="atv-ctrl-btn square yellow" onmousedown="inputs.reverse=true" onmouseup="inputs.reverse=false" ontouchstart="inputs.reverse=true" ontouchend="inputs.reverse=false">REV</button>
+            <button class="atv-ctrl-btn square green" onmousedown="inputs.forward=true" onmouseup="inputs.forward=false" ontouchstart="inputs.forward=true" ontouchend="inputs.forward=false">GAS</button>
+        </div>
+    </div>
+
+    <div id="trophyModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModals()">✕</button>
+            <h3 style="color:var(--accent-gold); margin-bottom: 10px; font-family:'Playfair Display'">🏆 Leaderboard</h3>
+            <p style="font-size: 12px; color: #aaa;">TOP EXPLORERS (XP)</p>
+            <div style="margin-top: 20px; font-size: 1rem; color: #fff; text-align: left;" id="lbScoreList">
+                <div style="margin-bottom:8px;">1. System - <span style="color:var(--accent-gold);">999 XP</span></div>
+                <div style="margin-bottom:8px;">2. Player - <span style="color:var(--accent-gold);">0 XP</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="garageModal" class="modal">
+        <div class="modal-content" style="border-color: var(--atv-orange);">
+            <button class="close-btn" onclick="closeModals()">✕</button>
+            <h3 style="color:var(--atv-orange); margin-bottom: 15px; font-family:'Playfair Display'">Garage</h3>
+            <div style="text-align: left; margin-bottom: 15px;">
+                <label style="color:#aaa; font-size: 12px;">Paint Color:</label>
+                <input type="color" id="carColor" value="#f97316" style="width:100%; height:45px; background:none; border:2px solid #333; cursor:pointer; border-radius:6px; margin-top:5px;">
+            </div>
+            <button class="btn-game" style="border-color: var(--atv-orange); color: var(--atv-orange);" onclick="applyGarage()">Apply Paint</button>
+        </div>
+    </div>
+
+    <div id="chatModal" class="modal">
+        <div class="modal-content" style="border-color: var(--sonar-blue);">
+            <button class="close-btn" onclick="closeModals()">✕</button>
+            <h3 style="color:var(--sonar-blue); margin-bottom: 10px; font-family:'Playfair Display'">Global Chat</h3>
+            <div class="chat-container">
+                <div class="chat-msgs" id="chatBox"></div>
+                <div class="chat-input-row">
+                    <input type="text" id="chatInput" placeholder="Message..." onkeypress="if(event.key === 'Enter') sendChat()">
+                    <button style="background: var(--sonar-blue); color:#fff;" onclick="sendChat()">></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Disable Context Menu
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // --- UI Modal Logic ---
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+        function applyGarage() { myKart.color = document.getElementById('carColor').value; closeModals(); }
+
+        // --- MENU LOGIC ---
+        let myAlias = "";
+        let myUserId = "KART_" + Math.floor(Math.random() * 99999);
+        let currentMode = ""; // bot, training, time, multi
+        
+        let hostServerId = null; 
+        let joinedServerId = null;
+        let heartbeatInterval = null;
+
+        function showScreen(id) {
+            document.querySelectorAll('.menu-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function submitAlias() {
+            let val = document.getElementById('playerAlias').value.trim().toUpperCase();
+            if(val.length === 0) return alert("Enter an alias!");
+            myAlias = val;
+            showScreen('screen-mode');
+        }
+
+        // --- MULTIPLAYER SERVER LOBBY LOGIC ---
+        function createServer() {
+            hostServerId = "ROOM_" + Math.floor(Math.random() * 10000);
+            
+            database.ref('gokart_rooms/' + hostServerId).set({
+                hostId: myUserId,
+                hostName: myAlias,
+                status: 'waiting',
+                lastHeartbeat: Date.now()
+            });
+
+            // Start Heartbeat to keep room alive (prevents 15 min auto-delete)
+            heartbeatInterval = setInterval(() => {
+                database.ref('gokart_rooms/' + hostServerId + '/lastHeartbeat').set(Date.now());
+            }, 10000); // every 10 secs
+
+            // Remove room on disconnect
+            database.ref('gokart_rooms/' + hostServerId).onDisconnect().remove();
+
+            // Listen for players wanting to join
+            database.ref('gokart_rooms/' + hostServerId + '/players').on('value', snapshot => {
+                let pList = document.getElementById('host-requests');
+                pList.innerHTML = "";
+                let data = snapshot.val();
+                if(!data) return;
+
+                for(let pid in data) {
+                    if(pid === myUserId) continue;
+                    let p = data[pid];
+                    if(p.status === 'pending') {
+                        pList.innerHTML += `<div class="player-req-item">
+                            <span>${p.name}</span>
+                            <div>
+                                <button class="acc-btn" onclick="acceptPlayer('${pid}')">Accept</button>
+                                <button class="rej-btn" onclick="rejectPlayer('${pid}')">Reject</button>
+                            </div>
+                        </div>`;
+                    } else if (p.status === 'accepted') {
+                        pList.innerHTML += `<div class="player-req-item" style="color:var(--zombie-green)">${p.name} (Ready)</div>`;
+                    }
+                }
+            });
+
+            joinedServerId = hostServerId;
+            showScreen('screen-host');
+        }
+
+        function closeServer() {
+            if(heartbeatInterval) clearInterval(heartbeatInterval);
+            if(hostServerId) {
+                database.ref('gokart_rooms/' + hostServerId).remove();
+                hostServerId = null;
+                joinedServerId = null;
+            }
+            showScreen('screen-multi');
+        }
+
+        function acceptPlayer(pid) {
+            database.ref('gokart_rooms/' + hostServerId + '/players/' + pid).update({ status: 'accepted' });
+        }
+        function rejectPlayer(pid) {
+            database.ref('gokart_rooms/' + hostServerId + '/players/' + pid).remove();
+        }
+
+        function openJoinServer() {
+            showScreen('screen-join');
+            let sList = document.getElementById('server-list');
+            document.getElementById('join-status').innerText = "Looking for active games...";
+
+            database.ref('gokart_rooms').on('value', snapshot => {
+                if(joinedServerId) return; // Stop rendering list if we joined
+                sList.innerHTML = "";
+                let data = snapshot.val();
+                let count = 0;
+
+                for(let rid in data) {
+                    let room = data[rid];
+                    // 15 MINUTE AUTO-DELETE LOGIC: Check heartbeat (900,000 ms)
+                    if(Date.now() - room.lastHeartbeat > 900000) {
+                        // Dead server, auto delete it from DB to clean up
+                        database.ref('gokart_rooms/' + rid).remove();
+                        continue; 
+                    }
+
+                    if(room.status === 'waiting') {
+                        count++;
+                        sList.innerHTML += `<div class="server-list-item">
+                            <span><b>${room.hostName}'s</b> Server</span>
+                            <button class="server-join-btn" onclick="requestJoin('${rid}')">JOIN</button>
+                        </div>`;
+                    }
+                }
+                if(count === 0) document.getElementById('join-status').innerText = "No active servers found.";
+                else document.getElementById('join-status').innerText = "Select a server:";
+            });
+        }
+
+        function requestJoin(roomId) {
+            document.getElementById('join-status').innerText = "Waiting for Host to accept...";
+            document.getElementById('server-list').innerHTML = "";
+            document.getElementById('btn-join-back').style.display = "none";
+            
+            joinedServerId = roomId;
+
+            // Submit pending request
+            let myPlayerRef = database.ref('gokart_rooms/' + roomId + '/players/' + myUserId);
+            myPlayerRef.set({ name: myAlias, status: 'pending' });
+            myPlayerRef.onDisconnect().remove();
+
+            // Listen to my status
+            myPlayerRef.on('value', snap => {
+                let data = snap.val();
+                if(!data) {
+                    // Rejected or kicked
+                    joinedServerId = null;
+                    myPlayerRef.off();
+                    document.getElementById('btn-join-back').style.display = "block";
+                    openJoinServer();
+                    alert("Host rejected or closed the room.");
+                } else if(data.status === 'accepted') {
+                    document.getElementById('join-status').innerHTML = "<span style='color:var(--zombie-green)'>Accepted! Waiting for host to start...</span>";
+                    
+                    // Listen for game start
+                    database.ref('gokart_rooms/' + roomId + '/status').on('value', statusSnap => {
+                        if(statusSnap.val() === 'playing') {
+                            startGame('multi');
+                            database.ref('gokart_rooms/' + roomId + '/status').off();
+                        }
+                    });
+                }
+            });
+        }
+
+        function startMultiplayerGame() {
+            database.ref('gokart_rooms/' + hostServerId).update({ status: 'playing' });
+            startGame('multi');
+        }
+
+        // --- GAME INITIALIZATION ---
+        function startGame(mode) {
+            currentMode = mode;
+            document.getElementById('menu-layer').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+            document.getElementById('mode-badge').innerText = mode.toUpperCase();
+
+            // Only sync MP if mode is multi
+            if(mode === 'multi' && joinedServerId) {
+                initGameSync();
+            }
+
+            // Spawn bot if Versus
+            if(mode === 'bot') {
+                otherPlayers['bot_1'] = { renderX: 450, renderY: worldSize.h - 400, renderAngle: 0, color: '#ff0000', isBot: true };
+            }
+
+            gameLoop();
+        }
+
+        // --- Chat Logic ---
+        function sendChat() {
+            let input = document.getElementById('chatInput');
+            let msg = input.value.trim();
+            if(msg === "") return;
+            
+            if(currentMode === 'multi' && joinedServerId) {
+                database.ref('gokart_rooms/' + joinedServerId + '/chats').push({ sender: myAlias, msg: msg });
+            } else {
+                document.getElementById('chatBox').innerHTML += `<div style="margin-bottom:5px;"><b style="color:var(--accent-gold);">Me:</b> <span style="color:#ddd;">${msg}</span></div>`;
+            }
+            input.value = "";
+            document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
+        }
+
+        // --- Multiplayer Play Sync ---
+        function initGameSync() {
+            database.ref('gokart_rooms/' + joinedServerId + '/chats').limitToLast(10).on('child_added', snap => {
+                let c = snap.val();
+                document.getElementById('chatBox').innerHTML += `<div style="margin-bottom:5px;"><b style="color:var(--accent-gold);">${c.sender}:</b> <span style="color:#ddd;">${c.msg}</span></div>`;
+                document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
+            });
+
+            database.ref('gokart_rooms/' + joinedServerId + '/gamestate').on('value', snap => {
+                let data = snap.val();
+                if(!data) return;
+                let activeNow = Date.now();
+
+                for (let id in data) {
+                    if (id === myUserId) continue;
+                    if (activeNow - data[id].lastSeen > 5000) continue; 
+                    
+                    if (!otherPlayers[id]) {
+                        otherPlayers[id] = { ...data[id], renderX: data[id].x, renderY: data[id].y, renderAngle: data[id].angle };
+                    } else {
+                        otherPlayers[id].x = data[id].x; 
+                        otherPlayers[id].y = data[id].y; 
+                        otherPlayers[id].angle = data[id].angle; 
+                        otherPlayers[id].color = data[id].color;
+                        otherPlayers[id].name = data[id].name;
+                    }
+                }
+            });
+        }
+
+        // --- GAME ENGINE (CANVAS) ---
+        const container = document.getElementById('game-container');
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = container.offsetWidth;
+        let height = canvas.height = container.offsetHeight;
+
+        window.addEventListener('resize', () => { width = canvas.width = container.offsetWidth; height = canvas.height = container.offsetHeight; });
+
+        const worldSize = { w: 2000, h: 4000 };
+        const trackBounds = { x: 100, y: 100, w: 1800, h: 3800 };
+        const roadWidth = 350; 
+
+        const trackWalls = [
+            { x: trackBounds.x + roadWidth, y: worldSize.h - roadWidth - 1100, w: trackBounds.w - roadWidth, h: 1100 },
+            { x: trackBounds.x, y: 1500, w: trackBounds.w - roadWidth - 100, h: roadWidth + 200 },
+            { x: trackBounds.x + roadWidth + 200, y: 1100, w: trackBounds.w - roadWidth - 100, h: roadWidth + 200 },
+            { x: trackBounds.x + roadWidth, y: trackBounds.y, w: trackBounds.w - roadWidth*2, h: 1000 }
+        ];
+
+        const rumbleStrips = [
+            { x: trackWalls[0].x - 10, y: worldSize.h - roadWidth - 1100, w: 20, h: 1100, angle: 0 }, 
+            { x: trackWalls[1].x + trackWalls[1].w, y: 1500, w: 20, h: roadWidth+200, angle:0 },
+            { x: trackWalls[2].x - 10, y: 1100, w: 20, h: roadWidth+200, angle:0 },
+        ];
+        
+        const tireBarriers = [
+            { x: worldSize.w - 150, y: 1400, r: 15 }, { x: worldSize.w - 180, y: 1430, r: 15 }, 
+            { x: 150, y: 1000, r: 15 }, { x: 180, y: 1030, r: 15 }, 
+        ];
+
+        function isCollision(x, y, kartWidth, kartHeight) {
+            if (x - kartWidth/2 < trackBounds.x || x + kartWidth/2 > trackBounds.x + trackBounds.w ||
+                y - kartHeight/2 < trackBounds.y || y + kartHeight/2 > trackBounds.y + trackBounds.h) {
+                return true;
+            }
+            for (let wall of trackWalls) {
+                if (x + kartWidth/2 > wall.x && x - kartWidth/2 < wall.x + wall.w &&
+                    y + kartHeight/2 > wall.y && y - kartHeight/2 < wall.y + wall.h) return true;
+            }
+            return false;
+        }
+
+        const inputs = { forward: false, reverse: false, left: false, right: false, brake: false };
+
+        window.addEventListener('keydown', e => {
+            if(e.key === 'ArrowUp' || e.key === 'w') inputs.forward = true;
+            if(e.key === 'ArrowDown' || e.key === 's') inputs.reverse = true;
+            if(e.key === 'ArrowLeft' || e.key === 'a') inputs.left = true;
+            if(e.key === 'ArrowRight' || e.key === 'd') inputs.right = true;
+            if(e.key === ' ') inputs.brake = true;
+        });
+        window.addEventListener('keyup', e => {
+            if(e.key === 'ArrowUp' || e.key === 'w') inputs.forward = false;
+            if(e.key === 'ArrowDown' || e.key === 's') inputs.reverse = false;
+            if(e.key === 'ArrowLeft' || e.key === 'a') inputs.left = false;
+            if(e.key === 'ArrowRight' || e.key === 'd') inputs.right = false;
+            if(e.key === ' ') inputs.brake = false;
+        });
+
+        let myKart = {
+            x: 300, y:worldSize.h - 400, 
+            angle: 0, speed: 0, maxSpeed: 16, accel: 0.3, friction: 0.08, turnSpeed: 0.07,
+            width: 25, height: 45, color: '#f97316'
+        };
+
+        function drawPatternedRect(patternCtx, x, y, w, h, color1, color2, size = 10) {
+            patternCtx.save();
+            patternCtx.beginPath(); patternCtx.rect(x, y, w, h); patternCtx.clip();
+            for (let i = 0; i < w + size; i += size) {
+                for (let j = 0; j < h + size; j += size) {
+                    patternCtx.fillStyle = (Math.floor(i/size) + Math.floor(j/size)) % 2 === 0 ? color1 : color2;
+                    patternCtx.fillRect(x + i, y + j, size, size);
+                }
+            }
+            patternCtx.restore();
+        }
+
+        function drawBackground(camX, camY) {
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--grass-green').trim();
+            ctx.fillRect(0, 0, width, height);
+            ctx.save();
+            ctx.translate(-camX, -camY);
+
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--track-asphalt').trim();
+            ctx.fillRect(trackBounds.x, trackBounds.y, trackBounds.w, trackBounds.h);
+
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--grass-green').trim();
+            trackWalls.forEach(wall => ctx.fillRect(wall.x, wall.y, wall.w, wall.h));
+
+            rumbleStrips.forEach(kerb => { drawPatternedRect(ctx, kerb.x, kerb.y, kerb.w, kerb.h, '#fff', getComputedStyle(document.documentElement).getPropertyValue('--rumble-red').trim(), 15); });
+            
+            ctx.fillStyle = '#000'; ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
+            tireBarriers.forEach(tire => {
+                ctx.beginPath(); ctx.arc(tire.x, tire.y, tire.r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                ctx.beginPath(); ctx.arc(tire.x, tire.y, tire.r/2, 0, Math.PI*2); ctx.stroke(); 
+            });
+
+            drawPatternedRect(ctx, trackBounds.x, worldSize.h - 500, roadWidth, 30, '#fff', '#000', 10);
+            ctx.restore();
+        }
+
+        function adjustColor(col, amt) {
+            let usePound = false; if (col[0] == "#") { col = col.slice(1); usePound = true; }
+            let num = parseInt(col,16);
+            let r = (num >> 16) + amt; if (r > 255) r = 255; else if (r < 0) r = 0;
+            let b = ((num >> 8) & 0x00FF) + amt; if (b > 255) b = 255; else if (b < 0) b = 0;
+            let g = (num & 0x0000FF) + amt; if (g > 255) g = 255; else if (g < 0) g = 0;
+            return (usePound?"#":"") + (g | (b << 8) | (r << 16)).toString(16);
+        }
+
+        function drawKart(kart, camX, camY, isMe) {
+            ctx.save();
+            ctx.translate(kart.x - camX, kart.y - camY);
+            ctx.rotate(kart.angle);
+
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect(-kart.width/2 + 3, -kart.height/2 + 3, kart.width, kart.height);
+
+            ctx.fillStyle = '#1a1a1a'; ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+            const wh = 14; const ww = 7;
+            const frontWheelAngle = isMe && (inputs.left ? -0.3 : inputs.right ? 0.3 : 0);
+            
+            ctx.fillRect(-kart.width/2 - 4, kart.height/2 - wh - 3, ww, wh); 
+            ctx.fillRect(kart.width/2 - ww + 4, kart.height/2 - wh - 3, ww, wh); 
+            
+            ctx.save(); ctx.translate(-kart.width/2, -kart.height/2 + 8); ctx.rotate(frontWheelAngle); ctx.fillRect(-4, -wh/2, ww, wh); ctx.restore(); 
+            ctx.save(); ctx.translate(kart.width/2, -kart.height/2 + 8); ctx.rotate(frontWheelAngle); ctx.fillRect(-ww+4, -wh/2, ww, wh); ctx.restore(); 
+
+            let grad = ctx.createLinearGradient(0, -kart.height/2, 0, kart.height/2);
+            grad.addColorStop(0, kart.color); grad.addColorStop(1, adjustColor(kart.color, -50));
+            ctx.fillStyle = grad;
+            ctx.fillRect(-kart.width/2, -kart.height/2, kart.width, kart.height);
+            
+            ctx.fillStyle = '#222'; ctx.fillRect(-6, 0, 12, 10);
+            
+            ctx.fillStyle = isMe ? '#fff' : '#aaa'; 
+            ctx.beginPath(); ctx.arc(0, -2, 9, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#111'; ctx.fillRect(-6, -6, 12, 4); 
+
+            // Name Tag for others
+            if(!isMe && kart.name) {
+                ctx.rotate(-kart.angle); // un-rotate text
+                ctx.fillStyle = "#fff";
+                ctx.font = "10px Outfit";
+                ctx.textAlign = "center";
+                ctx.fillText(kart.name, 0, -35);
+            }
+
+            ctx.restore();
+        }
+
+        // Dummy Bot Logic
+        function updateBot(p) {
+            if(!p.isBot) return;
+            p.renderY -= 10; // Drive straight up
+            if (p.renderY < 100) p.renderY = worldSize.h - 400; // loop
+        }
+
+        function gameLoop() {
+            if (inputs.forward) {
+                myKart.speed += myKart.accel;
+                if(myKart.speed > myKart.maxSpeed) myKart.speed = myKart.maxSpeed;
+            } else if (inputs.reverse) {
+                myKart.speed -= myKart.accel;
+                if(myKart.speed < -myKart.maxSpeed / 2) myKart.speed = -myKart.maxSpeed / 2;
+            } else {
+                if (myKart.speed > 0) { myKart.speed -= myKart.friction; if(myKart.speed < 0) myKart.speed = 0; }
+                if (myKart.speed < 0) { myKart.speed += myKart.friction; if(myKart.speed > 0) myKart.speed = 0; }
+            }
+
+            if (inputs.brake) { myKart.speed *= 0.85; if(Math.abs(myKart.speed) < 0.5) myKart.speed = 0; }
+
+            if (Math.abs(myKart.speed) > 0.1) {
+                let turnDir = myKart.speed > 0 ? 1 : -1;
+                let driftFactor = inputs.forward && Math.abs(myKart.speed) > myKart.maxSpeed*0.7 ? 1.5 : 1; 
+                if (inputs.left) myKart.angle -= (myKart.turnSpeed * turnDir * driftFactor);
+                if (inputs.right) myKart.angle += (myKart.turnSpeed * turnDir * driftFactor);
+            }
+
+            let nextX = myKart.x + Math.sin(myKart.angle) * myKart.speed;
+            let nextY = myKart.y - Math.cos(myKart.angle) * myKart.speed;
+
+            if (isCollision(nextX, nextY, myKart.width, myKart.height)) {
+                myKart.speed = -myKart.speed * 0.4;
+                myKart.x -= Math.sin(myKart.angle) * 3;
+                myKart.y += Math.cos(myKart.angle) * 3;
+            } else {
+                myKart.x = nextX;
+                myKart.y = nextY;
+            }
+
+            document.getElementById('speed-val').innerText = Math.abs(Math.floor(myKart.speed * 5));
+
+            let camX = myKart.x - width / 2;
+            let camY = myKart.y - height / 2;
+
+            ctx.clearRect(0, 0, width, height);
+            drawBackground(camX, camY);
+
+            for (let id in otherPlayers) {
+                let p = otherPlayers[id];
+                if(p.isBot) {
+                    updateBot(p);
+                    drawKart({ x: p.renderX, y: p.renderY, angle: p.renderAngle, width: 25, height: 45, color: p.color, name: 'BOT' }, camX, camY, false);
+                } else {
+                    p.renderX += (p.x - p.renderX) * 0.15;
+                    p.renderY += (p.y - p.renderY) * 0.15;
+                    let angleDiff = p.angle - p.renderAngle;
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                    p.renderAngle += angleDiff * 0.15;
+                    drawKart({ x: p.renderX, y: p.renderY, angle: p.renderAngle, width: 25, height: 45, color: p.color, name: p.name }, camX, camY, false);
+                }
+            }
+
+            drawKart(myKart, camX, camY, true);
+            
+            if(currentMode === 'multi' && joinedServerId) {
+                let now = Date.now();
+                if (now - lastSendTime > 100) {
+                    database.ref('gokart_rooms/' + joinedServerId + '/gamestate/' + myUserId).set({
+                        x: myKart.x, y: myKart.y, angle: myKart.angle, color: myKart.color, name: myAlias, lastSeen: now
+                    });
+                    lastSendTime = now;
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+</html>
