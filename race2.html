@@ -29,6 +29,9 @@
         :root {
             --accent-gold: #d4af37;
             --bg-dark: #0a0a0a;
+            --track-asphalt: #2a2a2a;
+            --grass-green: #0f1f0f;
+            --rumble-red: #ef4444;
             --atv-orange: #f97316;
             --sonar-blue: #3b82f6;
         }
@@ -333,11 +336,30 @@
             startGame('multi');
         }
 
+        // --- GAME ENGINE SETUP ---
+        const container = document.getElementById('game-container');
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width = 0;
+        let height = 0;
+
+        function resizeCanvas() {
+            width = canvas.width = container.offsetWidth;
+            height = canvas.height = container.offsetHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
         // --- GAME INITIALIZATION ---
         function startGame(mode) {
             currentMode = mode;
             document.getElementById('menu-layer').style.display = 'none';
             document.getElementById('game-container').style.display = 'block';
+            
+            // FIX: Resize the canvas immediately after the container becomes visible!
+            resizeCanvas();
+
             document.getElementById('mode-badge').innerText = mode.toUpperCase();
 
             if(mode === 'multi' && joinedServerId) initGameSync();
@@ -386,17 +408,11 @@
             });
         }
 
-        // --- GAME ENGINE (MODERN CANVAS) ---
-        const container = document.getElementById('game-container');
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        let width = canvas.width = container.offsetWidth;
-        let height = canvas.height = container.offsetHeight;
-
-        window.addEventListener('resize', () => { width = canvas.width = container.offsetWidth; height = canvas.height = container.offsetHeight; });
-
         // --- NEW MODERN TRACK PATH (Vector Based) ---
-        // A clean, pill-shaped circuit with smooth curves using Canvas Path2D
+        const worldSize = { w: 2000, h: 4000 };
+        const trackBounds = { x: 100, y: 100, w: 1800, h: 3800 };
+        const roadWidth = 350; 
+
         const trackPath = new Path2D();
         trackPath.arc(1000, 1000, 500, Math.PI, 0); // Top semi-circle
         trackPath.lineTo(1500, 3000);               // Right straight
@@ -404,14 +420,12 @@
         trackPath.closePath();                      // Left straight
 
         function isCollision(x, y) {
-            // Set line width to match the asphalt width to check collision
             ctx.lineWidth = 340; 
-            // If the point is NOT inside the stroked path, it's a collision (off-track)
             return !ctx.isPointInStroke(trackPath, x, y);
         }
 
         function drawGrid(camX, camY) {
-            ctx.fillStyle = '#0a0f0a'; // Very dark green/black
+            ctx.fillStyle = '#0a0f0a'; 
             ctx.fillRect(0, 0, width, height);
 
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
@@ -426,34 +440,42 @@
             ctx.stroke();
         }
 
+        function drawPatternedRect(patternCtx, x, y, w, h, color1, color2, size = 10) {
+            patternCtx.save();
+            patternCtx.beginPath(); patternCtx.rect(x, y, w, h); patternCtx.clip();
+            for (let i = 0; i < w + size; i += size) {
+                for (let j = 0; j < h + size; j += size) {
+                    patternCtx.fillStyle = (Math.floor(i/size) + Math.floor(j/size)) % 2 === 0 ? color1 : color2;
+                    patternCtx.fillRect(x + i, y + j, size, size);
+                }
+            }
+            patternCtx.restore();
+        }
+
         function drawTrack(camX, camY) {
             ctx.save();
             ctx.translate(-camX, -camY);
 
-            // 1. Red/White Rumble Strip Edge (Outer Border)
             ctx.lineWidth = 380;
-            ctx.strokeStyle = '#ef4444'; // Red base
+            ctx.strokeStyle = '#ef4444'; 
             ctx.stroke(trackPath);
 
             ctx.lineWidth = 380;
-            ctx.strokeStyle = '#fff'; // White dashes
+            ctx.strokeStyle = '#fff'; 
             ctx.setLineDash([60, 60]);
             ctx.stroke(trackPath);
             ctx.setLineDash([]);
 
-            // 2. Asphalt Road
             ctx.lineWidth = 340;
-            ctx.strokeStyle = '#222'; // Dark Asphalt
+            ctx.strokeStyle = '#222'; 
             ctx.stroke(trackPath);
 
-            // 3. Center Dashed Line
             ctx.lineWidth = 6;
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
             ctx.setLineDash([40, 40]);
             ctx.stroke(trackPath);
             ctx.setLineDash([]);
 
-            // 4. Start/Finish Line
             ctx.fillStyle = '#fff';
             ctx.fillRect(330, 2000, 340, 15);
             ctx.fillStyle = '#000';
@@ -482,7 +504,7 @@
         });
 
         let myKart = {
-            x: 500, y: 2000, // Starts exactly on the left straight
+            x: 500, y: 2000, 
             angle: 0, speed: 0, maxSpeed: 18, accel: 0.3, friction: 0.08, turnSpeed: 0.06,
             width: 25, height: 45, color: '#f97316'
         };
@@ -501,34 +523,29 @@
             ctx.translate(kart.x - camX, kart.y - camY);
             ctx.rotate(kart.angle);
 
-            // Shadow
             ctx.fillStyle = 'rgba(0,0,0,0.5)';
             ctx.fillRect(-kart.width/2 + 5, -kart.height/2 + 5, kart.width, kart.height);
 
-            // Draw 4 Wheels
             ctx.fillStyle = '#111'; 
             const wh = 14; const ww = 7;
             const frontWheelAngle = isMe && (inputs.left ? -0.3 : inputs.right ? 0.3 : 0);
             
-            ctx.fillRect(-kart.width/2 - 4, kart.height/2 - wh - 3, ww, wh); // BL
-            ctx.fillRect(kart.width/2 - ww + 4, kart.height/2 - wh - 3, ww, wh); // BR
+            ctx.fillRect(-kart.width/2 - 4, kart.height/2 - wh - 3, ww, wh); 
+            ctx.fillRect(kart.width/2 - ww + 4, kart.height/2 - wh - 3, ww, wh); 
             
-            ctx.save(); ctx.translate(-kart.width/2, -kart.height/2 + 8); ctx.rotate(frontWheelAngle); ctx.fillRect(-4, -wh/2, ww, wh); ctx.restore(); // FL
-            ctx.save(); ctx.translate(kart.width/2, -kart.height/2 + 8); ctx.rotate(frontWheelAngle); ctx.fillRect(-ww+4, -wh/2, ww, wh); ctx.restore(); // FR
+            ctx.save(); ctx.translate(-kart.width/2, -kart.height/2 + 8); ctx.rotate(frontWheelAngle); ctx.fillRect(-4, -wh/2, ww, wh); ctx.restore(); 
+            ctx.save(); ctx.translate(kart.width/2, -kart.height/2 + 8); ctx.rotate(frontWheelAngle); ctx.fillRect(-ww+4, -wh/2, ww, wh); ctx.restore(); 
 
-            // Draw Body
             let grad = ctx.createLinearGradient(0, -kart.height/2, 0, kart.height/2);
             grad.addColorStop(0, kart.color); grad.addColorStop(1, adjustColor(kart.color, -60));
             ctx.fillStyle = grad;
             ctx.fillRect(-kart.width/2, -kart.height/2, kart.width, kart.height);
             
-            // Driver
-            ctx.fillStyle = '#222'; ctx.fillRect(-6, 0, 12, 10); // Seat
+            ctx.fillStyle = '#222'; ctx.fillRect(-6, 0, 12, 10); 
             ctx.fillStyle = isMe ? '#fff' : '#aaa'; 
-            ctx.beginPath(); ctx.arc(0, -2, 8, 0, Math.PI * 2); ctx.fill(); // Helmet
-            ctx.fillStyle = '#111'; ctx.fillRect(-6, -6, 12, 4); // Visor
+            ctx.beginPath(); ctx.arc(0, -2, 8, 0, Math.PI * 2); ctx.fill(); 
+            ctx.fillStyle = '#111'; ctx.fillRect(-6, -6, 12, 4); 
 
-            // Name
             if(!isMe && kart.name) {
                 ctx.rotate(-kart.angle);
                 ctx.fillStyle = "#fff"; ctx.font = "bold 12px Outfit"; ctx.textAlign = "center";
@@ -538,11 +555,9 @@
             ctx.restore();
         }
 
-        // Dummy Bot Logic (Drives in a large circle)
         function updateBot(p) {
             if(!p.isBot) return;
             p.speed = 10;
-            // Make bot run around the top loop smoothly
             let cx = 1000, cy = 1000, radius = 500;
             let targetAngle = Math.atan2(p.renderX - cx, cy - p.renderY) + Math.PI/2;
             
@@ -552,7 +567,6 @@
         }
 
         function gameLoop() {
-            // Physics
             if (inputs.forward) {
                 myKart.speed += myKart.accel;
                 if(myKart.speed > myKart.maxSpeed) myKart.speed = myKart.maxSpeed;
@@ -576,9 +590,8 @@
             let nextX = myKart.x + Math.sin(myKart.angle) * myKart.speed;
             let nextY = myKart.y - Math.cos(myKart.angle) * myKart.speed;
 
-            // Collision Check (Hindi Tatagos logic)
             if (isCollision(nextX, nextY)) {
-                myKart.speed = -myKart.speed * 0.5; // Bounce
+                myKart.speed = -myKart.speed * 0.5; 
                 myKart.x -= Math.sin(myKart.angle) * 5;
                 myKart.y += Math.cos(myKart.angle) * 5;
             } else {
@@ -591,7 +604,6 @@
             let camX = myKart.x - width / 2;
             let camY = myKart.y - height / 2;
 
-            // Render
             ctx.clearRect(0, 0, width, height);
             drawGrid(camX, camY);
             drawTrack(camX, camY);
@@ -614,7 +626,6 @@
 
             drawKart(myKart, camX, camY, true);
             
-            // Sync Out
             if(currentMode === 'multi' && joinedServerId) {
                 let now = Date.now();
                 if (now - lastSendTime > 100) {
