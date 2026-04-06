@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-    <title>Paraiso GoKart Racing | Modern Portrait Sandbox</title>
+    <title>Paraiso GoKart | Modern Circuit Sandbox</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;600;700;800&family=Playfair+Display:wght@700;900&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
@@ -29,9 +29,6 @@
         :root {
             --accent-gold: #d4af37;
             --bg-dark: #0a0a0a;
-            --track-asphalt: #2a2a2a;
-            --grass-green: #0f1f0f;
-            --rumble-red: #ef4444;
             --atv-orange: #f97316;
             --sonar-blue: #3b82f6;
         }
@@ -39,35 +36,44 @@
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
         body, html { width: 100%; height: 100%; overflow: hidden; background-color: var(--bg-dark); font-family: 'Outfit', sans-serif; touch-action: none; color: #fff; }
 
-        /* Game Container to enforce portrait ratio on PC */
-        #game-container {
-            width: 100%;
-            height: 100%;
-            margin: 0 auto;
-            position: relative;
-            overflow: hidden;
-            background: var(--bg-dark);
-        }
+        /* LOBBY / MENU SCREENS */
+        #menu-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #111, #000); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;}
         
-        @media (min-width: 600px) {
-            #game-container { width: 500px; max-height: 90vh; top: 5vh; border: 2px solid #333; border-radius: 15px;}
-        }
+        .menu-panel { background: rgba(20,20,20,0.9); border: 1px solid var(--accent-gold); border-radius: 15px; padding: 30px; width: 100%; max-width: 400px; text-align: center; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .menu-panel.active { display: block; }
+        
+        .menu-title { font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 2rem; margin-bottom: 20px; }
+        
+        .auth-input { width: 100%; padding: 15px; background: rgba(0,0,0,0.6); border: 1px solid rgba(212, 175, 55, 0.4); color: var(--accent-gold); font-size: 1.2rem; text-align: center; border-radius: 8px; outline: none; text-transform: uppercase; margin-bottom: 20px; font-family: 'Outfit'; }
+        
+        .menu-btn { background: transparent; color: var(--accent-gold); border: 1px solid var(--accent-gold); padding: 15px 20px; border-radius: 30px; font-size: 1rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-weight: 700; width: 100%; margin-bottom: 15px; font-family: 'Outfit';}
+        .menu-btn:hover, .menu-btn:active { background: var(--accent-gold); color: #000; }
+        .menu-btn.outline { border-style: dashed; color: #ccc; border-color: #555; }
+        
+        .server-list-item { background: rgba(0,0,0,0.6); border: 1px solid #444; border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .server-join-btn { background: var(--sonar-blue); color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        
+        .player-req-item { background: #222; padding: 10px; border-radius: 5px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 14px;}
+        .acc-btn { background: #22c55e; color: #000; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;}
+        .rej-btn { background: #ef4444; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;}
 
+        /* Game Container */
+        #game-container { width: 100%; height: 100%; margin: 0 auto; position: relative; overflow: hidden; background: #050505; display: none; }
+        @media (min-width: 600px) { #game-container { width: 500px; max-height: 90vh; top: 5vh; border: 2px solid #333; border-radius: 15px;} }
         #gameCanvas { display: block; width: 100%; height: 100%; }
 
-        /* Floating UI Panel - Stacked Top Left for Portrait */
+        /* Floating UI Panel */
         .side-ui { position: absolute; top: 20px; left: 15px; display: flex; flex-direction: column; gap: 12px; z-index: 1000; }
         .ui-btn { background: rgba(10, 10, 10, 0.95); border: 2px solid var(--accent-gold); color: var(--accent-gold); width: 45px; height: 45px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.8); transition: 0.2s; }
         .ui-btn:active { transform: scale(0.9); }
         .ui-btn.orange { border-color: var(--atv-orange); color: var(--atv-orange); }
         .ui-btn.blue { border-color: var(--sonar-blue); color: var(--sonar-blue); }
 
-        /* Speedometer - Portrait Top Right */
         #speedometer { position: absolute; top: 20px; right: 20px; text-align: right; z-index: 1000;}
         #speed-val { font-size: 32px; font-weight: 900; color: #fff; text-shadow: 0 2px 5px #000; font-family: 'Playfair Display', serif; }
         #speed-unit { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-top:-5px; font-family: 'Outfit';}
 
-        /* On-Screen Controls (Adjusted for Portrait Bottom) */
+        /* Controls */
         #atv-bottom-controls { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 1000; width: 95%; justify-content: center; }
         .atv-ctrl-btn { background: rgba(30, 30, 30, 0.95); border: 2px solid; color: white; font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 14px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.8); transition: 0.1s; touch-action: none; -webkit-tap-highlight-color: transparent;}
         .atv-ctrl-btn:active { transform: scale(0.85); }
@@ -79,7 +85,7 @@
         .atv-ctrl-btn.green { border-color: #22c55e; color: #22c55e; }
 
         /* Modals */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 6000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .modal-content { background: #111; border: 1px solid var(--accent-gold); border-radius: 12px; padding: 25px; width: 90%; max-width: 350px; text-align: center; color: #fff; position: relative; box-shadow: 0 15px 40px rgba(0,0,0,0.9); font-family: 'Outfit', sans-serif;}
         .close-btn { position: absolute; top: 10px; right: 15px; background: transparent; border: none; color: #aaa; font-size: 1.2rem; cursor: pointer; font-weight: bold; }
         .btn-game { background: transparent; color: var(--accent-gold); border: 1px solid var(--accent-gold); padding: 10px 20px; border-radius: 30px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: 0.3s; font-weight: 700; width: 100%; margin-top: 15px; font-family: 'Outfit';}
@@ -89,11 +95,57 @@
         .chat-msgs { flex: 1; overflow-y: auto; text-align: left; font-size: 12px; font-family: 'Plus Jakarta Sans'; background: #050505; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #333;}
         .chat-input-row { display: flex; gap: 5px; }
         .chat-input-row input { flex: 1; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 6px; font-family: 'Outfit'; outline: none;}
-        .chat-input-row button { padding: 10px 15px; background: var(--accent-gold); border: none; font-weight: bold; border-radius: 6px; cursor: pointer;}
-        
+        .chat-input-row button { padding: 10px 15px; background: var(--accent-gold); border: none; font-weight: bold; border-radius: 6px; cursor: pointer; color: #000;}
     </style>
 </head>
 <body>
+
+    <div id="menu-layer">
+        
+        <div id="screen-alias" class="menu-panel active">
+            <h2 class="menu-title">Racer Profile</h2>
+            <p style="color:#aaa; font-size:14px; margin-bottom:20px;">Enter your Alias to continue.</p>
+            <input type="text" id="playerAlias" class="auth-input" placeholder="ALIAS (MAX 6)" maxlength="6">
+            <button class="menu-btn" onclick="submitAlias()">Next</button>
+        </div>
+
+        <div id="screen-mode" class="menu-panel">
+            <h2 class="menu-title">Select Mode</h2>
+            <button class="menu-btn" onclick="showScreen('screen-single')">Single Player</button>
+            <button class="menu-btn orange" onclick="showScreen('screen-multi')">Multi Player</button>
+        </div>
+
+        <div id="screen-single" class="menu-panel">
+            <h2 class="menu-title">Single Player</h2>
+            <button class="menu-btn" onclick="startGame('bot')">Versus Bot</button>
+            <button class="menu-btn" onclick="startGame('training')">Training Mode</button>
+            <button class="menu-btn" onclick="startGame('time')">Time Race</button>
+            <button class="menu-btn outline" onclick="showScreen('screen-mode')">Back</button>
+        </div>
+
+        <div id="screen-multi" class="menu-panel">
+            <h2 class="menu-title">Multi Player</h2>
+            <button class="menu-btn orange" onclick="createServer()">Create Server</button>
+            <button class="menu-btn orange" onclick="openJoinServer()">Join Server</button>
+            <button class="menu-btn outline" onclick="showScreen('screen-mode')">Back</button>
+        </div>
+
+        <div id="screen-host" class="menu-panel">
+            <h2 class="menu-title">My Server</h2>
+            <p style="color:#aaa; font-size:12px; margin-bottom:15px;">Waiting for players to join...</p>
+            <div id="host-requests" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
+            <button class="menu-btn orange" onclick="startMultiplayerGame()">Start Race</button>
+            <button class="menu-btn outline" onclick="closeServer()">Close Server</button>
+        </div>
+
+        <div id="screen-join" class="menu-panel">
+            <h2 class="menu-title">Server List</h2>
+            <p style="color:#aaa; font-size:12px; margin-bottom:15px;" id="join-status">Looking for active games...</p>
+            <div id="server-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
+            <button class="menu-btn outline" id="btn-join-back" onclick="showScreen('screen-multi')">Back</button>
+        </div>
+
+    </div>
 
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
@@ -101,6 +153,7 @@
         <div id="speedometer">
             <div id="speed-val">0</div>
             <div id="speed-unit">KPH</div>
+            <div id="mode-badge" style="font-size:10px; color:var(--accent-gold); margin-top:5px; border:1px solid; padding:2px 5px; border-radius:4px;">TRAINING</div>
         </div>
 
         <div class="side-ui">
@@ -125,8 +178,11 @@
         <div class="modal-content">
             <button class="close-btn" onclick="closeModals()">✕</button>
             <h3 style="color:var(--accent-gold); margin-bottom: 10px; font-family:'Playfair Display'">🏆 Leaderboard</h3>
-            <p style="font-size: 12px; color: #aaa;">Testing Phase - Portraits Mode Active.</p>
-            <div style="margin-top: 20px; font-size: 2.5rem; color: #fff; font-weight: 900;" id="lbScore">0 XP</div>
+            <p style="font-size: 12px; color: #aaa;">TOP RACERS (XP)</p>
+            <div style="margin-top: 20px; font-size: 1rem; color: #fff; text-align: left;" id="lbScoreList">
+                <div style="margin-bottom:8px;">1. System - <span style="color:var(--accent-gold);">999 XP</span></div>
+                <div style="margin-bottom:8px;">2. Player - <span style="color:var(--accent-gold);">0 XP</span></div>
+            </div>
         </div>
     </div>
 
@@ -149,102 +205,267 @@
             <div class="chat-container">
                 <div class="chat-msgs" id="chatBox"></div>
                 <div class="chat-input-row">
-                    <input type="text" id="chatInput" placeholder="Message..." onkeypress="if(event.key === 'Enter') sendChat()">
-                    <button style="background: var(--sonar-blue); color:#fff;" onclick="sendChat()">></button>
+                    <input type="text" id="chatInput" placeholder="Message..." onkeypress="if(event.key === 'Enter') sendChat()" autocomplete="off">
+                    <button style="background: var(--accent-gold); color:#000;" onclick="sendChat()">></button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // --- Modal Logic ---
+        // Disable Context Menu for smooth holding on mobile
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // --- UI Modal Logic ---
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
-        function applyGarage() { 
-            myKart.color = document.getElementById('carColor').value; 
-            closeModals(); 
+        function applyGarage() { myKart.color = document.getElementById('carColor').value; closeModals(); }
+
+        // --- MENU LOGIC ---
+        let myAlias = "";
+        let myUserId = "KART_" + Math.floor(Math.random() * 99999);
+        let currentMode = ""; 
+        
+        let hostServerId = null; 
+        let joinedServerId = null;
+        let heartbeatInterval = null;
+
+        function showScreen(id) {
+            document.querySelectorAll('.menu-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function submitAlias() {
+            let val = document.getElementById('playerAlias').value.trim().toUpperCase();
+            if(val.length === 0) return alert("Enter an alias!");
+            myAlias = val;
+            showScreen('screen-mode');
+        }
+
+        // --- MULTIPLAYER SERVER LOBBY LOGIC ---
+        function createServer() {
+            hostServerId = "ROOM_" + Math.floor(Math.random() * 10000);
+            database.ref('gokart_rooms/' + hostServerId).set({ hostId: myUserId, hostName: myAlias, status: 'waiting', lastHeartbeat: Date.now() });
+
+            heartbeatInterval = setInterval(() => { database.ref('gokart_rooms/' + hostServerId + '/lastHeartbeat').set(Date.now()); }, 10000); 
+            database.ref('gokart_rooms/' + hostServerId).onDisconnect().remove();
+
+            database.ref('gokart_rooms/' + hostServerId + '/players').on('value', snapshot => {
+                let pList = document.getElementById('host-requests');
+                pList.innerHTML = "";
+                let data = snapshot.val();
+                if(!data) return;
+
+                for(let pid in data) {
+                    if(pid === myUserId) continue;
+                    let p = data[pid];
+                    if(p.status === 'pending') {
+                        pList.innerHTML += `<div class="player-req-item"><span>${p.name}</span><div><button class="acc-btn" onclick="acceptPlayer('${pid}')">Accept</button> <button class="rej-btn" onclick="rejectPlayer('${pid}')">Reject</button></div></div>`;
+                    } else if (p.status === 'accepted') {
+                        pList.innerHTML += `<div class="player-req-item" style="color:#22c55e">${p.name} (Ready)</div>`;
+                    }
+                }
+            });
+
+            joinedServerId = hostServerId;
+            showScreen('screen-host');
+        }
+
+        function closeServer() {
+            if(heartbeatInterval) clearInterval(heartbeatInterval);
+            if(hostServerId) { database.ref('gokart_rooms/' + hostServerId).remove(); hostServerId = null; joinedServerId = null; }
+            showScreen('screen-multi');
+        }
+
+        function acceptPlayer(pid) { database.ref('gokart_rooms/' + hostServerId + '/players/' + pid).update({ status: 'accepted' }); }
+        function rejectPlayer(pid) { database.ref('gokart_rooms/' + hostServerId + '/players/' + pid).remove(); }
+
+        function openJoinServer() {
+            showScreen('screen-join');
+            let sList = document.getElementById('server-list');
+            document.getElementById('join-status').innerText = "Looking for active games...";
+
+            database.ref('gokart_rooms').on('value', snapshot => {
+                if(joinedServerId) return; 
+                sList.innerHTML = "";
+                let data = snapshot.val();
+                let count = 0;
+
+                for(let rid in data) {
+                    let room = data[rid];
+                    if(Date.now() - room.lastHeartbeat > 900000) { database.ref('gokart_rooms/' + rid).remove(); continue; } // 15 Min Auto-delete
+                    if(room.status === 'waiting') {
+                        count++;
+                        sList.innerHTML += `<div class="server-list-item"><span><b>${room.hostName}'s</b> Server</span><button class="server-join-btn" onclick="requestJoin('${rid}')">JOIN</button></div>`;
+                    }
+                }
+                if(count === 0) document.getElementById('join-status').innerText = "No active servers found.";
+                else document.getElementById('join-status').innerText = "Select a server:";
+            });
+        }
+
+        function requestJoin(roomId) {
+            document.getElementById('join-status').innerText = "Waiting for Host to accept...";
+            document.getElementById('server-list').innerHTML = "";
+            document.getElementById('btn-join-back').style.display = "none";
+            joinedServerId = roomId;
+
+            let myPlayerRef = database.ref('gokart_rooms/' + roomId + '/players/' + myUserId);
+            myPlayerRef.set({ name: myAlias, status: 'pending' });
+            myPlayerRef.onDisconnect().remove();
+
+            myPlayerRef.on('value', snap => {
+                let data = snap.val();
+                if(!data) {
+                    joinedServerId = null; myPlayerRef.off(); document.getElementById('btn-join-back').style.display = "block";
+                    openJoinServer(); alert("Host rejected or closed the room.");
+                } else if(data.status === 'accepted') {
+                    document.getElementById('join-status').innerHTML = "<span style='color:#22c55e'>Accepted! Waiting for host to start...</span>";
+                    database.ref('gokart_rooms/' + roomId + '/status').on('value', statusSnap => {
+                        if(statusSnap.val() === 'playing') { startGame('multi'); database.ref('gokart_rooms/' + roomId + '/status').off(); }
+                    });
+                }
+            });
+        }
+
+        function startMultiplayerGame() {
+            database.ref('gokart_rooms/' + hostServerId).update({ status: 'playing' });
+            startGame('multi');
+        }
+
+        // --- GAME INITIALIZATION ---
+        function startGame(mode) {
+            currentMode = mode;
+            document.getElementById('menu-layer').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+            document.getElementById('mode-badge').innerText = mode.toUpperCase();
+
+            if(mode === 'multi' && joinedServerId) initGameSync();
+            if(mode === 'bot') otherPlayers['bot_1'] = { renderX: 500, renderY: 1500, renderAngle: Math.PI, color: '#ef4444', isBot: true, name: 'BOT' };
+
+            gameLoop();
         }
 
         // --- Chat Logic ---
         function sendChat() {
             let input = document.getElementById('chatInput');
-            if(input.value.trim() === "") return;
-            document.getElementById('chatBox').innerHTML += `<div style="margin-bottom:5px;"><b style="color:var(--accent-gold);">Me:</b> <span style="color:#ddd;">${input.value}</span></div>`;
+            let msg = input.value.trim();
+            if(msg === "") return;
+            
+            if(currentMode === 'multi' && joinedServerId) {
+                database.ref('gokart_rooms/' + joinedServerId + '/chats').push({ sender: myAlias, msg: msg });
+            } else {
+                document.getElementById('chatBox').innerHTML += `<div style="margin-bottom:5px;"><b style="color:var(--accent-gold);">Me:</b> <span style="color:#ddd;">${msg}</span></div>`;
+            }
             input.value = "";
             document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
         }
 
-        // Disable Context Menu
-        document.addEventListener('contextmenu', event => event.preventDefault());
+        function initGameSync() {
+            database.ref('gokart_rooms/' + joinedServerId + '/chats').limitToLast(10).on('child_added', snap => {
+                let c = snap.val();
+                document.getElementById('chatBox').innerHTML += `<div style="margin-bottom:5px;"><b style="color:var(--accent-gold);">${c.sender}:</b> <span style="color:#ddd;">${c.msg}</span></div>`;
+                document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
+            });
 
-        // --- Game Setup ---
+            database.ref('gokart_rooms/' + joinedServerId + '/gamestate').on('value', snap => {
+                let data = snap.val();
+                if(!data) return;
+                let activeNow = Date.now();
+
+                for (let id in data) {
+                    if (id === myUserId) continue;
+                    if (activeNow - data[id].lastSeen > 5000) continue; 
+                    if (!otherPlayers[id]) {
+                        otherPlayers[id] = { ...data[id], renderX: data[id].x, renderY: data[id].y, renderAngle: data[id].angle };
+                    } else {
+                        otherPlayers[id].x = data[id].x; otherPlayers[id].y = data[id].y; 
+                        otherPlayers[id].angle = data[id].angle; otherPlayers[id].color = data[id].color; otherPlayers[id].name = data[id].name;
+                    }
+                }
+            });
+        }
+
+        // --- GAME ENGINE (MODERN CANVAS) ---
         const container = document.getElementById('game-container');
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         let width = canvas.width = container.offsetWidth;
         let height = canvas.height = container.offsetHeight;
 
-        window.addEventListener('resize', () => {
-            width = canvas.width = container.offsetWidth;
-            height = canvas.height = container.offsetHeight;
-        });
+        window.addEventListener('resize', () => { width = canvas.width = container.offsetWidth; height = canvas.height = container.offsetHeight; });
 
-        // --- TRACK DEFINITION V2: Modern Zigzag/Tamiya Style ---
-        // We define the whole game world area
-        const worldSize = { w: 2000, h: 4000 }; // Very long vertical track
+        // --- NEW MODERN TRACK PATH (Vector Based) ---
+        // A clean, pill-shaped circuit with smooth curves using Canvas Path2D
+        const trackPath = new Path2D();
+        trackPath.arc(1000, 1000, 500, Math.PI, 0); // Top semi-circle
+        trackPath.lineTo(1500, 3000);               // Right straight
+        trackPath.arc(1000, 3000, 500, 0, Math.PI); // Bottom semi-circle
+        trackPath.closePath();                      // Left straight
 
-        // Track Outer Boundary
-        const trackBounds = { x: 100, y: 100, w: 1800, h: 3800 };
-        const roadWidth = 350; // Wide roads for easy multi-cart racing
-
-        // Internal Grass/Walls definitions to carve out the path (The "Hindi Tatagos" boundaries)
-        const trackWalls = [
-            // Carver 1: Bottom Right Island (Creates first hairpin)
-            { x: trackBounds.x + roadWidth, y: worldSize.h - roadWidth - 1100, w: trackBounds.w - roadWidth, h: 1100 },
-            // Carver 2: Mid-Left Chicane Entry
-            { x: trackBounds.x, y: 1500, w: trackBounds.w - roadWidth - 100, h: roadWidth + 200 },
-            // Carver 3: Mid-Right Chicane Exit
-            { x: trackBounds.x + roadWidth + 200, y: 1100, w: trackBounds.w - roadWidth - 100, h: roadWidth + 200 },
-            // Carver 4: Top Center Island
-            { x: trackBounds.x + roadWidth, y: trackBounds.y, w: trackBounds.w - roadWidth*2, h: 1000 }
-        ];
-
-        // Rumble Strips (Kerbs) data on corners for aesthetics
-        const rumbleStrips = [
-            // Hairpin Bottom
-            { x: trackWalls[0].x - 10, y: worldSize.h - roadWidth - 1100, w: 20, h: 1100, angle: 0 }, 
-            // Chicane Left
-            { x: trackWalls[1].x + trackWalls[1].w, y: 1500, w: 20, h: roadWidth+200, angle:0 },
-            // Chicane Right
-            { x: trackWalls[2].x - 10, y: 1100, w: 20, h: roadWidth+200, angle:0 },
-        ];
-        
-        // Lifelike objects: Tire Barriers
-        const tireBarriers = [
-            { x: worldSize.w - 150, y: 1400, r: 15 }, { x: worldSize.w - 180, y: 1430, r: 15 }, // Tire pile
-            { x: 150, y: 1000, r: 15 }, { x: 180, y: 1030, r: 15 }, // Tire pile
-        ];
-
-        function isCollision(x, y, kartWidth, kartHeight) {
-            // Check Outer Bounds
-            if (x - kartWidth/2 < trackBounds.x || x + kartWidth/2 > trackBounds.x + trackBounds.w ||
-                y - kartHeight/2 < trackBounds.y || y + kartHeight/2 > trackBounds.y + trackBounds.h) {
-                return true;
-            }
-            // Check Internal Walls
-            for (let wall of trackWalls) {
-                if (x + kartWidth/2 > wall.x && x - kartWidth/2 < wall.x + wall.w &&
-                    y + kartHeight/2 > wall.y && y - kartHeight/2 < wall.y + wall.h) {
-                    return true;
-                }
-            }
-            return false;
+        function isCollision(x, y) {
+            // Set line width to match the asphalt width to check collision
+            ctx.lineWidth = 340; 
+            // If the point is NOT inside the stroked path, it's a collision (off-track)
+            return !ctx.isPointInStroke(trackPath, x, y);
         }
 
-        // --- Kart Physics ---
+        function drawGrid(camX, camY) {
+            ctx.fillStyle = '#0a0f0a'; // Very dark green/black
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            
+            let offsetX = -camX % 100;
+            let offsetY = -camY % 100;
+
+            for(let x = offsetX; x < width; x += 100) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
+            for(let y = offsetY; y < height; y += 100) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
+            ctx.stroke();
+        }
+
+        function drawTrack(camX, camY) {
+            ctx.save();
+            ctx.translate(-camX, -camY);
+
+            // 1. Red/White Rumble Strip Edge (Outer Border)
+            ctx.lineWidth = 380;
+            ctx.strokeStyle = '#ef4444'; // Red base
+            ctx.stroke(trackPath);
+
+            ctx.lineWidth = 380;
+            ctx.strokeStyle = '#fff'; // White dashes
+            ctx.setLineDash([60, 60]);
+            ctx.stroke(trackPath);
+            ctx.setLineDash([]);
+
+            // 2. Asphalt Road
+            ctx.lineWidth = 340;
+            ctx.strokeStyle = '#222'; // Dark Asphalt
+            ctx.stroke(trackPath);
+
+            // 3. Center Dashed Line
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.setLineDash([40, 40]);
+            ctx.stroke(trackPath);
+            ctx.setLineDash([]);
+
+            // 4. Start/Finish Line
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(330, 2000, 340, 15);
+            ctx.fillStyle = '#000';
+            for(let i = 0; i < 340; i+=20) {
+                ctx.fillRect(330 + i, 2000, 10, 15);
+            }
+
+            ctx.restore();
+        }
+
         const inputs = { forward: false, reverse: false, left: false, right: false, brake: false };
 
-        // Keyboard Support for PC testing
         window.addEventListener('keydown', e => {
             if(e.key === 'ArrowUp' || e.key === 'w') inputs.forward = true;
             if(e.key === 'ArrowDown' || e.key === 's') inputs.reverse = true;
@@ -260,134 +481,12 @@
             if(e.key === ' ') inputs.brake = false;
         });
 
-        // Player Data
-        const myUserId = "PortraitUser_" + Math.floor(Math.random() * 1000);
         let myKart = {
-            x: 300, y:worldSize.h - 400, // Start Bottom Left lane
-            angle: 0, 
-            speed: 0,
-            maxSpeed: 16, // Slightly faster on longer track
-            accel: 0.3, friction: 0.08, turnSpeed: 0.07,
-            width: 25, height: 45,
-            color: '#f97316'
+            x: 500, y: 2000, // Starts exactly on the left straight
+            angle: 0, speed: 0, maxSpeed: 18, accel: 0.3, friction: 0.08, turnSpeed: 0.06,
+            width: 25, height: 45, color: '#f97316'
         };
 
-        let otherPlayers = {};
-
-        // --- Firebase Multiplayer Sync ---
-        let lastSendTime = 0;
-        function syncMultiplayer() {
-            database.ref('gokart_portrait/' + myUserId).onDisconnect().remove();
-            
-            // Listen for others once, data updates in gameloop
-            database.ref('gokart_portrait').on('value', snapshot => {
-                const data = snapshot.val();
-                if(!data) return;
-                let activeNow = Date.now();
-                for (let id in data) {
-                    if (id === myUserId) continue;
-                    if (activeNow - data[id].lastSeen > 5000) continue; 
-                    if (!otherPlayers[id]) {
-                        otherPlayers[id] = { ...data[id], renderX: data[id].x, renderY: data[id].y, renderAngle: data[id].angle };
-                    } else {
-                        otherPlayers[id].x = data[id].x; otherPlayers[id].y = data[id].y; otherPlayers[id].angle = data[id].angle; otherPlayers[id].color = data[id].color;
-                    }
-                }
-            });
-        }
-        syncMultiplayer();
-
-        // --- Drawing Functions with Modern Styling ---
-        function drawPatternedRect(patternCtx, x, y, w, h, color1, color2, size = 10) {
-            patternCtx.save();
-            patternCtx.beginPath();
-            patternCtx.rect(x, y, w, h);
-            patternCtx.clip();
-            for (let i = 0; i < w + size; i += size) {
-                for (let j = 0; j < h + size; j += size) {
-                    patternCtx.fillStyle = (Math.floor(i/size) + Math.floor(j/size)) % 2 === 0 ? color1 : color2;
-                    patternCtx.fillRect(x + i, y + j, size, size);
-                }
-            }
-            patternCtx.restore();
-        }
-
-        function drawBackground(camX, camY) {
-            // 1. Fill Grass Background
-            ctx.fillStyle = varColor('--grass-green');
-            ctx.fillRect(0, 0, width, height);
-
-            ctx.save();
-            ctx.translate(-camX, -camY);
-
-            // 2. Draw Main Road (Carved Path)
-            ctx.fillStyle = varColor('--track-asphalt');
-            ctx.fillRect(trackBounds.x, trackBounds.y, trackBounds.w, trackBounds.h);
-
-            // Carve Grass Islands back
-            ctx.fillStyle = varColor('--grass-green');
-            trackWalls.forEach(wall => ctx.fillRect(wall.x, wall.y, wall.w, wall.h));
-
-            // 3. Draw Rumble Strips (Kerbs) with Pattern
-            rumbleStrips.forEach(kerb => {
-                drawPatternedRect(ctx, kerb.x, kerb.y, kerb.w, kerb.h, '#fff', varColor('--rumble-red'), 15);
-            });
-            
-            // 4. Draw Lifelike Objects: Tire Barriers
-            ctx.fillStyle = '#000'; ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
-            tireBarriers.forEach(tire => {
-                ctx.beginPath(); ctx.arc(tire.x, tire.y, tire.r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-                ctx.beginPath(); ctx.arc(tire.x, tire.y, tire.r/2, 0, Math.PI*2); ctx.stroke(); // Inner ring
-            });
-
-            // 5. Finish Line Checked
-            drawPatternedRect(ctx, trackBounds.x, worldSize.h - 500, roadWidth, 30, '#fff', '#000', 10);
-
-            ctx.restore();
-        }
-
-        function drawKart(kart, camX, camY, isMe) {
-            ctx.save();
-            ctx.translate(kart.x - camX, kart.y - camY);
-            ctx.rotate(kart.angle);
-
-            // Shadow
-            ctx.fillStyle = 'rgba(0,0,0,0.5)';
-            ctx.fillRect(-kart.width/2 + 3, -kart.height/2 + 3, kart.width, kart.height);
-
-            // Draw 4 Wheels
-            ctx.fillStyle = '#1a1a1a'; ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
-            const wh = 14; const ww = 7;
-            const frontWheelAngle = isMe && (inputs.left ? -0.3 : inputs.right ? 0.3 : 0);
-            
-            // Back Wheels (Fixed)
-            ctx.fillRect(-kart.width/2 - 4, kart.height/2 - wh - 3, ww, wh); // BL
-            ctx.fillRect(kart.width/2 - ww + 4, kart.height/2 - wh - 3, ww, wh); // BR
-            
-            // Front Wheels (Turning effect)
-            ctx.save(); ctx.translate(-kart.width/2, -kart.height/2 + 8); ctx.rotate(frontWheelAngle); ctx.fillRect(-4, -wh/2, ww, wh); ctx.restore(); // FL
-            ctx.save(); ctx.translate(kart.width/2, -kart.height/2 + 8); ctx.rotate(frontWheelAngle); ctx.fillRect(-ww+4, -wh/2, ww, wh); ctx.restore(); // FR
-
-            // Draw Kart Chassis Body (Gradient)
-            let grad = ctx.createLinearGradient(0, -kart.height/2, 0, kart.height/2);
-            grad.addColorStop(0, kart.color); grad.addColorStop(1, adjustColor(kart.color, -50));
-            ctx.fillStyle = grad;
-            ctx.fillRect(-kart.width/2, -kart.height/2, kart.width, kart.height);
-            
-            // Seat & Engine details
-            ctx.fillStyle = '#222'; ctx.fillRect(-6, 0, 12, 10);
-            
-            // Driver Head (Helmeted modern look)
-            ctx.fillStyle = isMe ? '#fff' : '#aaa'; 
-            ctx.beginPath(); ctx.arc(0, -2, 9, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#111'; ctx.fillRect(-6, -6, 12, 4); // Visor
-
-            ctx.restore();
-        }
-
-        // Helper: Get CSS variable color
-        function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-        // Helper: Darken/Lighten Color
         function adjustColor(col, amt) {
             let usePound = false; if (col[0] == "#") { col = col.slice(1); usePound = true; }
             let num = parseInt(col,16);
@@ -397,9 +496,63 @@
             return (usePound?"#":"") + (g | (b << 8) | (r << 16)).toString(16);
         }
 
-        // --- Main Game Loop ---
+        function drawKart(kart, camX, camY, isMe) {
+            ctx.save();
+            ctx.translate(kart.x - camX, kart.y - camY);
+            ctx.rotate(kart.angle);
+
+            // Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect(-kart.width/2 + 5, -kart.height/2 + 5, kart.width, kart.height);
+
+            // Draw 4 Wheels
+            ctx.fillStyle = '#111'; 
+            const wh = 14; const ww = 7;
+            const frontWheelAngle = isMe && (inputs.left ? -0.3 : inputs.right ? 0.3 : 0);
+            
+            ctx.fillRect(-kart.width/2 - 4, kart.height/2 - wh - 3, ww, wh); // BL
+            ctx.fillRect(kart.width/2 - ww + 4, kart.height/2 - wh - 3, ww, wh); // BR
+            
+            ctx.save(); ctx.translate(-kart.width/2, -kart.height/2 + 8); ctx.rotate(frontWheelAngle); ctx.fillRect(-4, -wh/2, ww, wh); ctx.restore(); // FL
+            ctx.save(); ctx.translate(kart.width/2, -kart.height/2 + 8); ctx.rotate(frontWheelAngle); ctx.fillRect(-ww+4, -wh/2, ww, wh); ctx.restore(); // FR
+
+            // Draw Body
+            let grad = ctx.createLinearGradient(0, -kart.height/2, 0, kart.height/2);
+            grad.addColorStop(0, kart.color); grad.addColorStop(1, adjustColor(kart.color, -60));
+            ctx.fillStyle = grad;
+            ctx.fillRect(-kart.width/2, -kart.height/2, kart.width, kart.height);
+            
+            // Driver
+            ctx.fillStyle = '#222'; ctx.fillRect(-6, 0, 12, 10); // Seat
+            ctx.fillStyle = isMe ? '#fff' : '#aaa'; 
+            ctx.beginPath(); ctx.arc(0, -2, 8, 0, Math.PI * 2); ctx.fill(); // Helmet
+            ctx.fillStyle = '#111'; ctx.fillRect(-6, -6, 12, 4); // Visor
+
+            // Name
+            if(!isMe && kart.name) {
+                ctx.rotate(-kart.angle);
+                ctx.fillStyle = "#fff"; ctx.font = "bold 12px Outfit"; ctx.textAlign = "center";
+                ctx.fillText(kart.name, 0, -35);
+            }
+
+            ctx.restore();
+        }
+
+        // Dummy Bot Logic (Drives in a large circle)
+        function updateBot(p) {
+            if(!p.isBot) return;
+            p.speed = 10;
+            // Make bot run around the top loop smoothly
+            let cx = 1000, cy = 1000, radius = 500;
+            let targetAngle = Math.atan2(p.renderX - cx, cy - p.renderY) + Math.PI/2;
+            
+            p.renderAngle += (targetAngle - p.renderAngle) * 0.1;
+            p.renderX += Math.sin(p.renderAngle) * p.speed;
+            p.renderY -= Math.cos(p.renderAngle) * p.speed;
+        }
+
         function gameLoop() {
-            // 1. Calculate Physics
+            // Physics
             if (inputs.forward) {
                 myKart.speed += myKart.accel;
                 if(myKart.speed > myKart.maxSpeed) myKart.speed = myKart.maxSpeed;
@@ -413,11 +566,9 @@
 
             if (inputs.brake) { myKart.speed *= 0.85; if(Math.abs(myKart.speed) < 0.5) myKart.speed = 0; }
 
-            // Steering (only if moving)
             if (Math.abs(myKart.speed) > 0.1) {
                 let turnDir = myKart.speed > 0 ? 1 : -1;
-                // Harder friction when turning at high speeds
-                let driftFactor = inputs.forward && Math.abs(myKart.speed) > myKart.maxSpeed*0.7 ? 1.5 : 1; 
+                let driftFactor = inputs.forward && Math.abs(myKart.speed) > myKart.maxSpeed*0.7 ? 1.3 : 1; 
                 if (inputs.left) myKart.angle -= (myKart.turnSpeed * turnDir * driftFactor);
                 if (inputs.right) myKart.angle += (myKart.turnSpeed * turnDir * driftFactor);
             }
@@ -425,58 +576,57 @@
             let nextX = myKart.x + Math.sin(myKart.angle) * myKart.speed;
             let nextY = myKart.y - Math.cos(myKart.angle) * myKart.speed;
 
-            // 2. Collision Detection ("Hindi Tatagos")
-            if (isCollision(nextX, nextY, myKart.width, myKart.height)) {
-                // Bounce back effect
-                myKart.speed = -myKart.speed * 0.4;
-                myKart.x -= Math.sin(myKart.angle) * 3;
-                myKart.y += Math.cos(myKart.angle) * 3;
+            // Collision Check (Hindi Tatagos logic)
+            if (isCollision(nextX, nextY)) {
+                myKart.speed = -myKart.speed * 0.5; // Bounce
+                myKart.x -= Math.sin(myKart.angle) * 5;
+                myKart.y += Math.cos(myKart.angle) * 5;
             } else {
                 myKart.x = nextX;
                 myKart.y = nextY;
             }
 
-            // Update UI
             document.getElementById('speed-val').innerText = Math.abs(Math.floor(myKart.speed * 5));
 
-            // 3. Camera (Follow player, landscape view rotated conceptually)
-            // Camera centers player in portrait frame
             let camX = myKart.x - width / 2;
             let camY = myKart.y - height / 2;
 
-            // 4. Draw
+            // Render
             ctx.clearRect(0, 0, width, height);
-            drawBackground(camX, camY);
+            drawGrid(camX, camY);
+            drawTrack(camX, camY);
 
-            // Interpolate and Draw Others
             for (let id in otherPlayers) {
                 let p = otherPlayers[id];
-                p.renderX += (p.x - p.renderX) * 0.15;
-                p.renderY += (p.y - p.renderY) * 0.15;
-                let angleDiff = p.angle - p.renderAngle;
-                while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
-                while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-                p.renderAngle += angleDiff * 0.15;
-                drawKart({ x: p.renderX, y: p.renderY, angle: p.renderAngle, width: 25, height: 45, color: p.color }, camX, camY, false);
+                if(p.isBot) {
+                    updateBot(p);
+                    drawKart({ x: p.renderX, y: p.renderY, angle: p.renderAngle, width: 25, height: 45, color: p.color, name: 'BOT' }, camX, camY, false);
+                } else {
+                    p.renderX += (p.x - p.renderX) * 0.15;
+                    p.renderY += (p.y - p.renderY) * 0.15;
+                    let angleDiff = p.angle - p.renderAngle;
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                    p.renderAngle += angleDiff * 0.15;
+                    drawKart({ x: p.renderX, y: p.renderY, angle: p.renderAngle, width: 25, height: 45, color: p.color, name: p.name }, camX, camY, false);
+                }
             }
 
-            // Draw Me
             drawKart(myKart, camX, camY, true);
             
-            // Send Multiplayer update (Optimized 100ms)
-            let now = Date.now();
-            if (now - lastSendTime > 100) {
-                database.ref('gokart_portrait/' + myUserId).set({
-                    x: myKart.x, y: myKart.y, angle: myKart.angle, color: myKart.color, lastSeen: now
-                });
-                lastSendTime = now;
+            // Sync Out
+            if(currentMode === 'multi' && joinedServerId) {
+                let now = Date.now();
+                if (now - lastSendTime > 100) {
+                    database.ref('gokart_rooms/' + joinedServerId + '/gamestate/' + myUserId).set({
+                        x: myKart.x, y: myKart.y, angle: myKart.angle, color: myKart.color, name: myAlias, lastSeen: now
+                    });
+                    lastSendTime = now;
+                }
             }
 
             requestAnimationFrame(gameLoop);
         }
-
-        // Start Loop
-        gameLoop();
     </script>
 </body>
 </html>
