@@ -78,23 +78,9 @@
         .game-feedback { font-size: 0.85rem; letter-spacing: 1px; margin-top: 20px; min-height: 20px; font-weight: 500; text-transform: uppercase;}
 
         /* Loading Screen Styles */
-        .loader-spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(212, 175, 55, 0.2);
-            border-top: 4px solid var(--accent-gold);
-            border-radius: 50%;
-            animation: spinLoading 1s linear infinite;
-            margin: 0 auto 30px;
-        }
+        .loader-spinner { width: 60px; height: 60px; border: 4px solid rgba(212, 175, 55, 0.2); border-top: 4px solid var(--accent-gold); border-radius: 50%; animation: spinLoading 1s linear infinite; margin: 0 auto 30px; }
         @keyframes spinLoading { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .credit-box {
-            border-top: 1px solid rgba(212, 175, 55, 0.3); 
-            padding-top: 25px; 
-            margin-top: 30px;
-            animation: fadeIn 1.5s ease-in-out;
-        }
+        .credit-box { border-top: 1px solid rgba(212, 175, 55, 0.3); padding-top: 25px; margin-top: 30px; animation: fadeIn 1.5s ease-in-out; }
         @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
 
         /* Auth & Scavenger Styles */
@@ -132,8 +118,7 @@
         .avatar-img-animate { animation: avatarBob 1.5s infinite ease-in-out; pointer-events: none; -webkit-touch-callout: none; user-select: none; }
 
         /* MULTIPLAYER MAPS Styles */
-        /* OPTIMIZATION: CSS Smoothing for Leaflet Markers */
-        .leaflet-marker-icon { transition: transform 0.3s linear; }
+        .leaflet-marker-icon { transition: transform 0.3s linear; } /* OPTIMIZATION: Smooth movement */
 
         #game-explorer, #game-radar { padding: 0; overflow: hidden; height: 70vh; min-height: 550px; max-width: 100%; display: none; border-radius: 15px; position: relative; margin-top:20px; margin-left:auto; margin-right:auto;}
         #game-explorer { border: 1px solid var(--accent-gold); }
@@ -207,7 +192,7 @@
         .btn-action { background: rgba(10,10,10,0.8); border: 1px solid var(--accent-gold); color: var(--accent-gold); padding: 10px; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; transition: 0.3s;}
         .btn-action:hover { background: var(--accent-gold); color: #000; transform: scale(1.1); }
         
-        #leaderboardPanel { display: none; position: absolute; left: 60px; top: 80px; width: 220px; background: rgba(10,10,10,0.95); border: 1px solid var(--accent-gold); border-radius: 10px; padding: 15px; z-index: 2000; font-family: 'Outfit'; box-shadow: 0 10px 25px rgba(0,0,0,0.8); color: #fff; text-align: left;}
+        #leaderboardPanel { display: none; position: fixed; left: 70px; top: 80px; width: 220px; background: rgba(10,10,10,0.95); border: 1px solid var(--accent-gold); border-radius: 10px; padding: 15px; z-index: 200000 !important; font-family: 'Outfit'; box-shadow: 0 10px 25px rgba(0,0,0,0.8); color: #fff; text-align: left;}
 
         /* RESORT RUMBLE & CABANA STYLES */
         .weapon-hud { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 1px solid var(--accent-gold); padding: 10px 20px; border-radius: 20px; z-index: 1000; font-family: 'Outfit'; font-size: 14px; color: #fff; font-weight: bold; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);}
@@ -260,24 +245,6 @@
     </style>
 </head>
 <body>
-
-    <div id="btnGlobalScore" style="display: none; position: fixed; top: 100px; left: 15px; background: rgba(10, 10, 10, 0.85); border: 1px solid var(--accent-gold); padding: 10px; border-radius: 50%; z-index: 100000; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); align-items: center; justify-content: center; font-size: 1.5rem;" onclick="document.getElementById('globalScoreModal').style.display='flex'">
-        🏆
-    </div>
-    
-    <div id="btnGarageGlobal" style="display: none; position: fixed; top: 160px; left: 15px; background: rgba(10, 10, 10, 0.85); border: 1px solid #f97316; padding: 10px; border-radius: 50%; z-index: 100000; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); align-items: center; justify-content: center; font-size: 1.5rem; color: #f97316;" onclick="document.getElementById('atvCustomizeModal').style.display='flex'">
-        <span class="material-icons-outlined">garage</span>
-    </div>
-
-    <div id="globalScoreModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:200005; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
-        <div style="background:#111; border:1px solid var(--accent-gold); border-radius:12px; padding:30px 20px; width:90%; max-width:350px; text-align:center; color:#fff; font-family:'Outfit'; box-shadow: 0 15px 40px rgba(0,0,0,0.9); position: relative;">
-            <button onclick="document.getElementById('globalScoreModal').style.display='none'" style="position:absolute; top:10px; right:15px; background:transparent; border:none; color:#aaa; font-size:1.2rem; cursor:pointer; font-weight:bold;">✕</button>
-            <span style="font-size: 3rem;">🏆</span>
-            <h3 style="color:var(--accent-gold); font-family:'Playfair Display'; font-size:1.5rem; margin: 10px 0;">Global Score</h3>
-            <p style="color:#aaa; font-size:0.85rem; margin-bottom:15px;">Your total accumulated XP across all quests and games.</p>
-            <div style="font-size: 2.5rem; font-weight: 800; color: #fff; margin-top: 10px;" id="globalScoreDisplay">0 XP</div>
-        </div>
-    </div>
 
     <div id="customModalOverlay">
         <div class="custom-modal-box">
@@ -432,6 +399,17 @@
             <div id="auth-error" class="game-feedback"></div>
         </div>
 
+        <div id="game-loading" class="game-box" style="text-align: center; padding: 70px 40px; max-width: 600px;">
+            <div class="loader-spinner"></div>
+            <h3 id="loading-game-title" style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 2.2rem; margin-bottom: 10px; letter-spacing: 2px;">Loading...</h3>
+            <p style="color: #aaa; font-size: 0.9rem; letter-spacing: 3px; text-transform: uppercase;">Preparing your adventure</p>
+            
+            <div class="credit-box">
+                <p style="color: #fff; font-family: 'Outfit'; font-size: 0.95rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;">Crafted & Developed by <span style="color: var(--accent-gold);">RTX Creations</span></p>
+                <p style="color: #888; font-size: 0.8rem; margin-top: 10px; letter-spacing: 1px;">Got feedback? Reach out at: <a href="mailto:ragientrigo@gmail.com" style="color: var(--sonar-blue); text-decoration: none; font-weight: bold;">ragientrigo@gmail.com</a></p>
+            </div>
+        </div>
+
         <div id="game-character-select" class="game-box">
             <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
             <h3 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 1.8rem; margin-bottom: 10px;">Choose Your Explorer</h3>
@@ -461,17 +439,6 @@
             <button class="btn-game" style="margin-top: 20px;" onclick="enterGPSGame()">Enter World</button>
         </div>
 
-        <div id="game-loading" class="game-box" style="text-align: center; padding: 70px 40px; max-width: 600px;">
-            <div class="loader-spinner"></div>
-            <h3 id="loading-game-title" style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 2.2rem; margin-bottom: 10px; letter-spacing: 2px;">Loading...</h3>
-            <p style="color: #aaa; font-size: 0.9rem; letter-spacing: 3px; text-transform: uppercase;">Preparing your adventure</p>
-            
-            <div class="credit-box">
-                <p style="color: #fff; font-family: 'Outfit'; font-size: 0.95rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;">Crafted & Developed by <span style="color: var(--accent-gold);">RTX Creations</span></p>
-                <p style="color: #888; font-size: 0.8rem; margin-top: 10px; letter-spacing: 1px;">Got feedback? Reach out at: <a href="mailto:ragientrigo@gmail.com" style="color: var(--sonar-blue); text-decoration: none; font-weight: bold;">ragientrigo@gmail.com</a></p>
-            </div>
-        </div>
-
         <div id="game-explorer" class="game-box">
             <div id="explorer-map"></div>
             <div id="hud-map">
@@ -488,11 +455,6 @@
                 <button class="btn-action" title="Backpack" onclick="openInventory(event)"><span class="material-icons-outlined">inventory_2</span></button>
                 <button class="btn-action" title="Global Chat" id="btnToggleChat" onclick="toggleGlobalChat(event)"><span class="material-icons-outlined">forum</span></button>
                 <button class="btn-action" title="Drop Flare" onclick="dropFlare()"><span class="material-icons-outlined">flare</span></button>
-            </div>
-
-            <div id="leaderboardPanel">
-                <h4 style="color:var(--accent-gold); margin-bottom:10px; border-bottom:1px solid rgba(212, 175, 55, 0.4); padding-bottom:5px; font-size: 12px;">TOP EXPLORERS (XP)</h4>
-                <div id="leaderboardList" style="font-size:0.9rem; line-height:1.6;">Loading...</div>
             </div>
 
             <div id="treasurePopup" class="treasure-popup">
@@ -537,6 +499,8 @@
             </div>
 
             <div id="atv-left-actions" style="position: absolute; left: 15px; top: 100px; display: flex; flex-direction: column; gap: 15px; z-index: 1000;">
+                <button class="atv-btn-round" title="Leaderboard" onclick="toggleLeaderboard(event)"><span class="material-icons-outlined">emoji_events</span></button>
+                <button class="atv-btn-round" title="Garage (Paint/Tires)" onclick="document.getElementById('atvCustomizeModal').style.display='flex'"><span class="material-icons-outlined">format_paint</span></button>
                 <button class="atv-btn-round" title="ATV Inventory" onclick="openATVInventory()"><span class="material-icons-outlined">inventory_2</span></button>
                 <button class="atv-btn-round" id="btnToggleChatATV" onclick="toggleGlobalChat(event)"><span class="material-icons-outlined">forum</span></button>
             </div>
@@ -609,6 +573,12 @@
             <button id="memoryResetBtn" class="btn-game" style="display:none; margin: 20px auto 0; padding: 10px 30px; font-size: 0.8rem;" onclick="initMemoryGame()">Play Again</button>
         </div>
 
+        <div id="leaderboardPanel">
+            <div style="font-size: 1rem; color: #fff; font-weight: bold; margin-bottom: 10px; border-bottom: 1px dashed #555; padding-bottom: 10px; font-family: 'Outfit';">My Score: <span id="myScoreDisplay" style="color: var(--accent-gold);">0</span> XP</div>
+            <h4 style="color:var(--accent-gold); margin-bottom:10px; border-bottom:1px solid rgba(212, 175, 55, 0.4); padding-bottom:5px; font-size: 12px;">TOP EXPLORERS (XP)</h4>
+            <div id="leaderboardList" style="font-size:0.9rem; line-height:1.6;">Loading...</div>
+        </div>
+
         <div id="chatPanel" style="display:none; position:fixed; right:15px; top:75px; width:220px; height:320px; background:rgba(10,10,10,0.95); border:1px solid var(--accent-gold); z-index:200000 !important; border-radius:10px; flex-direction:column; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
             <div style="padding:10px; background:var(--accent-gold); color:#000; font-weight:bold; font-size:12px; display:flex; justify-content:center; border-radius:8px 8px 0 0;">
                 <span style="font-family:'Outfit'">GLOBAL CHAT</span>
@@ -636,7 +606,7 @@
     <script>
         // --- AUTO-CLOSE MODALS ON OUTSIDE CLICK ---
         document.addEventListener('click', function(event) {
-            if (!event.target.closest('#leaderboardPanel') && !event.target.closest('.hud-actions') && !event.target.closest('.leaflet-popup')) {
+            if (!event.target.closest('#leaderboardPanel') && !event.target.closest('.hud-actions') && !event.target.closest('#atv-left-actions') && !event.target.closest('.leaflet-popup')) {
                 document.getElementById('leaderboardPanel').style.display = 'none';
             }
             if (!event.target.closest('#privateChatPanel') && !event.target.closest('.leaflet-popup')) {
@@ -659,9 +629,6 @@
             }
             if (event.target.id === 'customModalOverlay') {
                 document.getElementById('customModalOverlay').style.display = 'none';
-            }
-            if (event.target.id === 'globalScoreModal') {
-                document.getElementById('globalScoreModal').style.display = 'none';
             }
         });
 
@@ -735,7 +702,6 @@
             document.getElementById('gameSubtitle').style.display = 'none';
             
             if (!isAuthorized) {
-                // Show auth directly, do not load yet
                 document.getElementById('game-auth').style.display = 'block';
                 document.getElementById('voucherInput').value = '';
                 document.getElementById('auth-error').innerText = '';
@@ -768,26 +734,15 @@
                 'camera': 'Snap Quest',
                 'memory': 'Paraiso Match'
             };
-
+            
             const boxes = document.querySelectorAll('.game-box');
             boxes.forEach(box => box.style.display = 'none'); 
-
+            
             document.getElementById('loading-game-title').innerText = titles[gameType] || 'Loading Game...';
             document.getElementById('game-loading').style.display = 'block';
 
             setTimeout(() => {
                 document.getElementById('game-loading').style.display = 'none';
-                
-                // Show Trophy in all games
-                document.getElementById('btnGlobalScore').style.display = 'flex'; 
-
-                // Show Garage ONLY if game is ATV
-                if (gameType === 'atv') {
-                    document.getElementById('btnGarageGlobal').style.display = 'flex'; 
-                } else {
-                    document.getElementById('btnGarageGlobal').style.display = 'none'; 
-                }
-
                 launchGame(gameType);
             }, 2500); 
         }
@@ -798,10 +753,6 @@
             document.getElementById('quest-menu').style.display = 'flex';
             document.getElementById('gameSubtitle').style.display = 'block';
             document.getElementById('gameSubtitle').innerText = "Choose Your Adventure";
-            
-            // Hide icons when returning to menu
-            document.getElementById('btnGlobalScore').style.display = 'none'; 
-            document.getElementById('btnGarageGlobal').style.display = 'none'; 
             
             document.getElementById('chatPanel').style.display = 'none';
             document.getElementById('privateChatPanel').style.display = 'none';
@@ -819,7 +770,7 @@
         let currentSpeedMultiplier = 1;
         let flareLayers = {};
         let globalWatchId = null;
-        let lastGpsSendTime = 0; // For Firebase Optimization
+        let lastGpsSendTime = 0; // FIREBASE OPTIMIZATION THROTTLE
         
         // --- INVENTORY & COMBAT SYSTEM ---
         let myInventory = [
@@ -840,7 +791,9 @@
 
         function addScore(points) {
             myScore += points;
-            document.getElementById('globalScoreDisplay').innerText = `${myScore} XP`;
+            const myScoreEl = document.getElementById('myScoreDisplay');
+            if (myScoreEl) myScoreEl.innerText = myScore; // Updates inside the new Leaderboard Panel
+
             if(isAuthorized) {
                 database.ref('players/' + myUserId).update({ score: myScore });
             }
@@ -911,7 +864,6 @@
             backToMenu();
         }
 
-        /* OPTIMIZATION: CSS SMOOTHING ADDED TO LEAFLET ICONS IN STYLE SECTION */
         function getZombieIcon(urlOrId, name, isMe, zState, hp = null, isMonster = false) {
             let color = zState ? (zState === 'zombie' ? 'var(--zombie-red)' : 'var(--zombie-green)') : (isMe ? 'var(--accent-gold)' : '#fff');
             let pulse = isMe ? (zState ? (zState === 'zombie' ? 'pulse-wave-gold' : 'zombie-pulse') : 'pulse-wave-gold') : '';
@@ -933,7 +885,7 @@
             }
 
             return L.divIcon({
-                className: 'custom-div-icon leaflet-marker-icon', /* Smoothed transition added */
+                className: 'custom-div-icon leaflet-marker-icon', // OPTIMIZATION SMOOTHING
                 html: `<div class="user-icon-container" style="width: ${isMe?45:35}px; height: ${isMe?45:35}px;">
                            <div class="${pulse}" style="width: ${isMe?65:0}px; height: ${isMe?65:0}px; top: -10px; left: -10px; position:absolute; z-index:5; border-radius:50%;"></div>
                            <div style="position:absolute; top:-30px; left:50%; transform:translateX(-50%); text-align:center; z-index:20; min-width: 50px;">
@@ -1577,6 +1529,7 @@
 
             if (navigator.geolocation) {
                 globalWatchId = navigator.geolocation.watchPosition(pos => {
+                    let isWalk = lastLat ? (Math.abs(pos.coords.latitude - lastLat) > 0.00001) : false;
                     sonarMarker.setLatLng([pos.coords.latitude, pos.coords.longitude]); 
                     sonarMap.panTo([pos.coords.latitude, pos.coords.longitude]);
                     lastLat = pos.coords.latitude; 
