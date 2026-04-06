@@ -36,7 +36,6 @@
             --zombie-green: #22c55e;
             --sonar-blue: #3b82f6;
             --atv-orange: #f97316;
-            --plaza-pink: #ec4899;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -119,6 +118,10 @@
         .avatar-card.selected { border-color: var(--accent-gold); transform: scale(1.1); box-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
         .avatar-card img { width: 100%; height: 100%; object-fit: cover; }
         
+        /* Avatar Bobbing Animation on Map */
+        @keyframes avatarBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        .avatar-img-animate { animation: avatarBob 1.5s infinite ease-in-out; pointer-events: none; -webkit-touch-callout: none; user-select: none; }
+
         /* MULTIPLAYER MAPS Styles */
         /* OPTIMIZATION: CSS Smoothing for Leaflet Markers */
         .leaflet-marker-icon { transition: transform 0.3s linear; }
@@ -127,7 +130,7 @@
         #game-explorer { border: 1px solid var(--accent-gold); }
         #game-radar { border: 1px solid var(--accent-gold); }
         
-        #explorer-map, #sonar-map, #hangout-map { width: 100%; height: 100%; background: #eee; position: absolute; top: 0; left: 0; z-index: 1;} 
+        #explorer-map, #sonar-map { width: 100%; height: 100%; background: #eee; position: absolute; top: 0; left: 0; z-index: 1;} 
         
         .hud-map {
             position: absolute; top: 25px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 400px;
@@ -212,31 +215,6 @@
         .inv-name { font-weight: bold; color: var(--accent-gold); font-size: 1rem; }
         .inv-dmg { font-size: 0.75rem; color: #aaa; }
 
-        /* ROBLOX / HANGOUT SPECIFIC STYLES */
-        #game-hangout { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100dvh !important; max-width: none !important; z-index: 99999 !important; border-radius: 0 !important; margin: 0 !important; border: none !important; touch-action: none; background: #eee; display: none; overflow: hidden; }
-        
-        .chat-bubble {
-            position: absolute; top: -45px; left: 50%; transform: translateX(-50%);
-            background: rgba(255,255,255,0.95); color: #000; padding: 6px 10px;
-            border-radius: 12px; font-size: 11px; font-weight: bold; white-space: nowrap;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4); z-index: 1000; font-family: 'Outfit';
-            pointer-events: none; border: 1px solid #ccc;
-            animation: popBubble 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .chat-bubble::after {
-            content: ''; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
-            border-width: 5px 5px 0; border-style: solid; border-color: rgba(255,255,255,0.95) transparent transparent transparent;
-        }
-        @keyframes popBubble { 0% { transform: translateX(-50%) scale(0); } 100% { transform: translateX(-50%) scale(1); } }
-
-        /* Emote Animations for 2D Marker */
-        .emote-jump { animation: jumpAnim 0.5s ease 3; }
-        .emote-spin { animation: spinAnim 1s linear 2; }
-        .emote-shake { animation: shakeAnim 0.2s linear 5; }
-        @keyframes jumpAnim { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-25px) scale(1.1); } }
-        @keyframes spinAnim { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes shakeAnim { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px) rotate(-10deg); } 75% { transform: translateX(8px) rotate(10deg); } }
-
         /* ATV SPECIFIC STYLES */
         #game-atv { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100dvh !important; max-width: none !important; z-index: 99999 !important; border-radius: 0 !important; margin: 0 !important; border: none !important; touch-action: none; background: #eee; display: none; overflow: hidden; }
 
@@ -252,7 +230,6 @@
         .atv-ctrl-btn.yellow { border-color: #eab308; color: #eab308; }
         .atv-ctrl-btn.green { border-color: #22c55e; color: #22c55e; }
         .atv-ctrl-btn.blue { border-color: #3b82f6; color: #3b82f6; }
-        .atv-ctrl-btn.pink { border-color: var(--plaza-pink); color: var(--plaza-pink); }
     </style>
 </head>
 <body>
@@ -388,12 +365,6 @@
 
         <div id="quest-menu" class="quest-menu-grid">
             
-            <div class="quest-card" onclick="openGame('hangout')">
-                <span class="material-icons-outlined" style="color: var(--plaza-pink);">accessibility_new</span>
-                <h3 style="color: var(--plaza-pink);">Paraiso Plaza</h3>
-                <p>Virtual Hangout! Walk around the resort, show off emotes, and chat live with other players like in Roblox!</p>
-            </div>
-
             <div class="quest-card" onclick="openGame('atv')">
                 <span class="material-icons-outlined" style="color: var(--atv-orange);">two_wheeler</span>
                 <h3 style="color: var(--atv-orange);">ATV Dirt Racing</h3>
@@ -478,40 +449,6 @@
             <div class="credit-box">
                 <p style="color: #fff; font-family: 'Outfit'; font-size: 0.95rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;">Created & Developed by <span style="color: var(--accent-gold);">RTX Creations</span></p>
                 <p style="color: #888; font-size: 0.8rem; margin-top: 10px; letter-spacing: 1px;">Got feedback? Reach out at: <a href="mailto:ragientrigo@gmail.com" style="color: var(--sonar-blue); text-decoration: none; font-weight: bold;">ragientrigo@gmail.com</a></p>
-            </div>
-        </div>
-
-        <div id="game-hangout" class="game-box">
-            <div id="hangout-map" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1;"></div>
-            
-            <div id="hangout-top-hud" style="position: absolute; top: 15px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: rgba(30,30,30,0.95); border-radius: 30px; display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; z-index: 1000; border: 1px solid var(--plaza-pink); box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
-                <div style="display: flex; align-items: center; gap: 10px; color: #fff; cursor: pointer;" onclick="quitHangoutGame()">
-                    <span class="material-icons-outlined" style="color: #aaa;">arrow_back</span>
-                    <div style="display: flex; flex-direction: column; text-align: left;">
-                        <span style="font-weight: 800; font-size: 13px; letter-spacing: 1px; color: #fff; font-family: 'Outfit';">EXIT</span>
-                        <span style="color: var(--plaza-pink); font-size: 11px; font-weight: bold;"><span class="material-icons-outlined" style="font-size: 13px; vertical-align: middle;">accessibility_new</span> Paraiso Plaza</span>
-                    </div>
-                </div>
-            </div>
-
-            <div style="position: absolute; top: 80px; left: 50%; transform: translateX(-50%); z-index: 1000; display:flex; gap:5px; width: 90%; max-width: 350px;">
-                <input type="text" id="plazaChatInput" placeholder="Say something..." autocomplete="off" style="flex:1; background:rgba(0,0,0,0.8); border:1px solid var(--plaza-pink); color:#fff; padding:10px 15px; font-size:13px; border-radius:20px; outline:none; font-family:'Outfit';" onkeypress="if(event.key === 'Enter') sendPlazaChat()">
-                <button onclick="sendPlazaChat()" style="background:var(--plaza-pink); border:none; padding:10px 15px; cursor:pointer; border-radius:20px; font-weight:bold; color: white;"><span class="material-icons-outlined" style="font-size: 16px;">send</span></button>
-            </div>
-
-            <div id="hangout-right-actions" style="position: absolute; right: 15px; top: 130px; display: flex; flex-direction: column; gap: 10px; z-index: 1000;">
-                <button class="atv-btn-round" style="border-color: var(--plaza-pink); color: var(--plaza-pink);" title="Jump" onclick="triggerPlazaEmote('jump')"><span class="material-icons-outlined">arrow_upward</span></button>
-                <button class="atv-btn-round" style="border-color: var(--plaza-pink); color: var(--plaza-pink);" title="Spin" onclick="triggerPlazaEmote('spin')"><span class="material-icons-outlined">360</span></button>
-                <button class="atv-btn-round" style="border-color: var(--plaza-pink); color: var(--plaza-pink);" title="Shake" onclick="triggerPlazaEmote('shake')"><span class="material-icons-outlined">vibration</span></button>
-                <button class="atv-btn-round" style="border-color: var(--plaza-pink); color: var(--plaza-pink);" title="Heart" onclick="triggerPlazaEmote('heart')"><span class="material-icons-outlined">favorite</span></button>
-            </div>
-
-            <div id="hangout-bottom-controls" style="position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 1000; width: 95%; max-width: 450px; justify-content: center; touch-action: none;">
-                <button class="atv-ctrl-btn round pink" oncontextmenu="event.preventDefault();" onmousedown="hangoutInputs.left=true" onmouseup="hangoutInputs.left=false" onmouseleave="hangoutInputs.left=false" ontouchstart="hangoutInputs.left=true" ontouchend="hangoutInputs.left=false"><span class="material-icons-outlined">navigate_before</span></button>
-                <button class="atv-ctrl-btn round pink" oncontextmenu="event.preventDefault();" onmousedown="hangoutInputs.right=true" onmouseup="hangoutInputs.right=false" onmouseleave="hangoutInputs.right=false" ontouchstart="hangoutInputs.right=true" ontouchend="hangoutInputs.right=false"><span class="material-icons-outlined">navigate_next</span></button>
-                
-                <div style="width: 20px;"></div> <button class="atv-ctrl-btn square pink" style="height: 60px;" oncontextmenu="event.preventDefault();" onmousedown="hangoutInputs.down=true" onmouseup="hangoutInputs.down=false" onmouseleave="hangoutInputs.down=false" ontouchstart="hangoutInputs.down=true" ontouchend="hangoutInputs.down=false"><span class="material-icons-outlined">keyboard_arrow_down</span></button>
-                <button class="atv-ctrl-btn square pink" style="height: 60px;" oncontextmenu="event.preventDefault();" onmousedown="hangoutInputs.up=true" onmouseup="hangoutInputs.up=false" onmouseleave="hangoutInputs.up=false" ontouchstart="hangoutInputs.up=true" ontouchend="hangoutInputs.up=false"><span class="material-icons-outlined">keyboard_arrow_up</span></button>
             </div>
         </div>
 
@@ -777,7 +714,6 @@
             
             // INTRO LOADING SCREEN WITH DEV CREDITS
             const titles = {
-                'hangout': 'Paraiso Plaza',
                 'scavenger': 'The Explorer\'s Path',
                 'explorer': 'Resort Zombie Outbreak',
                 'radar': 'Relic Sonar',
@@ -882,7 +818,7 @@
             } else if(gameType === 'memory') {
                 document.getElementById('game-memory').style.display = 'block';
                 initMemoryGame();
-            } else if(gameType === 'explorer' || gameType === 'radar' || gameType === 'atv' || gameType === 'hangout') {
+            } else if(gameType === 'explorer' || gameType === 'radar' || gameType === 'atv') {
                 if(myAlias === "") {
                     document.getElementById('game-character-select').style.display = 'block';
                 } else {
@@ -929,14 +865,6 @@
                     atvMap.invalidateSize();
                 }, 100);
             }
-            else if (pendingGame === 'hangout') {
-                document.getElementById('game-hangout').style.display = 'block';
-                document.body.classList.add('no-scroll');
-                setTimeout(() => {
-                    if (!hangoutMap) { initHangoutMap(); }
-                    hangoutMap.invalidateSize();
-                }, 100);
-            }
         }
 
         function quitGPSGame() {
@@ -979,141 +907,6 @@
             });
         }
 
-        // --- HANGOUT PLAZA (ROBLOX STYLE) LOGIC ---
-        let hangoutMap = null;
-        let hangoutMarker = null;
-        let hangoutOtherMarkers = {};
-        let hangoutLoop = null;
-        let hangoutState = { lat: 14.5353, lng: 120.9842, emote: '', chatMsg: '' };
-        let hangoutInputs = { up: false, down: false, left: false, right: false };
-
-        function getHangoutIcon(avatarUrl, name, isMe, emoteClass, chatText) {
-            let color = isMe ? 'var(--plaza-pink)' : '#fff';
-            let chatHTML = chatText ? `<div class="chat-bubble">${chatText}</div>` : '';
-            let emoteAnimClass = emoteClass ? `emote-${emoteClass}` : '';
-            
-            return L.divIcon({
-                className: 'custom-div-icon',
-                html: `<div class="user-icon-container" style="width: 45px; height: 45px; position: relative;">
-                           ${chatHTML}
-                           <div style="position:absolute; top:-20px; left:50%; transform:translateX(-50%); text-align:center; z-index:20; min-width: 50px;">
-                               <div style="background:${color}; color:${color==='#fff'?'#000':'#fff'}; font-size:10px; padding:2px 5px; border-radius:4px; font-weight:800; white-space:nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.5); pointer-events: none;">${name}</div>
-                           </div>
-                           <img src="${avatarUrl}" class="${emoteAnimClass}" style="width: 100%; height: 100%; border-radius: 50%; border: 3px solid ${color}; background: #222; position:relative; z-index:10; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
-                       </div>`,
-                iconSize: [45, 45], iconAnchor: [22, 22]
-            });
-        }
-
-        function initHangoutMap() {
-            hangoutMap = L.map('hangout-map', { zoomControl: false, attributionControl: false }).setView([hangoutState.lat, hangoutState.lng], 19);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 21 }).addTo(hangoutMap);
-            
-            hangoutMarker = L.marker([hangoutState.lat, hangoutState.lng], { icon: getHangoutIcon(chosenAvatarUrl, myAlias, true, '', '') }).addTo(hangoutMap);
-            
-            startHangoutEngine();
-            syncHangoutPlayers();
-        }
-
-        function startHangoutEngine() {
-            if (hangoutLoop) clearInterval(hangoutLoop);
-            let frameCounter = 0;
-
-            hangoutLoop = setInterval(() => {
-                frameCounter++;
-                const speed = 0.00003; 
-
-                if (hangoutInputs.up) hangoutState.lat += speed;
-                if (hangoutInputs.down) hangoutState.lat -= speed;
-                if (hangoutInputs.right) hangoutState.lng += speed;
-                if (hangoutInputs.left) hangoutState.lng -= speed;
-
-                let isMoving = (hangoutInputs.up || hangoutInputs.down || hangoutInputs.left || hangoutInputs.right);
-
-                hangoutMarker.setLatLng([hangoutState.lat, hangoutState.lng]);
-                
-                if(isMoving) {
-                    hangoutMap.panTo([hangoutState.lat, hangoutState.lng], { animate: false });
-                }
-
-                // OPTIMIZATION: Send data to Firebase only every 10 frames (500ms) to save bandwidth
-                if (isAuthorized && frameCounter % 10 === 0) {
-                    database.ref('hangout_players/' + myUserId).update({
-                        lat: hangoutState.lat, lng: hangoutState.lng, name: myAlias, avatar: chosenAvatarUrl, lastSeen: Date.now()
-                    });
-                }
-            }, 50); 
-        }
-
-        function syncHangoutPlayers() {
-            database.ref('hangout_players').on('value', (snapshot) => {
-                const players = snapshot.val();
-                if(!players) return;
-
-                for (let id in hangoutOtherMarkers) {
-                    if (!players[id]) { hangoutMap.removeLayer(hangoutOtherMarkers[id]); delete hangoutOtherMarkers[id]; }
-                }
-
-                for (let id in players) {
-                    const p = players[id];
-                    if (Date.now() - p.lastSeen > 10000) continue; 
-                    
-                    if (id === myUserId) {
-                        hangoutMarker.setIcon(getHangoutIcon(chosenAvatarUrl, myAlias, true, p.emote, p.chatMsg));
-                        continue;
-                    }
-
-                    if (hangoutOtherMarkers[id]) {
-                        hangoutOtherMarkers[id].setLatLng([p.lat, p.lng]);
-                        hangoutOtherMarkers[id].setIcon(getHangoutIcon(p.avatar, p.name, false, p.emote, p.chatMsg)); 
-                    } else {
-                        hangoutOtherMarkers[id] = L.marker([p.lat, p.lng], { icon: getHangoutIcon(p.avatar, p.name, false, p.emote, p.chatMsg) }).addTo(hangoutMap);
-                    }
-                }
-            });
-        }
-
-        function triggerPlazaEmote(emoteType) {
-            database.ref('hangout_players/' + myUserId).update({ emote: emoteType });
-            setTimeout(() => {
-                database.ref('hangout_players/' + myUserId).update({ emote: '' });
-            }, 2000); // Clear emote after 2s
-            
-            // Add visual local emote particle if heart
-            if(emoteType === 'heart') {
-                let myIcon = hangoutMarker.getElement();
-                if(myIcon) {
-                    let hitEl = document.createElement('div');
-                    hitEl.className = 'hit-anim'; hitEl.innerText = `💖`;
-                    myIcon.appendChild(hitEl);
-                    setTimeout(() => hitEl.remove(), 800);
-                }
-            }
-        }
-
-        function sendPlazaChat() {
-            const input = document.getElementById('plazaChatInput');
-            const msg = input.value.trim();
-            if(msg === "") return;
-            
-            // Send to global database
-            database.ref('chats').push({ sender: myAlias, msg: msg, time: Date.now() });
-            
-            // Show as Chat Bubble
-            database.ref('hangout_players/' + myUserId).update({ chatMsg: msg });
-            setTimeout(() => {
-                database.ref('hangout_players/' + myUserId).update({ chatMsg: '' });
-            }, 5000); // Clear bubble after 5s
-
-            input.value = "";
-        }
-
-        function quitHangoutGame() {
-            if (hangoutLoop) clearInterval(hangoutLoop);
-            document.body.classList.remove('no-scroll'); 
-            database.ref('hangout_players/' + myUserId).remove();
-            backToMenu();
-        }
 
         // --- COMBINED MAP EXPLORER & ZOMBIE SURVIVAL LOGIC ---
         let explorerMap = null;
