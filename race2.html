@@ -503,6 +503,9 @@
             if(e.key === ' ') inputs.brake = false;
         });
 
+        let otherPlayers = {}; 
+        let lastSendTime = 0;
+
         let myKart = {
             x: 500, y: 2000, 
             angle: 0, speed: 0, maxSpeed: 18, accel: 0.3, friction: 0.08, turnSpeed: 0.06,
