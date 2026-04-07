@@ -1,0 +1,83 @@
+function getATVIcon(colorStr, heading, isMe, avatarUrl, name, tireColor, styleType) {
+            let glow = isMe ? `box-shadow: 0 0 15px ${colorStr};` : '';
+            let defaultAvatar = 'https://api.dicebear.com/8.x/adventurer/svg?seed=NPC';
+            let img = avatarUrl || defaultAvatar;
+            let displayName = name || 'NPC';
+
+            let bodyRadius = "8px"; 
+            let extraHTML = "";
+            let tireHTML = `
+                <div style="position:absolute; top: 5px; left: -12px; width:8px; height:14px; background:${tireColor}; border-radius:3px; border:1px solid #000;"></div>
+                <div style="position:absolute; top: 5px; right: -12px; width:8px; height:14px; background:${tireColor}; border-radius:3px; border:1px solid #000;"></div>
+                <div style="position:absolute; bottom: 5px; left: -12px; width:8px; height:14px; background:${tireColor}; border-radius:3px; border:1px solid #000;"></div>
+                <div style="position:absolute; bottom: 5px; right: -12px; width:8px; height:14px; background:${tireColor}; border-radius:3px; border:1px solid #000;"></div>
+            `;
+            let baseSizeHTML = `width: 35px; height: 50px;`;
+
+            if (styleType === 'buggy') {
+                bodyRadius = "20px";
+            } else if (styleType === 'sport') {
+                bodyRadius = "50% 50% 0 0";
+            } else if (styleType === 'race') {
+                bodyRadius = "8px 8px 0 0";
+                extraHTML = `<div style="position:absolute; bottom:-5px; width:120%; height:8px; background:#111; border-radius:2px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);"></div>`;
+            } else if (styleType === 'dirt') {
+                bodyRadius = "4px";
+                tireHTML = `
+                <div style="position:absolute; top: 2px; left: -12px; width:10px; height:16px; background:${tireColor}; border-radius:4px; border:1px solid #000;"></div>
+                <div style="position:absolute; top: 2px; right: -12px; width:10px; height:16px; background:${tireColor}; border-radius:4px; border:1px solid #000;"></div>
+                <div style="position:absolute; bottom: 2px; left: -12px; width:10px; height:16px; background:${tireColor}; border-radius:4px; border:1px solid #000;"></div>
+                <div style="position:absolute; bottom: 2px; right: -12px; width:10px; height:16px; background:${tireColor}; border-radius:4px; border:1px solid #000;"></div>
+                `;
+            } else if (styleType === 'hotdog') {
+                bodyRadius = "20px";
+                colorStr = "#8b4513";
+                extraHTML = `<div style="position:absolute; top:10%; left:40%; width:20%; height:80%; background:#ffd700; border-radius:5px;"></div>`;
+            } else if (styleType === 'tank' || styleType === 'cannon') {
+                bodyRadius = "4px";
+                extraHTML = `<div style="width: 8px; height: 30px; background: #333; position: absolute; top: -25px; border: 2px solid #000; z-index: -1;"></div>`;
+            } else if (styleType === 'missile') {
+                bodyRadius = "8px";
+                extraHTML = `
+                    <div style="position:absolute; top:10px; left:-12px; width:6px; height:20px; background:#ccc; border-radius:50% 50% 0 0; border:1px solid #000;"><div style="background:red; width:100%; height:4px; border-radius: 50% 50% 0 0;"></div></div>
+                    <div style="position:absolute; top:10px; right:-12px; width:6px; height:20px; background:#ccc; border-radius:50% 50% 0 0; border:1px solid #000;"><div style="background:red; width:100%; height:4px; border-radius: 50% 50% 0 0;"></div></div>
+                `;
+            } else if (styleType === 'boat') {
+                bodyRadius = "50% 50% 10px 10px / 100% 100% 10px 10px";
+                tireHTML = ""; 
+            } else if (styleType === 'ufo') {
+                bodyRadius = "50%";
+                baseSizeHTML = `width: 45px; height: 45px;`;
+                tireHTML = "";
+                extraHTML = `<div style="width: 30px; height: 30px; background: rgba(0, 255, 255, 0.5); position: absolute; border-radius: 50%; border: 1px solid #0ff; z-index: 1;"></div>`;
+            } else if (styleType === 'coffin') {
+                bodyRadius = "0px";
+                extraHTML = `<div style="position:absolute; top:0; left:0; width:100%; height:100%; background:inherit; clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%); z-index: -1;"></div>`;
+                baseSizeHTML = `width: 35px; height: 50px; background: transparent; border: none;`; 
+            }
+
+            let htmlContent = `
+                <div style="width: 60px; height: 60px; position: relative; display: flex; flex-direction: column; align-items: center;">
+                    <div class="atv-car-body" style="${baseSizeHTML} background: ${styleType === 'coffin' ? 'transparent' : colorStr}; border: ${styleType === 'coffin' ? 'none' : '2px solid #000'}; border-radius: ${bodyRadius}; transform: rotate(${heading}deg); display: flex; justify-content: center; align-items: center; position: relative; z-index: 2; ${glow} transition: transform 0.05s linear;">
+                        ${extraHTML}
+                        <div style="width: 22px; height: 22px; background: #fff; border-radius: 50%; overflow: hidden; border: 2px solid #000; z-index: 5;">
+                            <img src="${img}" style="width:100%; height:100%; object-fit:cover;">
+                        </div>
+                        ${tireHTML}
+                    </div>
+                    <div style="background: ${colorStr}; color: white; font-size: 9px; font-weight: 800; border: 1px solid #000; padding: 2px 6px; border-radius: 4px; z-index: 3; white-space: nowrap; margin-top: 2px; font-family: 'Outfit';">
+                        ${displayName}
+                    </div>
+                </div>
+            `;
+
+            // Dito natin in-apply ang local-atv class para tanggalin ang CSS transition sa sarili mong kotse lang
+            let myMarkerClass = isMe ? ' local-atv' : '';
+
+            return L.divIcon({ 
+                className: 'custom-div-icon leaflet-marker-icon' + myMarkerClass, 
+                html: htmlContent, 
+                iconSize: [60, 70], 
+                iconAnchor: [30, 35] 
+            });
+        }
