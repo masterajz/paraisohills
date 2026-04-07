@@ -817,32 +817,50 @@
         }
 
         function triggerLoadingAndLaunch(gameType) {
-            // INTRO LOADING SCREEN WITH DEV CREDITS
-            const titles = {
-                'hangout': 'Paraiso Plaza',
-                'scavenger': 'The Explorer\'s Path',
-                'explorer': 'Resort Zombie Outbreak',
-                'radar': 'Relic Sonar',
-                'atv': 'ATV Dirt Racing',
-                'camera': 'Snap Quest',
-                'memory': 'Paraiso Match'
-            };
-            
-            const boxes = document.querySelectorAll('.game-box');
-            boxes.forEach(box => box.style.display = 'none'); 
-            
-            document.getElementById('loading-game-title').innerText = titles[gameType] || 'Loading Game...';
-            document.getElementById('game-loading').style.display = 'block';
-
-            // 2.5 Second Loading Wait
-            setTimeout(() => {
-                document.getElementById('game-loading').style.display = 'none';
-                // SHOW HIDDEN MENU ICONS ONCE IN-GAME
-                document.getElementById('btnGlobalScore').style.display = 'flex'; 
-                document.getElementById('btnGarageGlobal').style.display = 'flex'; 
-                launchGame(gameType);
-            }, 2500); 
+    // 1. Check muna natin kung galing sa Character Select screen
+    if (document.getElementById('game-character-select').style.display === 'block') {
+        const aliasInput = document.getElementById('playerAlias').value.trim();
+        const isValid = /^[a-z0-9]{1,6}$/i.test(aliasInput);
+        
+        if (!isValid) {
+            showModal("Invalid Alias", "Please enter a valid Alias (Max 6 letters/numbers).");
+            return; // Stop dito, huwag mag-loading
         }
+        myAlias = aliasInput.toUpperCase();
+    }
+
+    // 2. I-setup ang titles
+    const titles = {
+        'hangout': 'Paraiso Plaza',
+        'scavenger': 'The Explorer\'s Path',
+        'explorer': 'Resort Zombie Outbreak',
+        'radar': 'Relic Sonar',
+        'atv': 'ATV Dirt Racing',
+        'camera': 'Snap Quest',
+        'memory': 'Paraiso Match'
+    };
+    
+    // 3. Itago lahat ng boxes at ipakita ang loading
+    const boxes = document.querySelectorAll('.game-box');
+    boxes.forEach(box => box.style.display = 'none'); 
+    
+    document.getElementById('loading-game-title').innerText = titles[gameType] || 'Loading Game...';
+    document.getElementById('game-loading').style.display = 'block';
+
+    // 4. Wait for 2.5 seconds bago i-launch ang actual game
+    setTimeout(() => {
+        document.getElementById('game-loading').style.display = 'none';
+        document.getElementById('btnGlobalScore').style.display = 'flex'; 
+        document.getElementById('btnGarageGlobal').style.display = 'flex'; 
+        
+        // DITO ANG FIX: Imbis na launchGame, direkta na sa enterGPSGame kung kailangan
+        if(['explorer', 'radar', 'atv', 'hangout'].includes(gameType)) {
+            enterGPSGame(); // Skip na sa character check dahil nakuha na natin sa taas
+        } else {
+            launchGame(gameType);
+        }
+    }, 2500); 
+}
 
         function backToMenu() {
             const boxes = document.querySelectorAll('.game-box');
@@ -919,29 +937,21 @@
             }
         }
 
-        function enterGPSGame() {
-            if(myAlias === "") {
-                const aliasInput = document.getElementById('playerAlias').value.trim();
-                const isValid = /^[a-z0-9]{1,6}$/i.test(aliasInput);
-                
-                if (!isValid) {
-                    showModal("Invalid Alias", "Please enter a valid Alias (Max 6 letters/numbers, no spaces or special symbols).");
-                    return;
-                }
-                myAlias = aliasInput.toUpperCase();
-            }
-            
-            document.getElementById('game-character-select').style.display = 'none';
-            initGlobalSystems(); 
-            
-            if(pendingGame === 'explorer') {
-                document.getElementById('game-explorer').style.display = 'block';
-                setTimeout(() => {
-                    if (!explorerMap) { initExplorerMap(); } 
-                    else { if(userMarker) userMarker.setIcon(getBlockyIcon(chosenAvatarUrl, myAlias, true, null)); }
-                    explorerMap.invalidateSize(); 
-                }, 100);
-            } 
+function enterGPSGame() {
+    // Itago ang character selection kung sakaling nakabukas pa
+    document.getElementById('game-character-select').style.display = 'none';
+    initGlobalSystems(); 
+    
+    if(pendingGame === 'explorer') {
+        document.getElementById('game-explorer').style.display = 'block';
+        setTimeout(() => {
+            if (!explorerMap) { initExplorerMap(); } 
+            else { if(userMarker) userMarker.setIcon(getBlockyIcon(chosenAvatarUrl, myAlias, true, null)); }
+            explorerMap.invalidateSize(); 
+        }, 100);
+    } 
+    // ... ituloy lang ang existing logic para sa radar, atv, at hangout ...
+} 
             else if (pendingGame === 'radar') {
                 document.getElementById('game-radar').style.display = 'block';
                 setTimeout(() => {
