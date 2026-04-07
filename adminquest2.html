@@ -65,9 +65,9 @@
         .card h2 { color: var(--accent-gold); font-size: 1.2rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
 
         /* Stats Row */
-        .stats-row { display: flex; gap: 15px; margin-bottom: 20px; }
+        .stats-row { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;}
         .stat-box { 
-            flex: 1; 
+            flex: 1; min-width: 120px;
             background: linear-gradient(145deg, #1e293b, var(--bg-card)); 
             border: 1px solid var(--border-line); 
             padding: 20px; 
@@ -103,6 +103,7 @@
         /* Forms & Lists */
         .admin-input { background: #1e293b; border: 1px solid var(--border-line); color: var(--text-main); padding: 10px 12px; border-radius: 6px; width: 100%; margin-bottom: 10px; font-family: 'Outfit'; outline: none;}
         .admin-input:focus { border-color: var(--accent-gold); }
+        textarea.admin-input { resize: vertical; min-height: 80px; }
         .content-list { list-style: none; max-height: 250px; overflow-y: auto; margin-bottom: 15px; padding-right: 5px; }
         .content-list li { background: rgba(0,0,0,0.3); border: 1px solid var(--border-line); padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; font-size: 0.85rem;}
         .content-text { flex: 1; word-break: break-word; }
@@ -143,14 +144,10 @@
             
             .switch-container { flex-direction: column; gap: 12px; text-align: center; }
             
-            /* Stack buttons inside content lists on mobile so they don't get squished */
             .content-list li { flex-direction: column; align-items: flex-start; }
             .content-actions { width: 100%; justify-content: flex-end; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-line); }
             
-            /* Make action buttons slightly bigger for touch */
             .btn-action { padding: 8px 16px; font-size: 0.9rem; }
-            
-            /* Ensure game toggles wrap cleanly if text is long */
             .game-toggle-row { flex-wrap: wrap; gap: 10px; }
         }
     </style>
@@ -165,7 +162,11 @@
     <div class="stats-row">
         <div class="stat-box">
             <h3 id="onlineCount">0</h3>
-            <p>Active Players</p>
+            <p>Map Players</p>
+        </div>
+        <div class="stat-box">
+            <h3 id="atvCount">0</h3>
+            <p>ATV Racers</p>
         </div>
         <div class="stat-box">
             <h3 id="chatCount">0</h3>
@@ -175,7 +176,7 @@
 
     <div class="dashboard-grid">
         <div class="card">
-            <h2><span class="material-icons-outlined">people</span> Live Players</h2>
+            <h2><span class="material-icons-outlined">people</span> Live Map Players</h2>
             <div class="table-container">
                 <table>
                     <thead>
@@ -193,6 +194,14 @@
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 20px;">
+            
+            <div class="card">
+                <h2><span class="material-icons-outlined">campaign</span> Global Announcement</h2>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Send a system alert to all online players.</p>
+                <textarea id="announcementText" class="admin-input" placeholder="Type your broadcast message..."></textarea>
+                <button class="btn-action btn-add" style="background: #3b82f6; margin-top: 0;" onclick="sendAnnouncement()">Send Broadcast</button>
+            </div>
+
             <div class="card">
                 <h2><span class="material-icons-outlined">build</span> Game Status</h2>
                 <div class="switch-container">
@@ -202,6 +211,14 @@
                         <span class="slider"></span>
                     </label>
                 </div>
+            </div>
+
+            <div class="card" style="border-color: #7f1d1d;">
+                <h2 style="color: #ef4444;"><span class="material-icons-outlined">warning</span> Danger Zone</h2>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Advanced server controls. Use with caution.</p>
+                
+                <button class="btn-action btn-kick" style="width: 100%; margin-bottom: 10px; padding: 12px;" onclick="kickAllPlayers()">Kick All Active Players</button>
+                <button class="btn-action btn-kick" style="width: 100%; padding: 12px; background: #991b1b;" onclick="factoryResetServer()">Factory Reset (Wipe Database)</button>
             </div>
 
             <div class="card">
@@ -473,6 +490,7 @@
 
         // --- DASHBOARD MONITORING & CONTROLS ---
 
+        // Map Players
         database.ref('players').on('value', (snapshot) => {
             const players = snapshot.val();
             const tableBody = document.getElementById('playerTableBody');
@@ -487,9 +505,9 @@
                         <tr>
                             <td><img src="${p.avatar}" style="width:32px; height:32px; border-radius:50%; border:2px solid var(--accent-gold); background:#1f2937;"></td>
                             <td style="font-weight:bold; color:var(--text-main); letter-spacing: 1px;">${p.name}</td>
-                            <td style="color:var(--text-muted); font-size:0.75rem;">${p.status || 'Playing'}</td>
+                            <td style="color:var(--text-muted); font-size:0.75rem;">${p.status || 'Map'}</td>
                             <td style="color:var(--accent-gold); font-weight:900;">${p.score || 0}</td>
-                            <td><button class="btn-action btn-kick" onclick="kickPlayer('${id}', '${p.name}')">KICK</button></td>
+                            <td><button class="btn-action btn-kick" onclick="kickPlayer('${id}', '${p.name}', 'players')">KICK</button></td>
                         </tr>
                     `;
                 }
@@ -497,7 +515,21 @@
             document.getElementById('onlineCount').innerText = count;
         });
 
-        function kickPlayer(uid, name) { if(confirm(`Kick ${name}?`)) database.ref('players/' + uid).remove(); }
+        // ATV Racers Count
+        database.ref('atv_players').on('value', (snapshot) => {
+            const atvs = snapshot.val();
+            let count = 0;
+            if (atvs) {
+                for (let id in atvs) {
+                    if (Date.now() - atvs[id].lastSeen < 15000) count++; // Consider offline if no update for 15s in ATV
+                }
+            }
+            document.getElementById('atvCount').innerText = count;
+        });
+
+        function kickPlayer(uid, name, node) { 
+            if(confirm(`Kick ${name}?`)) database.ref(`${node}/${uid}`).remove(); 
+        }
 
         database.ref('chats').on('value', (snapshot) => {
             const chats = snapshot.val();
@@ -549,6 +581,39 @@
             });
         }
 
+        // --- NEW: ANNOUNCEMENTS ---
+        function sendAnnouncement() {
+            let text = document.getElementById('announcementText').value.trim();
+            if(text) {
+                if(confirm("Send this broadcast to everyone?")) {
+                    database.ref('settings/announcement').set({ msg: text, time: Date.now() });
+                    document.getElementById('announcementText').value = '';
+                    alert("Broadcast sent!");
+                }
+            }
+        }
+
+        // --- NEW: DANGER ZONE CONTROLS ---
+        function kickAllPlayers() {
+            if(confirm("Are you sure you want to kick ALL players? This clears active sessions.")) {
+                database.ref('players').remove();
+                database.ref('atv_players').remove();
+                alert("All players kicked.");
+            }
+        }
+        
+        function factoryResetServer() {
+            let pass = prompt("WARNING: This will wipe ALL game data (chats, players, attacks, emotes, flares). Type 'RESET' to confirm:");
+            if(pass === "RESET") {
+                const nodes = ['players', 'atv_players', 'chats', 'private_chats', 'attacks', 'atv_attacks', 'emotes', 'flares', 'zones'];
+                nodes.forEach(node => database.ref(node).remove());
+                alert("Server has been factory reset.");
+            } else if (pass !== null) {
+                alert("Reset cancelled. Incorrect confirmation word.");
+            }
+        }
+
+        // --- MAINTENANCE & GAME CONTROLS ---
         const toggleBtn = document.getElementById('maintenanceToggle');
         const label = document.getElementById('maintenanceLabel');
         database.ref('settings/maintenance').on('value', (snapshot) => {
