@@ -120,6 +120,9 @@
         /* MULTIPLAYER MAPS Styles */
         .leaflet-marker-icon { transition: transform 0.3s linear; } 
 
+        /* Pangtanggal ng nginig sa sariling ATV */
+        .local-atv { transition: none !important; }
+
         #game-explorer, #game-radar { padding: 0; overflow: hidden; height: 70vh; min-height: 550px; max-width: 100%; display: none; border-radius: 15px; position: relative; margin-top:20px; margin-left:auto; margin-right:auto;}
         #game-explorer { border: 1px solid var(--accent-gold); }
         #game-radar { border: 1px solid var(--accent-gold); }
@@ -241,17 +244,33 @@
         .atv-ctrl-btn.yellow { border-color: #eab308; color: #eab308; }
         .atv-ctrl-btn.green { border-color: #22c55e; color: #22c55e; }
         .atv-ctrl-btn.blue { border-color: #3b82f6; color: #3b82f6; }
+
+        /* GOKART SPECIFIC STYLES */
+        .gk-menu-panel { background: rgba(20,20,20,0.9); border: 1px solid var(--accent-gold); border-radius: 15px; padding: 30px; width: 100%; max-width: 400px; text-align: center; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); margin: 0 auto; }
+        .gk-menu-panel.active { display: block; }
+        .gk-menu-title { font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 2rem; margin-bottom: 20px; }
+        .gk-menu-btn { background: transparent; color: var(--accent-gold); border: 1px solid var(--accent-gold); padding: 15px 20px; border-radius: 30px; font-size: 1rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-weight: 700; width: 100%; margin-bottom: 15px; font-family: 'Outfit';}
+        .gk-menu-btn:hover, .gk-menu-btn:active { background: var(--accent-gold); color: #000; }
+        .gk-menu-btn.outline { border-style: dashed; color: #ccc; border-color: #555; }
+        .gk-server-list-item { background: rgba(0,0,0,0.6); border: 1px solid #444; border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .gk-server-join-btn { background: var(--sonar-blue); color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .gk-player-req-item { background: #222; padding: 10px; border-radius: 5px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 14px;}
+        .gk-acc-btn { background: #22c55e; color: #000; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;}
+        .gk-rej-btn { background: #ef4444; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;}
+
+        .gk-side-ui { position: absolute; top: 20px; left: 15px; display: flex; flex-direction: column; gap: 12px; z-index: 1000; }
+        .gk-ui-btn { background: rgba(10, 10, 10, 0.95); border: 2px solid var(--accent-gold); color: var(--accent-gold); width: 45px; height: 45px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.8); transition: 0.2s; }
+        .gk-ui-btn:active { transform: scale(0.9); }
+        
+        #gk-speedometer { position: absolute; top: 20px; right: 20px; text-align: right; z-index: 1000;}
+        #gk-speed-val { font-size: 32px; font-weight: 900; color: #fff; text-shadow: 0 2px 5px #000; font-family: 'Playfair Display', serif; }
+        #gk-speed-unit { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-top:-5px; font-family: 'Outfit';}
+
+        #gk-bottom-controls { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 1000; width: 95%; justify-content: center; }
+
     </style>
 </head>
 <body>
-
-    <div id="btnGlobalScore" style="position: fixed; top: 100px; left: 15px; background: rgba(10, 10, 10, 0.85); border: 1px solid var(--accent-gold); padding: 10px; border-radius: 50%; z-index: 100000; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;" onclick="document.getElementById('globalScoreModal').style.display='flex'">
-        🏆
-    </div>
-    
-    <div id="btnGarageGlobal" style="position: fixed; top: 160px; left: 15px; background: rgba(10, 10, 10, 0.85); border: 1px solid #f97316; padding: 10px; border-radius: 50%; z-index: 100000; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #f97316;" onclick="document.getElementById('atvCustomizeModal').style.display='flex'">
-        <span class="material-icons-outlined">garage</span>
-    </div>
 
     <div id="globalScoreModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:200005; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
         <div style="background:#111; border:1px solid var(--accent-gold); border-radius:12px; padding:30px 20px; width:90%; max-width:350px; text-align:center; color:#fff; font-family:'Outfit'; box-shadow: 0 15px 40px rgba(0,0,0,0.9); position: relative; max-height: 80vh; overflow-y: auto;">
@@ -306,55 +325,6 @@
         </div>
     </div>
 
-    <div id="atvInventoryModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:200000; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
-        <div style="background:#111; border:1px solid #f97316; border-radius:12px; padding:20px; width:90%; max-width:350px; text-align:center; color:#fff; font-family:'Outfit'; box-shadow: 0 15px 40px rgba(0,0,0,0.9);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:15px; border-bottom: 1px solid rgba(249, 115, 22, 0.3); padding-bottom: 10px;">
-                <h3 style="color:#f97316; font-family:'Playfair Display'; font-size:1.5rem; margin:0;">🎒 ATV Weapons</h3>
-                <span id="atvInvCount" style="font-size:0.8rem; color:#aaa;">0/3</span>
-            </div>
-            <div id="atvInventoryList" style="max-height:300px; overflow-y:auto; margin-bottom:15px; display:flex; flex-direction:column; gap:10px;"></div>
-            <button class="btn-game" onclick="document.getElementById('atvInventoryModal').style.display='none'" style="padding:8px 25px; font-size:0.85rem; width: 100%; border-color:#f97316; color:#f97316;">Close Bag</button>
-        </div>
-    </div>
-
-    <div id="emojiPickerModal">
-        <div class="emoji-box">
-            <div class="emoji-title">Send Reaction</div>
-            <span onclick="selectEmoji('😂')">😂</span>
-            <span onclick="selectEmoji('😁')">😁</span>
-            <span onclick="selectEmoji('❤️')">❤️</span>
-            <span onclick="selectEmoji('😮')">😮</span>
-            <span onclick="selectEmoji('😡')">😡</span>
-            <span onclick="selectEmoji('😭')">😭</span>
-            <span onclick="selectEmoji('👍')">👍</span>
-            <span onclick="selectEmoji('🔥')">🔥</span>
-            <span onclick="selectEmoji('🎉')">🎉</span>
-            <span onclick="selectEmoji('💩')">💩</span>
-            <span onclick="selectEmoji('💀')">💀</span>
-            <span onclick="selectEmoji('🤩')">🤩</span>
-        </div>
-    </div>
-
-    <div id="inventoryModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:200000; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
-        <div style="background:#111; border:1px solid var(--accent-gold); border-radius:12px; padding:20px; width:90%; max-width:350px; text-align:center; color:#fff; font-family:'Outfit'; box-shadow: 0 15px 40px rgba(0,0,0,0.9);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:15px; border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 10px;">
-                <h3 style="color:var(--accent-gold); font-family:'Playfair Display'; font-size:1.5rem; margin:0;">🎒 Backpack</h3>
-                <span id="invCount" style="font-size:0.8rem; color:#aaa;">0/10</span>
-            </div>
-            
-            <div id="inventoryList" style="max-height:300px; overflow-y:auto; margin-bottom:15px; display:flex; flex-direction:column; gap:10px;">
-                </div>
-            <button class="btn-game" onclick="document.getElementById('inventoryModal').style.display='none'" style="padding:8px 25px; font-size:0.85rem; width: 100%;">Close Bag</button>
-        </div>
-    </div>
-
-    <div id="deathScreen">
-        <h1>WASTED</h1>
-        <p id="deathCause">You were eliminated by an enemy.</p>
-        <div id="deathTimer">02:00</div>
-        <p style="margin-top:20px; font-size:0.9rem; color:#aaa;">You will respawn automatically.</p>
-    </div>
-
     <div id="maintenanceOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 10, 10, 0.98); z-index: 99999; justify-content: center; align-items: center; flex-direction: column; font-family: 'Outfit', sans-serif; text-align: center; padding: 20px;">
         <span class="material-icons-outlined" style="font-size: 6rem; color: var(--accent-gold); margin-bottom: 20px; animation: pulseRed 2s infinite;">engineering</span>
         <h1 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 3rem; margin-bottom: 15px;">Under Maintenance</h1>
@@ -399,11 +369,18 @@
                 <p>Virtual map racing! Drive your ATV around the resort, chat with others, and avoid NPC traffic.</p>
             </div>
 
+            <div class="quest-card" id="card_gokart" onclick="openGame('gokart')">
+                <span class="material-icons-outlined">sports_motorsports</span>
+                <h3>Paraiso GoKart</h3>
+                <p>Modern Circuit Sandbox! Race with friends or bots on our interactive 2D canvas track.</p>
+            </div>
+
             <div class="quest-card" id="card_camera" onclick="openGame('camera')">
                 <span class="material-icons-outlined">photo_camera</span>
                 <h3>Snap Quest</h3>
                 <p>Use your phone's camera to capture beautiful spots around the resort to complete missions.</p>
             </div>
+            
             <div class="quest-card" id="card_memory" onclick="openGame('memory')">
                 <span class="material-icons-outlined">dashboard</span>
                 <h3>Paraiso Match</h3>
@@ -459,6 +436,70 @@
             </div>
             
             <button class="btn-game" style="margin-top: 20px;" onclick="enterGPSGame()">Enter World</button>
+        </div>
+
+        <div id="game-gokart-lobby" class="game-box" style="max-width: 500px; padding: 20px;">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            
+            <div id="gk-screen-mode" class="gk-menu-panel active">
+                <h2 class="gk-menu-title">Select Mode</h2>
+                <button class="gk-menu-btn" onclick="gkShowScreen('gk-screen-single')">Single Player</button>
+                <button class="gk-menu-btn" style="border-color: #f97316; color: #f97316;" onclick="gkShowScreen('gk-screen-multi')">Multi Player</button>
+            </div>
+
+            <div id="gk-screen-single" class="gk-menu-panel">
+                <h2 class="gk-menu-title">Single Player</h2>
+                <button class="gk-menu-btn" onclick="gkStartGame('bot')">Versus Bot</button>
+                <button class="gk-menu-btn" onclick="gkStartGame('training')">Training Mode</button>
+                <button class="gk-menu-btn outline" onclick="gkShowScreen('gk-screen-mode')">Back</button>
+            </div>
+
+            <div id="gk-screen-multi" class="gk-menu-panel">
+                <h2 class="gk-menu-title">Multi Player</h2>
+                <button class="gk-menu-btn" style="border-color: #f97316; color: #f97316;" onclick="gkCreateServer()">Create Server</button>
+                <button class="gk-menu-btn" style="border-color: #f97316; color: #f97316;" onclick="gkOpenJoinServer()">Join Server</button>
+                <button class="gk-menu-btn outline" onclick="gkShowScreen('gk-screen-mode')">Back</button>
+            </div>
+
+            <div id="gk-screen-host" class="gk-menu-panel">
+                <h2 class="gk-menu-title">My Server</h2>
+                <p style="color:#aaa; font-size:12px; margin-bottom:15px;">Waiting for players to join...</p>
+                <div id="gk-host-requests" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
+                <button class="gk-menu-btn" style="border-color: #f97316; color: #f97316;" onclick="gkStartMultiplayerGame()">Start Race</button>
+                <button class="gk-menu-btn outline" onclick="gkCloseServer()">Close Server</button>
+            </div>
+
+            <div id="gk-screen-join" class="gk-menu-panel">
+                <h2 class="gk-menu-title">Server List</h2>
+                <p style="color:#aaa; font-size:12px; margin-bottom:15px;" id="gk-join-status">Looking for active games...</p>
+                <div id="gk-server-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
+                <button class="gk-menu-btn outline" id="gk-btn-join-back" onclick="gkShowScreen('gk-screen-multi')">Back</button>
+            </div>
+        </div>
+
+        <div id="game-gokart-play" class="game-box" style="padding: 0; overflow: hidden; height: 75vh; min-height: 550px; background: #050505; border: 2px solid var(--accent-gold);">
+            <button class="btn-close-game" onclick="gkQuitGame()" style="z-index: 10001; background: rgba(0,0,0,0.8); border: 1px solid var(--accent-gold); color: var(--accent-gold); padding: 8px 15px; border-radius: 20px; top: 15px; right: 15px; left: auto;"><span class="material-icons-outlined" style="font-size:14px; margin-right:5px;">exit_to_app</span> Quit</button>
+            
+            <div id="gk-canvas-container" style="width:100%; height:100%; position:relative;">
+                <canvas id="gkGameCanvas"></canvas>
+                
+                <div id="gk-speedometer">
+                    <div id="gk-speed-val">0</div>
+                    <div id="gk-speed-unit">KPH</div>
+                    <div id="gk-mode-badge" style="font-size:10px; color:var(--accent-gold); margin-top:5px; border:1px solid; padding:2px 5px; border-radius:4px;">TRAINING</div>
+                </div>
+
+                <div id="gk-bottom-controls">
+                    <button class="atv-ctrl-btn round orange" oncontextmenu="event.preventDefault();" onmousedown="gkInputs.left=true" onmouseup="gkInputs.left=false" ontouchstart="gkInputs.left=true" ontouchend="gkInputs.left=false"><span class="material-icons-outlined">navigate_before</span></button>
+                    <button class="atv-ctrl-btn round orange" oncontextmenu="event.preventDefault();" onmousedown="gkInputs.right=true" onmouseup="gkInputs.right=false" ontouchstart="gkInputs.right=true" ontouchend="gkInputs.right=false"><span class="material-icons-outlined">navigate_next</span></button>
+                    
+                    <div style="width: 15px;"></div>
+
+                    <button class="atv-ctrl-btn square red" oncontextmenu="event.preventDefault();" onmousedown="gkInputs.brake=true" onmouseup="gkInputs.brake=false" ontouchstart="gkInputs.brake=true" ontouchend="gkInputs.brake=false">BRK</button>
+                    <button class="atv-ctrl-btn square yellow" oncontextmenu="event.preventDefault();" onmousedown="gkInputs.reverse=true" onmouseup="gkInputs.reverse=false" ontouchstart="gkInputs.reverse=true" ontouchend="gkInputs.reverse=false">REV</button>
+                    <button class="atv-ctrl-btn square green" oncontextmenu="event.preventDefault();" onmousedown="gkInputs.forward=true" onmouseup="gkInputs.forward=false" ontouchstart="gkInputs.forward=true" ontouchend="gkInputs.forward=false">GAS</button>
+                </div>
+            </div>
         </div>
 
         <div id="game-explorer" class="game-box">
@@ -526,6 +567,7 @@
             </div>
 
             <div id="atv-left-actions" style="position: absolute; left: 15px; top: 100px; display: flex; flex-direction: column; gap: 15px; z-index: 1000;">
+                <button class="atv-btn-round" title="Leaderboard" onclick="toggleLeaderboard(event)"><span class="material-icons-outlined">emoji_events</span></button>
                 <button class="atv-btn-round" title="Garage (Paint/Tires)" onclick="document.getElementById('atvCustomizeModal').style.display='flex'"><span class="material-icons-outlined">format_paint</span></button>
                 <button class="atv-btn-round" title="ATV Inventory" onclick="openATVInventory()"><span class="material-icons-outlined">inventory_2</span></button>
                 <button class="atv-btn-round" id="btnToggleChatATV" onclick="toggleGlobalChat(event)"><span class="material-icons-outlined">forum</span></button>
@@ -626,7 +668,7 @@
     <script>
         // --- AUTO-CLOSE MODALS ON OUTSIDE CLICK ---
         document.addEventListener('click', function(event) {
-            if (!event.target.closest('#leaderboardPanel') && !event.target.closest('.hud-actions') && !event.target.closest('.leaflet-popup')) {
+            if (!event.target.closest('#leaderboardPanel') && !event.target.closest('.hud-actions') && !event.target.closest('#atv-left-actions') && !event.target.closest('.leaflet-popup')) {
                 document.getElementById('leaderboardPanel').style.display = 'none';
             }
             if (!event.target.closest('#privateChatPanel') && !event.target.closest('.leaflet-popup')) {
@@ -710,6 +752,7 @@
                 'explorer': 'card_explorer',
                 'radar': 'card_radar',
                 'atv': 'card_atv',
+                'gokart': 'card_gokart',
                 'camera': 'card_camera',
                 'memory': 'card_memory'
             };
@@ -754,7 +797,6 @@
             snap.forEach(child => { dynamicSnapMissions.push(child.val().text); });
         });
 
-        // Fallbacks just in case Firebase is slow or empty
         let fallbackQuests = [
             { icon: "water", riddle: "\"Where waters meet the sky's embrace... Go to the Lagoon Pool. What color is the large tile near the stairs?\"", answer: "BLUE" },
             { icon: "local_fire_department", riddle: "\"A warm glow in the dark... Visit the Bonfire Area and find the hidden word etched on the log.\"", answer: "EMBER" },
@@ -826,6 +868,7 @@
                 'explorer': 'Resort Zombie Outbreak',
                 'radar': 'Relic Sonar',
                 'atv': 'ATV Dirt Racing',
+                'gokart': 'Paraiso GoKart',
                 'camera': 'Snap Quest',
                 'memory': 'Paraiso Match'
             };
@@ -887,10 +930,6 @@
         function addScore(points) {
             myScore += points;
             document.getElementById('globalScoreDisplay').innerText = `${myScore} XP`;
-            if (document.getElementById('myScoreDisplay')) {
-                document.getElementById('myScoreDisplay').innerText = myScore;
-            }
-
             if(isAuthorized) {
                 database.ref('players/' + myUserId).update({ score: myScore });
             }
@@ -906,6 +945,12 @@
             } else if(gameType === 'memory') {
                 document.getElementById('game-memory').style.display = 'block';
                 initMemoryGame();
+            } else if(gameType === 'gokart') {
+                if(myAlias === "") {
+                    document.getElementById('game-character-select').style.display = 'block';
+                } else {
+                    openGoKartLobby();
+                }
             } else if(gameType === 'explorer' || gameType === 'radar' || gameType === 'atv') {
                 if(myAlias === "") {
                     document.getElementById('game-character-select').style.display = 'block';
@@ -919,11 +964,7 @@
             if(myAlias === "") {
                 const aliasInput = document.getElementById('playerAlias').value.trim();
                 const isValid = /^[a-z0-9]{1,6}$/i.test(aliasInput);
-                
-                if (!isValid) {
-                    showModal("Invalid Alias", "Please enter a valid Alias (Max 6 letters/numbers, no spaces or special symbols).");
-                    return;
-                }
+                if (!isValid) { showModal("Invalid Alias", "Please enter a valid Alias (Max 6 letters/numbers, no spaces or special symbols)."); return; }
                 myAlias = aliasInput.toUpperCase();
             }
             
@@ -940,18 +981,15 @@
             } 
             else if (pendingGame === 'radar') {
                 document.getElementById('game-radar').style.display = 'block';
-                setTimeout(() => {
-                    if (!sonarMap) { initSonarMap(); }
-                    sonarMap.invalidateSize();
-                }, 100);
+                setTimeout(() => { if (!sonarMap) { initSonarMap(); } sonarMap.invalidateSize(); }, 100);
             }
             else if (pendingGame === 'atv') {
                 document.getElementById('game-atv').style.display = 'block';
                 document.body.classList.add('no-scroll'); 
-                setTimeout(() => {
-                    if (!atvMap) { initATVMap(); }
-                    atvMap.invalidateSize();
-                }, 100);
+                setTimeout(() => { if (!atvMap) { initATVMap(); } atvMap.invalidateSize(); }, 100);
+            }
+            else if (pendingGame === 'gokart') {
+                openGoKartLobby();
             }
         }
 
@@ -999,6 +1037,9 @@
         // --- MAP BOUNDARY AND POI DRAWING ---
         function drawParaisoMap(mapInstance) {
             if(mapMode !== "PARAISO") return;
+            
+            // Remove street map background feeling
+            mapInstance.getContainer().style.background = '#111';
 
             const centerLat = 14.5353;
             const centerLng = 120.9842;
@@ -1169,9 +1210,12 @@
 
         function initExplorerMap() {
             explorerMap = L.map('explorer-map', { zoomControl: false, attributionControl: false }).setView([14.5353, 120.9842], 18);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20 }).addTo(explorerMap);
             
-            // --- DRAW PARAISO MAP IF VOUCHER MATCHES ---
+            // TILE LAYER CONTROL
+            if (mapMode === "GLOBAL") {
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20 }).addTo(explorerMap);
+            }
+            
             drawParaisoMap(explorerMap);
 
             cabanaLayer = L.circle([cabanaZone.lat, cabanaZone.lng], { radius: cabanaZone.radius, color: '#d4af37', fillColor: '#d4af37', className: 'cabana-zone' })
@@ -1667,7 +1711,12 @@
 
         function initSonarMap() {
             sonarMap = L.map('sonar-map', { zoomControl: false, attributionControl: false }).setView([14.5353, 120.9842], 18);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20 }).addTo(sonarMap);
+            
+            // TILE LAYER CONTROL
+            if (mapMode === "GLOBAL") {
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20 }).addTo(sonarMap);
+            }
+            drawParaisoMap(sonarMap);
             
             sonarMarker = L.marker([14.5353, 120.9842], { icon: getZombieIcon(chosenAvatarUrl, myAlias, true, null) }).addTo(sonarMap);
 
@@ -1718,7 +1767,7 @@
             }, 1000);
         }
 
-        // --- ATV RACING LOGIC ---
+        // --- ATV RACING LOGIC (ORIGINAL AND SMOOTH) ---
         let atvMap = null;
         let atvMarker = null;
         let atvOtherMarkers = {};
@@ -1841,9 +1890,12 @@
 
         function initATVMap() {
             atvMap = L.map('atv-map', { zoomControl: false, attributionControl: false }).setView([atvState.lat, atvState.lng], 19);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 21 }).addTo(atvMap);
             
-            // --- DRAW PARAISO MAP IF VOUCHER MATCHES ---
+            // TILE LAYER CONTROL
+            if (mapMode === "GLOBAL") {
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 21 }).addTo(atvMap);
+            }
+            
             drawParaisoMap(atvMap);
             
             atvState.hp = 5; 
@@ -1954,7 +2006,6 @@
                     }
                 }
 
-                // USING THE ORIGINAL SMOOTH SETICON LOGIC
                 atvMarker.setLatLng([atvState.lat, atvState.lng]);
                 atvMarker.setIcon(getATVIcon(atvState.color, atvState.heading, true, chosenAvatarUrl, myAlias, atvState.tires, atvState.style));
                 atvMap.panTo([atvState.lat, atvState.lng], { animate: false });
@@ -2069,7 +2120,6 @@
                     }
                 }
 
-                // USING THE ORIGINAL SMOOTH SETICON LOGIC FOR NPCs
                 npcMarkers.forEach(n => {
                     let radNpc = n.data.heading * (Math.PI / 180);
                     n.data.lat += Math.cos(radNpc) * n.data.speed;
@@ -2224,10 +2274,426 @@
             database.ref('atv_players/' + myUserId).remove(); backToMenu();
         }
 
+        // --- NEW GAME: GOKART (CANVAS TRACK) ---
+        function openGoKartLobby() {
+            document.getElementById('game-character-select').style.display = 'none';
+            initGlobalSystems();
+            document.getElementById('game-gokart-lobby').style.display = 'block';
+            gkShowScreen('gk-screen-mode'); 
+        }
+
+        function gkShowScreen(id) {
+            document.querySelectorAll('.gk-menu-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        let gkCanvas, gkCtx, gkWidth, gkHeight;
+        let gkInputs = { forward: false, reverse: false, left: false, right: false, brake: false };
+        let gkMyKart = { x: 500, y: 2000, angle: 0, speed: 0, maxSpeed: 18, accel: 0.3, friction: 0.08, turnSpeed: 0.06, width: 25, height: 45, color: '#f97316' };
+        let gkOtherPlayers = {};
+        let gkLastSendTime = 0;
+        let gkCurrentMode = "";
+        let gkHostServerId = null;
+        let gkJoinedServerId = null;
+        let gkHeartbeatInterval = null;
+        let gkReqAnimFrame = null;
+        let gkIsPlaying = false;
+
+        const gkOffX = 2200; const gkOffY = 2200; const gkScale = 16;
+        const gkTr = (x, y) => { return { x: gkOffX + (x * gkScale), y: gkOffY - (y * gkScale) }; };
+
+        const gkRawBoundary = [ [8.3857,5.3183], [49.7357,-77.4360], [53.1362,-89.0900], [0.7357,-119.6286], [-51.6814,-35.5260], [-43.8097,-26.7219], [-30.2202,-20.4906], [-7.1190,-4.6334], [0.0096,-0.0039], [0,0] ];
+        const gkRawLotA = [ [-25.7639,-15.0150], [-18.4347,-30.5200], [-46.7992,-47.0507], [-99.2164,37.0519], [-91.3447,45.8559], [-77.7552,52.0872], [-54.6540,67.9445], [-47.5253,72.5739], [-39.1395,77.8922], [-0.1675,-0.1030], [0,0] ];
+        const gkRawLotB = [ [2.3779,-4.7589], [5.7784,-16.4129], [-18.4303,-30.5216], [-25.7595,-15.0166], [0.0044,-0.0016] ];
+
+        function gkBuildPath(points) {
+            let p = new Path2D();
+            let start = gkTr(points[0][0], points[0][1]);
+            p.moveTo(start.x, start.y);
+            for(let i=1; i<points.length; i++) {
+                let pt = gkTr(points[i][0], points[i][1]);
+                p.lineTo(pt.x, pt.y);
+            }
+            p.closePath(); return p;
+        }
+
+        const gkTrackPath = gkBuildPath(gkRawBoundary);
+        const gkLotAPath = gkBuildPath(gkRawLotA);
+        const gkLotBPath = gkBuildPath(gkRawLotB);
+
+        function gkBuildGlobalTrack() {
+            let p = new Path2D(); p.ellipse(gkOffX, gkOffY, 1500, 800, 0, 0, Math.PI * 2); return p;
+        }
+        const gkGlobalTrackPath = gkBuildGlobalTrack();
+
+        function gkResizeCanvas() {
+            let container = document.getElementById('gk-canvas-container');
+            gkWidth = gkCanvas.width = container.offsetWidth;
+            gkHeight = gkCanvas.height = container.offsetHeight;
+        }
+        window.addEventListener('resize', () => { if(gkIsPlaying) gkResizeCanvas(); });
+
+        window.addEventListener('keydown', e => {
+            if(!gkIsPlaying) return;
+            if(e.key === 'ArrowUp' || e.key === 'w') gkInputs.forward = true;
+            if(e.key === 'ArrowDown' || e.key === 's') gkInputs.reverse = true;
+            if(e.key === 'ArrowLeft' || e.key === 'a') gkInputs.left = true;
+            if(e.key === 'ArrowRight' || e.key === 'd') gkInputs.right = true;
+            if(e.key === ' ') gkInputs.brake = true;
+        });
+        window.addEventListener('keyup', e => {
+            if(!gkIsPlaying) return;
+            if(e.key === 'ArrowUp' || e.key === 'w') gkInputs.forward = false;
+            if(e.key === 'ArrowDown' || e.key === 's') gkInputs.reverse = false;
+            if(e.key === 'ArrowLeft' || e.key === 'a') gkInputs.left = false;
+            if(e.key === 'ArrowRight' || e.key === 'd') gkInputs.right = false;
+            if(e.key === ' ') gkInputs.brake = false;
+        });
+
+        function gkAdjustColor(col, amt) {
+            let usePound = false; 
+            if (col[0] == "#") { col = col.slice(1); usePound = true; }
+            let num = parseInt(col,16);
+            let r = (num >> 16) + amt; if (r > 255) r = 255; else if (r < 0) r = 0;
+            let b = ((num >> 8) & 0x00FF) + amt; if (b > 255) b = 255; else if (b < 0) b = 0;
+            let g = (num & 0x0000FF) + amt; if (g > 255) g = 255; else if (g < 0) g = 0;
+            let hex = (g | (b << 8) | (r << 16)).toString(16);
+            while (hex.length < 6) { hex = "0" + hex; }
+            return (usePound ? "#" : "") + hex;
+        }
+
+        function gkIsCollision(x, y) {
+            gkCtx.lineWidth = 150;
+            if (mapMode === "PARAISO") {
+                return !gkCtx.isPointInStroke(gkTrackPath, x, y);
+            } else {
+                return !gkCtx.isPointInStroke(gkGlobalTrackPath, x, y);
+            }
+        }
+
+        function gkDrawGrid(camX, camY) {
+            gkCtx.fillStyle = '#1e293b'; gkCtx.fillRect(0, 0, gkWidth, gkHeight);
+            gkCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)'; gkCtx.lineWidth = 1; gkCtx.beginPath();
+            let offsetX = -camX % 100; let offsetY = -camY % 100;
+            for(let x = offsetX; x < gkWidth; x += 100) { gkCtx.moveTo(x, 0); gkCtx.lineTo(x, gkHeight); }
+            for(let y = offsetY; y < gkHeight; y += 100) { gkCtx.moveTo(0, y); gkCtx.lineTo(gkWidth, y); }
+            gkCtx.stroke();
+        }
+
+        function gkDrawTrack(camX, camY) {
+            gkCtx.save();
+            gkCtx.translate(-camX, -camY);
+
+            if (mapMode === "PARAISO") {
+                gkCtx.fillStyle = '#0f172a'; gkCtx.fill(gkLotAPath); gkCtx.fill(gkLotBPath);
+                gkCtx.strokeStyle = 'rgba(212, 175, 55, 0.3)'; gkCtx.lineWidth = 4; gkCtx.stroke(gkLotAPath); gkCtx.stroke(gkLotBPath);
+
+                gkCtx.lineWidth = 170; gkCtx.strokeStyle = '#ef4444'; gkCtx.stroke(gkTrackPath);
+                gkCtx.lineWidth = 170; gkCtx.strokeStyle = '#fff'; gkCtx.setLineDash([40, 40]); gkCtx.stroke(gkTrackPath); gkCtx.setLineDash([]);
+                gkCtx.lineWidth = 150; gkCtx.strokeStyle = '#262626'; gkCtx.stroke(gkTrackPath);
+                gkCtx.lineWidth = 4; gkCtx.strokeStyle = '#facc15'; gkCtx.setLineDash([30, 40]); gkCtx.stroke(gkTrackPath); gkCtx.setLineDash([]);
+                
+                const resortPOIs = [
+                    { name: "Paraiso Resturant", loc: gkTr(0, 0), icon: "🍽️" },
+                    { name: "Lake View", loc: gkTr(-80, 50), icon: "🌊" },
+                    { name: "Garden View", loc: gkTr(-45, 60), icon: "🌸" },
+                    { name: "Family Room", loc: gkTr(-20, 20), icon: "🏡" },
+                    { name: "Alfresco", loc: gkTr(5, -5), icon: "🍷" },
+                    { name: "Brew Umbrella", loc: gkTr(15, -15), icon: "☕" },
+                    { name: "Lagoon Pool", loc: gkTr(-20, -20), icon: "🏊" },
+                    { name: "Camping Site", loc: gkTr(-60, 40), icon: "⛺" },
+                    { name: "ATV Trail Site", loc: gkTr(20, -50), icon: "🛺" },
+                    { name: "Bonfire", loc: gkTr(-40, -40), icon: "🔥" },
+                    { name: "Swing", loc: gkTr(40, -80), icon: "🪢" }
+                ];
+                for (let poi of resortPOIs) {
+                    gkCtx.fillStyle = "rgba(0,0,0,0.7)"; gkCtx.beginPath(); gkCtx.roundRect(poi.loc.x - 60, poi.loc.y - 30, 120, 60, 10); gkCtx.fill();
+                    gkCtx.fillStyle = "#fff"; gkCtx.font = "bold 12px Outfit"; gkCtx.textAlign = "center";
+                    gkCtx.fillText(poi.icon, poi.loc.x, poi.loc.y - 5);
+                    gkCtx.fillStyle = "var(--accent-gold)"; gkCtx.fillText(poi.name, poi.loc.x, poi.loc.y + 15);
+                }
+            } else {
+                gkCtx.lineWidth = 170; gkCtx.strokeStyle = '#ef4444'; gkCtx.stroke(gkGlobalTrackPath);
+                gkCtx.lineWidth = 170; gkCtx.strokeStyle = '#fff'; gkCtx.setLineDash([40, 40]); gkCtx.stroke(gkGlobalTrackPath); gkCtx.setLineDash([]);
+                gkCtx.lineWidth = 150; gkCtx.strokeStyle = '#262626'; gkCtx.stroke(gkGlobalTrackPath);
+                gkCtx.lineWidth = 4; gkCtx.strokeStyle = '#facc15'; gkCtx.setLineDash([30, 40]); gkCtx.stroke(gkGlobalTrackPath); gkCtx.setLineDash([]);
+                
+                gkCtx.fillStyle = "rgba(0,0,0,0.7)"; gkCtx.beginPath(); gkCtx.roundRect(gkOffX - 60, gkOffY - 30, 120, 60, 10); gkCtx.fill();
+                gkCtx.fillStyle = "#fff"; gkCtx.font = "bold 12px Outfit"; gkCtx.textAlign = "center";
+                gkCtx.fillText("🌍", gkOffX, gkOffY - 5);
+                gkCtx.fillStyle = "var(--accent-gold)"; gkCtx.fillText("Global Circuit", gkOffX, gkOffY + 15);
+            }
+            gkCtx.restore();
+        }
+
+        function gkDrawKart(kart, camX, camY, isMe) {
+            gkCtx.save(); gkCtx.translate(kart.x - camX, kart.y - camY); gkCtx.rotate(kart.angle);
+            gkCtx.fillStyle = 'rgba(0,0,0,0.5)'; gkCtx.fillRect(-kart.width/2 + 5, -kart.height/2 + 5, kart.width, kart.height);
+
+            gkCtx.fillStyle = '#111'; 
+            const wh = 14; const ww = 7;
+            const frontWheelAngle = isMe && (gkInputs.left ? -0.3 : gkInputs.right ? 0.3 : 0);
+            
+            gkCtx.fillRect(-kart.width/2 - 4, kart.height/2 - wh - 3, ww, wh); 
+            gkCtx.fillRect(kart.width/2 - ww + 4, kart.height/2 - wh - 3, ww, wh); 
+            
+            gkCtx.save(); gkCtx.translate(-kart.width/2, -kart.height/2 + 8); gkCtx.rotate(frontWheelAngle); gkCtx.fillRect(-4, -wh/2, ww, wh); gkCtx.restore(); 
+            gkCtx.save(); gkCtx.translate(kart.width/2, -kart.height/2 + 8); gkCtx.rotate(frontWheelAngle); gkCtx.fillRect(-ww+4, -wh/2, ww, wh); gkCtx.restore(); 
+
+            let grad = gkCtx.createLinearGradient(0, -kart.height/2, 0, kart.height/2);
+            grad.addColorStop(0, kart.color); grad.addColorStop(1, gkAdjustColor(kart.color, -60));
+            gkCtx.fillStyle = grad; gkCtx.fillRect(-kart.width/2, -kart.height/2, kart.width, kart.height);
+            
+            gkCtx.fillStyle = '#222'; gkCtx.fillRect(-6, 0, 12, 10); 
+            gkCtx.fillStyle = isMe ? '#fff' : '#aaa'; 
+            gkCtx.beginPath(); gkCtx.arc(0, -2, 8, 0, Math.PI * 2); gkCtx.fill(); 
+            gkCtx.fillStyle = '#111'; gkCtx.fillRect(-6, -6, 12, 4); 
+
+            if(!isMe && kart.name) {
+                gkCtx.rotate(-kart.angle);
+                gkCtx.fillStyle = "#fff"; gkCtx.font = "bold 12px Outfit"; gkCtx.textAlign = "center";
+                gkCtx.fillText(kart.name, 0, -35);
+            }
+            gkCtx.restore();
+        }
+
+        function gkUpdateBot(p) {
+            if(!p.isBot) return;
+            p.speed = 10;
+            let cx = gkOffX, cy = gkOffY;
+            let targetAngle = Math.atan2(p.renderX - cx, cy - p.renderY) + Math.PI/2;
+            p.renderAngle += (targetAngle - p.renderAngle) * 0.1;
+            p.renderX += Math.sin(p.renderAngle) * p.speed;
+            p.renderY -= Math.cos(p.renderAngle) * p.speed;
+        }
+
+        // Multiplayer Server Logic
+        function gkCreateServer() {
+            gkHostServerId = "ROOM_" + Math.floor(Math.random() * 10000);
+            database.ref('gokart_rooms/' + gkHostServerId).set({ hostId: myUserId, hostName: myAlias, status: 'waiting', lastHeartbeat: Date.now() });
+
+            gkHeartbeatInterval = setInterval(() => { database.ref('gokart_rooms/' + gkHostServerId + '/lastHeartbeat').set(Date.now()); }, 10000); 
+            database.ref('gokart_rooms/' + gkHostServerId).onDisconnect().remove();
+
+            database.ref('gokart_rooms/' + gkHostServerId + '/players').on('value', snapshot => {
+                let pList = document.getElementById('gk-host-requests');
+                pList.innerHTML = ""; let data = snapshot.val(); if(!data) return;
+
+                for(let pid in data) {
+                    if(pid === myUserId) continue;
+                    let p = data[pid];
+                    if(p.status === 'pending') {
+                        pList.innerHTML += `<div class="gk-player-req-item"><span>${p.name}</span><div><button class="gk-acc-btn" onclick="gkAcceptPlayer('${pid}')">Accept</button> <button class="gk-rej-btn" onclick="gkRejectPlayer('${pid}')">Reject</button></div></div>`;
+                    } else if (p.status === 'accepted') {
+                        pList.innerHTML += `<div class="gk-player-req-item" style="color:#22c55e">${p.name} (Ready)</div>`;
+                    }
+                }
+            });
+
+            gkJoinedServerId = gkHostServerId;
+            gkShowScreen('gk-screen-host');
+        }
+
+        function gkCloseServer() {
+            if(gkHeartbeatInterval) clearInterval(gkHeartbeatInterval);
+            if(gkHostServerId) { database.ref('gokart_rooms/' + gkHostServerId).remove(); gkHostServerId = null; gkJoinedServerId = null; }
+            gkShowScreen('gk-screen-multi');
+        }
+
+        function gkAcceptPlayer(pid) { database.ref('gokart_rooms/' + gkHostServerId + '/players/' + pid).update({ status: 'accepted' }); }
+        function gkRejectPlayer(pid) { database.ref('gokart_rooms/' + gkHostServerId + '/players/' + pid).remove(); }
+
+        function gkOpenJoinServer() {
+            gkShowScreen('gk-screen-join');
+            let sList = document.getElementById('gk-server-list');
+            document.getElementById('gk-join-status').innerText = "Looking for active games...";
+
+            database.ref('gokart_rooms').on('value', snapshot => {
+                if(gkJoinedServerId) return; 
+                sList.innerHTML = ""; let data = snapshot.val(); let count = 0;
+
+                for(let rid in data) {
+                    let room = data[rid];
+                    if(Date.now() - room.lastHeartbeat > 900000) { database.ref('gokart_rooms/' + rid).remove(); continue; } 
+                    if(room.status === 'waiting') {
+                        count++;
+                        sList.innerHTML += `<div class="gk-server-list-item"><span><b>${room.hostName}'s</b> Server</span><button class="gk-server-join-btn" onclick="gkRequestJoin('${rid}')">JOIN</button></div>`;
+                    }
+                }
+                if(count === 0) document.getElementById('gk-join-status').innerText = "No active servers found.";
+                else document.getElementById('gk-join-status').innerText = "Select a server:";
+            });
+        }
+
+        function gkRequestJoin(roomId) {
+            document.getElementById('gk-join-status').innerText = "Waiting for Host to accept...";
+            document.getElementById('gk-server-list').innerHTML = "";
+            document.getElementById('gk-btn-join-back').style.display = "none";
+            gkJoinedServerId = roomId;
+
+            let myPlayerRef = database.ref('gokart_rooms/' + roomId + '/players/' + myUserId);
+            myPlayerRef.set({ name: myAlias, status: 'pending' });
+            myPlayerRef.onDisconnect().remove();
+
+            myPlayerRef.on('value', snap => {
+                let data = snap.val();
+                if(!data) {
+                    gkJoinedServerId = null; myPlayerRef.off(); document.getElementById('gk-btn-join-back').style.display = "block";
+                    gkOpenJoinServer(); alert("Host rejected or closed the room.");
+                } else if(data.status === 'accepted') {
+                    document.getElementById('gk-join-status').innerHTML = "<span style='color:#22c55e'>Accepted! Waiting for host to start...</span>";
+                    database.ref('gokart_rooms/' + roomId + '/status').on('value', statusSnap => {
+                        if(statusSnap.val() === 'playing') { gkStartGame('multi'); database.ref('gokart_rooms/' + roomId + '/status').off(); }
+                    });
+                }
+            });
+        }
+
+        function gkStartMultiplayerGame() {
+            database.ref('gokart_rooms/' + gkHostServerId).update({ status: 'playing' });
+            gkStartGame('multi');
+        }
+
+        function gkInitGameSync() {
+            database.ref('gokart_rooms/' + gkJoinedServerId + '/gamestate').on('value', snap => {
+                let data = snap.val(); if(!data) return;
+                let activeNow = Date.now();
+
+                for (let id in data) {
+                    if (id === myUserId) continue;
+                    if (activeNow - data[id].lastSeen > 5000) continue; 
+                    if (!gkOtherPlayers[id]) {
+                        gkOtherPlayers[id] = { ...data[id], renderX: data[id].x, renderY: data[id].y, renderAngle: data[id].angle };
+                    } else {
+                        gkOtherPlayers[id].x = data[id].x; gkOtherPlayers[id].y = data[id].y; 
+                        gkOtherPlayers[id].angle = data[id].angle; gkOtherPlayers[id].color = data[id].color; gkOtherPlayers[id].name = data[id].name;
+                    }
+                }
+            });
+        }
+
+        // Start & Loop
+        function gkStartGame(mode) {
+            gkCurrentMode = mode;
+            document.getElementById('game-gokart-lobby').style.display = 'none';
+            document.getElementById('game-gokart-play').style.display = 'block';
+            
+            gkCanvas = document.getElementById('gkGameCanvas');
+            gkCtx = gkCanvas.getContext('2d');
+            gkResizeCanvas();
+            document.getElementById('gk-mode-badge').innerText = mode.toUpperCase();
+
+            gkIsPlaying = true; gkOtherPlayers = {};
+            
+            // Set spawn point based on Map Mode
+            if (mapMode === "PARAISO") {
+                gkMyKart.x = gkTr(10,-40).x; gkMyKart.y = gkTr(10,-40).y; 
+            } else {
+                gkMyKart.x = gkOffX; gkMyKart.y = gkOffY - 750;
+            }
+            gkMyKart.speed = 0; gkMyKart.angle = Math.PI / 2;
+
+            if(mode === 'multi' && gkJoinedServerId) gkInitGameSync();
+            if(mode === 'bot') gkOtherPlayers['bot_1'] = { renderX: gkMyKart.x + 150, renderY: gkMyKart.y, renderAngle: gkMyKart.angle, color: '#ef4444', isBot: true, name: 'BOT' };
+
+            gkGameLoop();
+        }
+
+        function gkGameLoop() {
+            if(!gkIsPlaying) return;
+
+            if (gkInputs.forward) {
+                gkMyKart.speed += gkMyKart.accel;
+                if(gkMyKart.speed > gkMyKart.maxSpeed) gkMyKart.speed = gkMyKart.maxSpeed;
+            } else if (gkInputs.reverse) {
+                gkMyKart.speed -= gkMyKart.accel;
+                if(gkMyKart.speed < -gkMyKart.maxSpeed / 2) gkMyKart.speed = -gkMyKart.maxSpeed / 2;
+            } else {
+                if (gkMyKart.speed > 0) { gkMyKart.speed -= gkMyKart.friction; if(gkMyKart.speed < 0) gkMyKart.speed = 0; }
+                if (gkMyKart.speed < 0) { gkMyKart.speed += gkMyKart.friction; if(gkMyKart.speed > 0) gkMyKart.speed = 0; }
+            }
+
+            if (gkInputs.brake) { gkMyKart.speed *= 0.85; if(Math.abs(gkMyKart.speed) < 0.5) gkMyKart.speed = 0; }
+
+            if (Math.abs(gkMyKart.speed) > 0.1) {
+                let turnDir = gkMyKart.speed > 0 ? 1 : -1;
+                let driftFactor = gkInputs.forward && Math.abs(gkMyKart.speed) > gkMyKart.maxSpeed*0.7 ? 1.3 : 1; 
+                if (gkInputs.left) gkMyKart.angle -= (gkMyKart.turnSpeed * turnDir * driftFactor);
+                if (gkInputs.right) gkMyKart.angle += (gkMyKart.turnSpeed * turnDir * driftFactor);
+            }
+
+            let nextX = gkMyKart.x + Math.sin(gkMyKart.angle) * gkMyKart.speed;
+            let nextY = gkMyKart.y - Math.cos(gkMyKart.angle) * gkMyKart.speed;
+
+            if (gkIsCollision(nextX, nextY)) {
+                gkMyKart.speed = -gkMyKart.speed * 0.5; 
+                gkMyKart.x -= Math.sin(gkMyKart.angle) * 5;
+                gkMyKart.y += Math.cos(gkMyKart.angle) * 5;
+            } else {
+                gkMyKart.x = nextX;
+                gkMyKart.y = nextY;
+            }
+
+            document.getElementById('gk-speed-val').innerText = Math.abs(Math.floor(gkMyKart.speed * 5));
+
+            let camX = gkMyKart.x - gkWidth / 2;
+            let camY = gkMyKart.y - gkHeight / 2;
+
+            gkCtx.clearRect(0, 0, gkWidth, gkHeight);
+            gkDrawGrid(camX, camY);
+            gkDrawTrack(camX, camY);
+
+            for (let id in gkOtherPlayers) {
+                let p = gkOtherPlayers[id];
+                if(p.isBot) {
+                    gkUpdateBot(p);
+                    gkDrawKart({ x: p.renderX, y: p.renderY, angle: p.renderAngle, width: 25, height: 45, color: p.color, name: 'BOT' }, camX, camY, false);
+                } else {
+                    p.renderX += (p.x - p.renderX) * 0.15;
+                    p.renderY += (p.y - p.renderY) * 0.15;
+                    let angleDiff = p.angle - p.renderAngle;
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                    p.renderAngle += angleDiff * 0.15;
+                    gkDrawKart({ x: p.renderX, y: p.renderY, angle: p.renderAngle, width: 25, height: 45, color: p.color, name: p.name }, camX, camY, false);
+                }
+            }
+
+            gkDrawKart(gkMyKart, camX, camY, true);
+            
+            if(gkCurrentMode === 'multi' && gkJoinedServerId) {
+                let now = Date.now();
+                if (now - gkLastSendTime > 100) {
+                    database.ref('gokart_rooms/' + gkJoinedServerId + '/gamestate/' + myUserId).set({
+                        x: gkMyKart.x, y: gkMyKart.y, angle: gkMyKart.angle, color: gkMyKart.color, name: myAlias, lastSeen: now
+                    });
+                    gkLastSendTime = now;
+                }
+            }
+
+            gkReqAnimFrame = requestAnimationFrame(gkGameLoop);
+        }
+
+        function gkQuitGame() {
+            gkIsPlaying = false;
+            cancelAnimationFrame(gkReqAnimFrame);
+            if(gkHeartbeatInterval) clearInterval(gkHeartbeatInterval);
+            if(gkHostServerId) { database.ref('gokart_rooms/' + gkHostServerId).remove(); gkHostServerId = null; }
+            if(gkJoinedServerId && gkCurrentMode === 'multi') {
+                database.ref('gokart_rooms/' + gkJoinedServerId + '/players/' + myUserId).remove();
+                database.ref('gokart_rooms/' + gkJoinedServerId + '/gamestate/' + myUserId).remove();
+                gkJoinedServerId = null;
+            }
+            
+            document.getElementById('game-gokart-play').style.display = 'none';
+            backToMenu();
+        }
+
         // --- SCAVENGER HUNT LOGIC ---
         let currentQuest = 0;
 
         function loadQuest() {
+            // Use dynamic quests from Firebase, or fallback if none
             const qList = dynamicQuests.length > 0 ? dynamicQuests : fallbackQuests;
             if(qList.length === 0) return;
             const q = qList[currentQuest];
