@@ -1617,10 +1617,10 @@
             let bodyRadius = "8px"; 
             let extraHTML = "";
             let tireHTML = `
-                <div style="position:absolute; top: 5px; left: -8px; width:8px; height:14px; background:${tireColor}; border-radius:3px; border:1px solid #000;"></div>
-                <div style="position:absolute; top: 5px; right: -8px; width:8px; height:14px; background:${tireColor}; border-radius:3px; border:1px solid #000;"></div>
-                <div style="position:absolute; bottom: 5px; left: -8px; width:8px; height:14px; background:${tireColor}; border-radius:3px; border:1px solid #000;"></div>
-                <div style="position:absolute; bottom: 5px; right: -8px; width:8px; height:14px; background:${tireColor}; border-radius:3px; border:1px solid #000;"></div>
+                <div style="position:absolute; top: 5px; left: -12px; width:8px; height:14px; background:${tireColor}; border-radius:3px; border:1px solid #000;"></div>
+                <div style="position:absolute; top: 5px; right: -12px; width:8px; height:14px; background:${tireColor}; border-radius:3px; border:1px solid #000;"></div>
+                <div style="position:absolute; bottom: 5px; left: -12px; width:8px; height:14px; background:${tireColor}; border-radius:3px; border:1px solid #000;"></div>
+                <div style="position:absolute; bottom: 5px; right: -12px; width:8px; height:14px; background:${tireColor}; border-radius:3px; border:1px solid #000;"></div>
             `;
             let baseSizeHTML = `width: 35px; height: 50px;`;
 
@@ -1634,10 +1634,10 @@
             } else if (styleType === 'dirt') {
                 bodyRadius = "4px";
                 tireHTML = `
-                <div style="position:absolute; top: 2px; left: -10px; width:10px; height:16px; background:${tireColor}; border-radius:4px; border:1px solid #000;"></div>
-                <div style="position:absolute; top: 2px; right: -10px; width:10px; height:16px; background:${tireColor}; border-radius:4px; border:1px solid #000;"></div>
-                <div style="position:absolute; bottom: 2px; left: -10px; width:10px; height:16px; background:${tireColor}; border-radius:4px; border:1px solid #000;"></div>
-                <div style="position:absolute; bottom: 2px; right: -10px; width:10px; height:16px; background:${tireColor}; border-radius:4px; border:1px solid #000;"></div>
+                <div style="position:absolute; top: 2px; left: -12px; width:10px; height:16px; background:${tireColor}; border-radius:4px; border:1px solid #000;"></div>
+                <div style="position:absolute; top: 2px; right: -12px; width:10px; height:16px; background:${tireColor}; border-radius:4px; border:1px solid #000;"></div>
+                <div style="position:absolute; bottom: 2px; left: -12px; width:10px; height:16px; background:${tireColor}; border-radius:4px; border:1px solid #000;"></div>
+                <div style="position:absolute; bottom: 2px; right: -12px; width:10px; height:16px; background:${tireColor}; border-radius:4px; border:1px solid #000;"></div>
                 `;
             } else if (styleType === 'hotdog') {
                 bodyRadius = "20px";
@@ -1667,8 +1667,8 @@
             }
 
             let htmlContent = `
-                <div style="width: 40px; height: 60px; position: relative; display: flex; flex-direction: column; align-items: center;">
-                    <div style="${baseSizeHTML} background: ${styleType === 'coffin' ? 'transparent' : colorStr}; border: ${styleType === 'coffin' ? 'none' : '2px solid #000'}; border-radius: ${bodyRadius}; transform: rotate(${heading}deg); display: flex; justify-content: center; align-items: center; position: relative; z-index: 2; ${glow}">
+                <div style="width: 60px; height: 60px; position: relative; display: flex; flex-direction: column; align-items: center;">
+                    <div class="atv-car-body" style="${baseSizeHTML} background: ${styleType === 'coffin' ? 'transparent' : colorStr}; border: ${styleType === 'coffin' ? 'none' : '2px solid #000'}; border-radius: ${bodyRadius}; transform: rotate(${heading}deg); display: flex; justify-content: center; align-items: center; position: relative; z-index: 2; ${glow} transition: transform 0.05s linear;">
                         ${extraHTML}
                         <div style="width: 22px; height: 22px; background: #fff; border-radius: 50%; overflow: hidden; border: 2px solid #000; z-index: 5;">
                             <img src="${img}" style="width:100%; height:100%; object-fit:cover;">
@@ -1681,7 +1681,7 @@
                 </div>
             `;
 
-            return L.divIcon({ className: 'custom-div-icon leaflet-marker-icon', html: htmlContent, iconSize: [40, 70], iconAnchor: [20, 35] });
+            return L.divIcon({ className: 'custom-div-icon leaflet-marker-icon', html: htmlContent, iconSize: [60, 70], iconAnchor: [30, 35] });
         }
 
         function saveATVCustomization() {
@@ -1833,9 +1833,17 @@
                     }
                 }
 
+                // OPTIMIZATION: Smooth movement without setIcon re-render
                 atvMarker.setLatLng([atvState.lat, atvState.lng]);
-                atvMarker.setIcon(getATVIcon(atvState.color, atvState.heading, true, chosenAvatarUrl, myAlias, atvState.tires, atvState.style));
                 atvMap.panTo([atvState.lat, atvState.lng], { animate: false });
+                
+                let myIconElement = atvMarker.getElement();
+                if (myIconElement) {
+                    let carBody = myIconElement.querySelector('.atv-car-body');
+                    if (carBody) {
+                        carBody.style.transform = `rotate(${atvState.heading}deg)`;
+                    }
+                }
 
                 // OPTIMIZATION: Send data to Firebase only every 10 frames (500ms) to save bandwidth
                 if (isAuthorized && frameCounter % 10 === 0 && !isDead) {
@@ -1968,7 +1976,14 @@
                     if (n.data.lng > 120.9870 || n.data.lng < 120.9810) n.data.heading += 180;
 
                     n.marker.setLatLng([n.data.lat, n.data.lng]);
-                    n.marker.setIcon(getATVIcon('#aaa', n.data.heading, false, null, n.data.id.toUpperCase(), '#222', 'standard'));
+                    
+                    let npcIconEl = n.marker.getElement();
+                    if(npcIconEl) {
+                        let npcBody = npcIconEl.querySelector('.atv-car-body');
+                        if(npcBody) npcBody.style.transform = `rotate(${n.data.heading}deg)`;
+                    } else {
+                        n.marker.setIcon(getATVIcon('#aaa', n.data.heading, false, null, n.data.id.toUpperCase(), '#222', 'standard'));
+                    }
                 });
 
             }, 50); 
@@ -2131,7 +2146,13 @@
 
                     if (atvOtherMarkers[id]) {
                         atvOtherMarkers[id].setLatLng([p.lat, p.lng]);
-                        atvOtherMarkers[id].setIcon(getATVIcon(pColor, p.heading, false, p.avatar, p.name, pTires, pStyle)); 
+                        let otherIconEl = atvOtherMarkers[id].getElement();
+                        if(otherIconEl) {
+                            let otherBody = otherIconEl.querySelector('.atv-car-body');
+                            if(otherBody) otherBody.style.transform = `rotate(${p.heading}deg)`;
+                        } else {
+                            atvOtherMarkers[id].setIcon(getATVIcon(pColor, p.heading, false, p.avatar, p.name, pTires, pStyle)); 
+                        }
                     } else {
                         atvOtherMarkers[id] = L.marker([p.lat, p.lng], { icon: getATVIcon(pColor, p.heading, false, p.avatar, p.name, pTires, pStyle) })
                             .addTo(atvMap)
