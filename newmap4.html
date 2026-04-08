@@ -1,0 +1,2927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>Paraiso Quest | Interactive Gamification</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;600;700;800&family=Playfair+Display:wght@700;900&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyAR5NKaiNwVpLuQm9OqKCOpJG7Ju_Y_6sM",
+        authDomain: "quest-e4e9f.firebaseapp.com",
+        databaseURL: "https://quest-e4e9f-default-rtdb.firebaseio.com/",
+        projectId: "quest-e4e9f",
+        storageBucket: "quest-e4e9f.firebasestorage.app",
+        messagingSenderId: "397171901653",
+        appId: "1:397171901653:web:429d408ca5475e0beb8e5c"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+    </script>
+
+    <style>
+        :root {
+            --accent-gold: #d4af37;
+            --bg-dark: #0a0a0a;
+            --zombie-red: #ef4444;
+            --zombie-green: #22c55e;
+            --sonar-blue: #3b82f6;
+            --atv-orange: #f97316;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-dark); color: #f4f4f4; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; min-height: 100vh; position: relative;}
+        body.no-scroll { overflow: hidden !important; touch-action: none; }
+
+        /* Cinematic Background */
+        .bg-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background-image: url('https://res.cloudinary.com/dc7ff0sz2/image/upload/v1775034238/Praiso_front_es9uow.png'); 
+            background-size: cover; background-position: center; 
+            filter: blur(10px) brightness(0.2); z-index: -2;
+        }
+
+        /* Top Navigation */
+        .btn-back-wrapper { padding: 30px 50px; position: relative; z-index: 10; }
+        .btn-back-home { display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; background: transparent; color: var(--accent-gold); border: 1px solid rgba(212, 175, 55, 0.5); border-radius: 30px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: 600;}
+        .btn-back-home:hover { background: var(--accent-gold); color: #000; transform: translateX(-5px); }
+
+        /* Main Game Container */
+        .game-container { max-width: 1000px; margin: 0 auto 50px; text-align: center; font-family: 'Outfit', sans-serif; position: relative; z-index: 5; padding: 0 20px;}
+        .game-title { font-size: 3.5rem; color: var(--accent-gold); font-family: 'Playfair Display', serif; font-weight: 900; letter-spacing: 5px; margin-bottom: 5px; text-transform: uppercase; filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.3));}
+        .game-subtitle { font-size: 0.9rem; color: #ccc; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 50px; font-weight: 300;}
+        
+        /* Menu Cards */
+        .quest-menu-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; margin-top: 30px; }
+        .quest-card { flex: 1 1 250px; max-width: 300px; background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px; padding: 40px 25px; cursor: pointer; transition: all 0.4s ease; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        .quest-card:hover { transform: translateY(-10px); border-color: var(--accent-gold); background: rgba(20, 20, 20, 0.8); box-shadow: 0 20px 50px rgba(212, 175, 55, 0.15); }
+        .quest-card .material-icons-outlined { font-size: 3.5rem; color: var(--accent-gold); margin-bottom: 20px; transition: transform 0.4s ease; }
+        .quest-card:hover .material-icons-outlined { transform: scale(1.1); }
+        .quest-card h3 { font-family: 'Playfair Display', serif; color: #fff; font-size: 1.4rem; margin-bottom: 12px; letter-spacing: 1px; font-weight: 700; }
+        .quest-card p { font-size: 0.85rem; color: #aaa; line-height: 1.6; font-weight: 300; font-family: 'Plus Jakarta Sans', sans-serif;}
+
+        /* Shared Game Box Styles */
+        .game-box { display: none; background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 15px; padding: 50px 40px; box-shadow: 0 30px 60px rgba(0,0,0,0.9); position: relative; margin-top: 20px; max-width: 850px; margin-left: auto; margin-right: auto;}
+        .btn-close-game { position: absolute; top: 25px; left: 25px; background: transparent; border: none; color: #aaa; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Outfit'; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; font-weight: 600; z-index:9999;}
+        .btn-close-game:hover { color: var(--accent-gold); }
+        .btn-game { background: transparent; color: var(--accent-gold); border: 1px solid var(--accent-gold); padding: 15px 40px; border-radius: 30px; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: 0.4s; font-weight: 600; display: inline-block; font-family: 'Outfit', sans-serif;}
+        .btn-game:hover { background: var(--accent-gold); color: #000; box-shadow: 0 0 25px rgba(212, 175, 55, 0.3); transform: translateY(-3px);}
+        .game-feedback { font-size: 0.85rem; letter-spacing: 1px; margin-top: 20px; min-height: 20px; font-weight: 500; text-transform: uppercase;}
+
+        /* Loading Screen Styles */
+        .loader-spinner { width: 60px; height: 60px; border: 4px solid rgba(212, 175, 55, 0.2); border-top: 4px solid var(--accent-gold); border-radius: 50%; animation: spinLoading 1s linear infinite; margin: 0 auto 30px; }
+        @keyframes spinLoading { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .credit-box { border-top: 1px solid rgba(212, 175, 55, 0.3); padding-top: 25px; margin-top: 30px; animation: fadeIn 1.5s ease-in-out; }
+        @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+
+        /* Auth & Scavenger Styles */
+        .auth-input { width: 100%; max-width: 350px; padding: 18px 25px; background: rgba(0,0,0,0.6); border: 1px solid rgba(212, 175, 55, 0.3); color: var(--accent-gold); font-size: 1.2rem; text-align: center; border-radius: 8px; outline: none; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 30px; font-family: 'Outfit', sans-serif; transition: border-color 0.3s;}
+        .auth-input:focus { border-color: var(--accent-gold); }
+        .riddle-text { font-size: 1.5rem; color: #f4f4f4; line-height: 1.7; font-family: 'Playfair Display', serif; font-style: italic; margin-bottom: 35px; letter-spacing: 1px;}
+        .answer-input { width: 100%; max-width: 300px; padding: 15px 20px; background: transparent; border: none; border-bottom: 2px solid rgba(212, 175, 55, 0.3); color: #fff; font-size: 1.2rem; text-align: center; outline: none; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 35px; transition: 0.3s; font-weight: 700;}
+        .answer-input:focus { border-bottom-color: var(--accent-gold); }
+
+        /* Memory Game Styles */
+        .memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; max-width: 500px; margin: 30px auto 0; perspective: 1000px; }
+        .memory-card { width: 100%; aspect-ratio: 1; position: relative; cursor: pointer; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
+        .memory-card.flip { transform: rotateY(180deg); }
+        .memory-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .memory-front { background: #111; border: 1px solid rgba(212, 175, 55, 0.5); transform: rotateY(180deg); }
+        .memory-front img { width: 100%; height: 100%; object-fit: cover; }
+        .memory-back { background: radial-gradient(circle, #1a1a1a, #000); border: 1px solid rgba(212, 175, 55, 0.2); }
+        .memory-back::after { content: 'PH'; font-family: 'Playfair Display'; color: rgba(212, 175, 55, 0.4); font-size: 2rem; font-weight: 900; }
+
+        /* Snap Quest (Camera) Styles */
+        .snap-preview { width: 100%; max-width: 350px; aspect-ratio: 4/3; background: rgba(0,0,0,0.4); border: 1px dashed rgba(212, 175, 55, 0.4); border-radius: 12px; margin: 25px auto; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+        .snap-preview img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .scanner-line { position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--accent-gold); box-shadow: 0 0 20px var(--accent-gold); display: none; animation: scan 2s linear infinite; }
+        @keyframes scan { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
+
+        /* Avatar Selection Styles */
+        .avatar-grid { display: flex; justify-content: center; gap: 15px; margin: 30px 0; flex-wrap: wrap; max-height: 250px; overflow-y: auto; padding: 10px; border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 10px; background: rgba(0,0,0,0.4); }
+        .avatar-card { width: 70px; height: 70px; border-radius: 50%; border: 3px solid rgba(212, 175, 55, 0.2); cursor: pointer; transition: all 0.3s ease; background: rgba(0,0,0,0.5); overflow: hidden; flex-shrink: 0;}
+        .avatar-card:hover { border-color: rgba(212, 175, 55, 0.6); transform: translateY(-5px); }
+        .avatar-card.selected { border-color: var(--accent-gold); transform: scale(1.1); box-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
+        .avatar-card img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* Avatar Bobbing Animation on Map */
+        @keyframes avatarBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        .avatar-img-animate { animation: avatarBob 1.5s infinite ease-in-out; pointer-events: none; -webkit-touch-callout: none; user-select: none; }
+
+        /* MULTIPLAYER MAPS Styles */
+        .leaflet-div-icon { background: transparent; border: none; }
+
+        #game-explorer, #game-radar { padding: 0; overflow: hidden; height: 70vh; min-height: 550px; max-width: 100%; display: none; border-radius: 15px; position: relative; margin-top:20px; margin-left:auto; margin-right:auto;}
+        #game-explorer { border: 1px solid var(--accent-gold); }
+        #game-radar { border: 1px solid var(--accent-gold); }
+        
+        #explorer-map, #sonar-map { width: 100%; height: 100%; background: #eee; position: absolute; top: 0; left: 0; z-index: 1;} 
+        
+        .hud-map {
+            position: absolute; top: 25px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 400px;
+            z-index: 1000; background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 15px 25px; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border: 1px solid rgba(212, 175, 55, 0.3); display: flex; align-items: center; justify-content: space-between;
+        }
+        .hud-title { font-weight: 700; color: #f4f4f4; font-size: 13px; font-family: 'Outfit', sans-serif; letter-spacing: 1px; display: flex; align-items: center; gap: 5px;}
+        .hud-status { font-size: 10px; color: var(--accent-gold); background: rgba(212, 175, 55, 0.1); padding: 6px 15px; border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.4); font-weight: 600; font-family: 'Outfit', sans-serif; letter-spacing: 1px; text-transform: uppercase;}
+
+        .user-icon-container { width: 20px; height: 20px; position: relative; cursor: pointer; display: flex; justify-content: center; align-items: center;}
+        .user-pulse { width: 40px; height: 40px; background-color: rgba(212, 175, 55, 0.3); border-radius: 50%; position: absolute; top: -10px; left: -10px; z-index: 5; animation: pulse-wave-gold 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1); pointer-events: none;}
+        .zombie-pulse { background-color: rgba(239, 68, 68, 0.4); animation: pulse-wave-zombie 1s infinite; pointer-events: none; position: absolute; width: 60px; height: 60px; border-radius: 50%; z-index: 5;}
+        
+        @keyframes pulse-wave-gold { 0% { transform: scale(0.1); opacity: 1; } 70% { transform: scale(1.2); opacity: 0; } 100% { transform: scale(1.2); opacity: 0; } }
+        @keyframes pulse-wave-zombie { 0% { transform: scale(0.1); opacity: 1; } 70% { transform: scale(1.6); opacity: 0; } 100% { transform: scale(1.6); opacity: 0; } }
+
+        .leaflet-popup-content-wrapper { background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px); color: #f4f4f4; border: 1px solid var(--accent-gold); box-shadow: 0 10px 25px rgba(0,0,0,0.8); font-family: 'Outfit', sans-serif; border-radius: 8px;}
+        .leaflet-popup-tip { background: rgba(20, 20, 20, 0.95); border-top: 1px solid var(--accent-gold); border-left: 1px solid var(--accent-gold); }
+        .leaflet-container a.leaflet-popup-close-button { color: #aaa; }
+
+        /* Hit Animation */
+        .hit-anim { position:absolute; top:-20px; right:-15px; color:#ef4444; font-weight:900; font-size:26px; font-family:'Outfit'; text-shadow: 0 2px 5px #000; animation: floatHit 0.8s forwards; z-index:100; pointer-events:none;}
+        @keyframes floatHit { 0% { transform:translateY(0) scale(0.5); opacity:1; } 50% { transform:translateY(-25px) scale(1.8); opacity:1; } 100% { transform:translateY(-40px) scale(1); opacity:0; } }
+
+        /* Explosion Animation */
+        @keyframes explode {
+            0% { transform: scale(0.5); opacity: 1; }
+            50% { transform: scale(2.5); opacity: 1; }
+            100% { transform: scale(3.5); opacity: 0; }
+        }
+
+        /* Treasure Hunt Twist Styles */
+        .treasure-popup {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            background: rgba(10, 10, 10, 0.95); border: 2px solid var(--accent-gold);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px; padding: 40px 30px; text-align: center; z-index: 9999;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 30px rgba(212, 175, 55, 0.3);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none; opacity: 0; width: 90%; max-width: 350px;
+        }
+        .treasure-popup.show { transform: translate(-50%, -50%) scale(1); pointer-events: auto; opacity: 1; }
+        .treasure-emoji { font-size: 5rem; margin-bottom: 15px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5)); animation: floatTreasure 3s ease-in-out infinite; }
+        @keyframes floatTreasure { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+        /* SONAR ANIMATION (NEW RADAR) */
+        .sonar-wave { animation: expandSonar 2s ease-out; fill-opacity: 0; stroke-width: 3; }
+        @keyframes expandSonar { 0% { radius: 0; opacity: 1; } 100% { radius: 150px; opacity: 0; } }
+
+        @media (max-width: 900px) {
+            .btn-back-wrapper { padding: 20px; }
+            #game-explorer, #game-radar { height: 75vh; }
+        }
+
+        /* --- UPGRADE STYLES --- */
+        .emote-marker { animation: floatEmote 2s forwards ease-out; font-size: 35px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.8)); z-index: 1000 !important; text-align: center;}
+        @keyframes floatEmote { 0% { transform: translateY(0) scale(1); opacity: 1;} 100% {transform: translateY(-60px) scale(1.8); opacity: 0;} }
+        
+        .pulse-flare { animation: pulseRed 1.5s infinite; fill-opacity: 0.4; }
+        @keyframes pulseRed { 0% { stroke-width: 1; opacity: 1; } 100% { stroke-width: 15; opacity: 0; } }
+
+        .hud-actions { position: absolute; left: 10px; top: 80px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+        .btn-action { background: rgba(10,10,10,0.8); border: 1px solid var(--accent-gold); color: var(--accent-gold); padding: 10px; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; transition: 0.3s;}
+        .btn-action:hover { background: var(--accent-gold); color: #000; transform: scale(1.1); }
+        
+        #leaderboardPanel { display: none; position: absolute; left: 60px; top: 80px; width: 220px; background: rgba(10,10,10,0.95); border: 1px solid var(--accent-gold); border-radius: 10px; padding: 15px; z-index: 2000; font-family: 'Outfit'; box-shadow: 0 10px 25px rgba(0,0,0,0.8); color: #fff; text-align: left;}
+
+        /* RESORT RUMBLE & CABANA STYLES */
+        .weapon-hud { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 1px solid var(--accent-gold); padding: 10px 20px; border-radius: 20px; z-index: 1000; font-family: 'Outfit'; font-size: 14px; color: #fff; font-weight: bold; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);}
+        
+        .cabana-zone { fill-opacity: 0.2; animation: glowCabana 3s infinite alternate; pointer-events: none;}
+        @keyframes glowCabana { 0% { fill-opacity: 0.2; stroke-opacity: 0.5; } 100% { fill-opacity: 0.4; stroke-opacity: 1; } }
+
+        #deathScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(150, 0, 0, 0.95); z-index: 10000; color: #fff; justify-content: center; align-items: center; flex-direction: column; font-family: 'Playfair Display'; text-align: center; padding: 20px;}
+        #deathScreen h1 { font-size: 5rem; letter-spacing: 10px; margin-bottom: 10px; text-shadow: 0 0 20px #000; }
+        #deathScreen p { font-family: 'Outfit'; font-size: 1.2rem; margin-bottom: 30px; }
+        #deathTimer { font-size: 2.5rem; color: var(--accent-gold); font-weight: 900; }
+
+        /* Custom Alert Modal */
+        #customModalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 200000 !important; justify-content: center; align-items: center; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
+        .custom-modal-box { background: #111; border: 1px solid var(--accent-gold); border-radius: 12px; padding: 30px 25px; max-width: 350px; width: 90%; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.8); color: #fff; font-family: 'Outfit', sans-serif; }
+        .custom-modal-box h3 { color: var(--accent-gold); font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 15px; letter-spacing: 1px;}
+        .custom-modal-box p { font-size: 0.95rem; color: #ccc; margin-bottom: 25px; line-height: 1.5; }
+        .modal-btn-container { display: flex; gap: 15px; justify-content: center; }
+
+        /* Emoji Picker Modal */
+        #emojiPickerModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 200000 !important; justify-content: center; align-items: center; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+        .emoji-box { background: #111; border: 1px solid var(--accent-gold); border-radius: 15px; padding: 20px; width: 85%; max-width: 320px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; text-align: center; font-size: 2.2rem; box-shadow: 0 15px 40px rgba(0,0,0,0.9);}
+        .emoji-box span { cursor: pointer; transition: transform 0.2s ease; display: inline-block; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)); }
+        .emoji-box span:hover { transform: scale(1.3); }
+        .emoji-title { grid-column: span 4; font-size: 1rem; color: #aaa; font-family: 'Outfit'; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding-bottom: 10px;}
+
+        /* Inventory Backpack Modal */
+        .inventory-item { background: rgba(0,0,0,0.6); border: 1px solid rgba(212, 175, 55, 0.3); padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; text-align: left; transition: 0.3s; }
+        .inventory-item:hover { border-color: var(--accent-gold); background: rgba(20,20,20,0.8); }
+        .inv-details { display: flex; flex-direction: column; }
+        .inv-name { font-weight: bold; color: var(--accent-gold); font-size: 1rem; }
+        .inv-dmg { font-size: 0.75rem; color: #aaa; }
+
+        /* ATV SPECIFIC STYLES */
+        #game-atv { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100dvh !important; max-width: none !important; z-index: 99999 !important; border-radius: 0 !important; margin: 0 !important; border: none !important; touch-action: none; background: #eee; display: none; overflow: hidden; }
+
+        .atv-btn-round { background: rgba(30,30,30,0.9); border: 2px solid #f97316; color: #f97316; width: 45px; height: 45px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); touch-action: none;}
+        .atv-btn-pill { background: rgba(30,30,30,0.9); border: 2px solid #f97316; color: #3b82f6; width: 45px; height: 80px; border-radius: 25px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; gap: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); touch-action: none;}
+        .atv-ctrl-btn { background: rgba(40,40,40,0.95); border: 2px solid; color: white; font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 14px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.4); user-select: none; -webkit-user-select: none; transition: 0.1s; touch-action: none;}
+        .atv-ctrl-btn:active { transform: scale(0.90); }
+        .atv-ctrl-btn.round { width: 60px; height: 60px; border-radius: 50%; }
+        .atv-ctrl-btn.round .material-icons-outlined { font-size: 35px; }
+        .atv-ctrl-btn.square { width: 65px; height: 75px; border-radius: 12px; }
+        .atv-ctrl-btn.orange { border-color: #f97316; color: #f97316; }
+        .atv-ctrl-btn.red { border-color: #ef4444; color: #ef4444; }
+        .atv-ctrl-btn.yellow { border-color: #eab308; color: #eab308; }
+        .atv-ctrl-btn.green { border-color: #22c55e; color: #22c55e; }
+        .atv-ctrl-btn.blue { border-color: #3b82f6; color: #3b82f6; }
+
+        /* GOKART SPECIFIC STYLES */
+        .gk-menu-panel { background: rgba(20,20,20,0.9); border: 1px solid var(--accent-gold); border-radius: 15px; padding: 30px; width: 100%; max-width: 400px; text-align: center; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); margin: 0 auto; }
+        .gk-menu-panel.active { display: block; }
+        .gk-menu-title { font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 2rem; margin-bottom: 20px; }
+        .gk-menu-btn { background: transparent; color: var(--accent-gold); border: 1px solid var(--accent-gold); padding: 15px 20px; border-radius: 30px; font-size: 1rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-weight: 700; width: 100%; margin-bottom: 15px; font-family: 'Outfit';}
+        .gk-menu-btn:hover, .gk-menu-btn:active { background: var(--accent-gold); color: #000; }
+        .gk-menu-btn.outline { border-style: dashed; color: #ccc; border-color: #555; }
+        .gk-server-list-item { background: rgba(0,0,0,0.6); border: 1px solid #444; border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .gk-server-join-btn { background: var(--sonar-blue); color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .gk-player-req-item { background: #222; padding: 10px; border-radius: 5px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 14px;}
+        .gk-acc-btn { background: #22c55e; color: #000; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;}
+        .gk-rej-btn { background: #ef4444; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;}
+
+        .gk-side-ui { position: absolute; top: 20px; left: 15px; display: flex; flex-direction: column; gap: 12px; z-index: 1000; }
+        .gk-ui-btn { background: rgba(10, 10, 10, 0.95); border: 2px solid var(--accent-gold); color: var(--accent-gold); width: 45px; height: 45px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.8); transition: 0.2s; }
+        .gk-ui-btn:active { transform: scale(0.9); }
+        
+        #gk-speedometer { position: absolute; top: 20px; right: 20px; text-align: right; z-index: 1000;}
+        #gk-speed-val { font-size: 32px; font-weight: 900; color: #fff; text-shadow: 0 2px 5px #000; font-family: 'Playfair Display', serif; }
+        #gk-speed-unit { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-top:-5px; font-family: 'Outfit';}
+
+        #gk-bottom-controls { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 1000; width: 95%; justify-content: center; }
+
+    </style>
+</head>
+<body>
+
+    <div id="globalScoreModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:200005; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
+        <div style="background:#111; border:1px solid var(--accent-gold); border-radius:12px; padding:30px 20px; width:90%; max-width:350px; text-align:center; color:#fff; font-family:'Outfit'; box-shadow: 0 15px 40px rgba(0,0,0,0.9); position: relative; max-height: 80vh; overflow-y: auto;">
+            <button onclick="document.getElementById('globalScoreModal').style.display='none'" style="position:absolute; top:10px; right:15px; background:transparent; border:none; color:#aaa; font-size:1.2rem; cursor:pointer; font-weight:bold;">✕</button>
+            <span style="font-size: 3rem;">🏆</span>
+            <h3 style="color:var(--accent-gold); font-family:'Playfair Display'; font-size:1.5rem; margin: 10px 0;">Global Score</h3>
+            <p style="color:#aaa; font-size:0.85rem; margin-bottom:15px;">Your total accumulated XP across all quests and games.</p>
+            <div style="font-size: 2.5rem; font-weight: 800; color: #fff; margin-top: 10px; margin-bottom: 20px;" id="globalScoreDisplay">0 XP</div>
+            
+            <h4 style="color:var(--accent-gold); margin-bottom:10px; border-bottom:1px solid rgba(212, 175, 55, 0.4); padding-bottom:5px; font-size: 14px; text-align: left;">TOP PLAYERS GLOBALLY</h4>
+            <div id="globalScorePlayerList" style="font-size:0.9rem; line-height:1.6; text-align: left;">Loading players...</div>
+        </div>
+    </div>
+
+    <div id="customModalOverlay">
+        <div class="custom-modal-box">
+            <h3 id="modalTitle">Alert</h3>
+            <p id="modalMsg">Message goes here.</p>
+            <div class="modal-btn-container">
+                <button id="modalBtnOk" class="btn-game" style="padding: 10px 25px; font-size: 0.85rem;">OK</button>
+                <button id="modalBtnCancel" class="btn-game" style="display:none; padding: 10px 25px; font-size: 0.85rem; background: transparent; color: #aaa; border-color: #555;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="atvCustomizeModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:200000; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
+        <div style="background:#111; border:1px solid #f97316; border-radius:12px; padding:20px; width:90%; max-width:350px; text-align:center; color:#fff; font-family:'Outfit'; box-shadow: 0 15px 40px rgba(0,0,0,0.9);">
+            <button onclick="document.getElementById('atvCustomizeModal').style.display='none'" style="position:absolute; top:10px; right:15px; background:transparent; border:none; color:#aaa; font-size:1.2rem; cursor:pointer; font-weight:bold;">✕</button>
+            <h3 style="color:#f97316; font-family:'Playfair Display'; font-size:1.5rem; margin-bottom: 15px;">Garage</h3>
+            <div style="margin-bottom: 15px; text-align: left;">
+                <label style="color:#aaa; font-size: 12px;">Paint Color:</label><br>
+                <input type="color" id="paintColorInput" value="#f97316" style="width:100%; height:40px; border:none; background:transparent; cursor:pointer;">
+            </div>
+            <div style="margin-bottom: 15px; text-align: left;">
+                <label style="color:#aaa; font-size: 12px;">Tire Color:</label><br>
+                <input type="color" id="tireColorInput" value="#222222" style="width:100%; height:40px; border:none; background:transparent; cursor:pointer;">
+            </div>
+            <div style="margin-bottom: 25px; text-align: left;">
+                <label style="color:#aaa; font-size: 12px;">Vehicle Style:</label><br>
+                <select id="vehicleStyleInput" style="width:100%; padding:10px; background:#222; color:#fff; border:1px solid #444; border-radius:4px; font-family:'Outfit';">
+                    <option value="standard">Standard Kart</option>
+                    <option value="buggy">Round Buggy</option>
+                    <option value="sport">Sport Wedge</option>
+                    <option value="race">F1 Race Car</option>
+                    <option value="dirt">Dirt Kart</option>
+                    <option value="hotdog">Funny Hotdog</option>
+                    <option value="cannon">Battle Tank (Cannon)</option>
+                    <option value="missile">Missile Cruiser</option>
+                </select>
+            </div>
+            <button class="btn-game" onclick="saveATVCustomization()" style="padding:10px 25px; font-size:0.85rem; width: 100%; border-color:#f97316; color:#f97316;">Apply & Save</button>
+        </div>
+    </div>
+
+    <div id="atvInventoryModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:200000; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
+        <div style="background:#111; border:1px solid #f97316; border-radius:12px; padding:20px; width:90%; max-width:350px; text-align:center; color:#fff; font-family:'Outfit'; box-shadow: 0 15px 40px rgba(0,0,0,0.9);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:15px; border-bottom: 1px solid rgba(249, 115, 22, 0.3); padding-bottom: 10px;">
+                <h3 style="color:#f97316; font-family:'Playfair Display'; font-size:1.5rem; margin:0;">🎒 ATV Weapons</h3>
+                <span id="atvInvCount" style="font-size:0.8rem; color:#aaa;">0/3</span>
+            </div>
+            <div id="atvInventoryList" style="max-height:300px; overflow-y:auto; margin-bottom:15px; display:flex; flex-direction:column; gap:10px;"></div>
+            <button class="btn-game" onclick="document.getElementById('atvInventoryModal').style.display='none'" style="padding:8px 25px; font-size:0.85rem; width: 100%; border-color:#f97316; color:#f97316;">Close Bag</button>
+        </div>
+    </div>
+
+    <div id="emojiPickerModal">
+        <div class="emoji-box">
+            <div class="emoji-title">Send Reaction</div>
+            <span onclick="selectEmoji('😂')">😂</span>
+            <span onclick="selectEmoji('😁')">😁</span>
+            <span onclick="selectEmoji('❤️')">❤️</span>
+            <span onclick="selectEmoji('😮')">😮</span>
+            <span onclick="selectEmoji('😡')">😡</span>
+            <span onclick="selectEmoji('😭')">😭</span>
+            <span onclick="selectEmoji('👍')">👍</span>
+            <span onclick="selectEmoji('🔥')">🔥</span>
+            <span onclick="selectEmoji('🎉')">🎉</span>
+            <span onclick="selectEmoji('💩')">💩</span>
+            <span onclick="selectEmoji('💀')">💀</span>
+            <span onclick="selectEmoji('🤩')">🤩</span>
+        </div>
+    </div>
+
+    <div id="inventoryModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:200000; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
+        <div style="background:#111; border:1px solid var(--accent-gold); border-radius:12px; padding:20px; width:90%; max-width:350px; text-align:center; color:#fff; font-family:'Outfit'; box-shadow: 0 15px 40px rgba(0,0,0,0.9);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:15px; border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 10px;">
+                <h3 style="color:var(--accent-gold); font-family:'Playfair Display'; font-size:1.5rem; margin:0;">🎒 Backpack</h3>
+                <span id="invCount" style="font-size:0.8rem; color:#aaa;">0/10</span>
+            </div>
+            
+            <div id="inventoryList" style="max-height:300px; overflow-y:auto; margin-bottom:15px; display:flex; flex-direction:column; gap:10px;">
+                </div>
+            <button class="btn-game" onclick="document.getElementById('inventoryModal').style.display='none'" style="padding:8px 25px; font-size:0.85rem; width: 100%;">Close Bag</button>
+        </div>
+    </div>
+
+    <div id="deathScreen">
+        <h1>WASTED</h1>
+        <p id="deathCause">You were eliminated by an enemy.</p>
+        <div id="deathTimer">02:00</div>
+        <p style="margin-top:20px; font-size:0.9rem; color:#aaa;">You will respawn automatically.</p>
+    </div>
+
+    <div id="maintenanceOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 10, 10, 0.98); z-index: 99999; justify-content: center; align-items: center; flex-direction: column; font-family: 'Outfit', sans-serif; text-align: center; padding: 20px;">
+        <span class="material-icons-outlined" style="font-size: 6rem; color: var(--accent-gold); margin-bottom: 20px; animation: pulseRed 2s infinite;">engineering</span>
+        <h1 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 3rem; margin-bottom: 15px;">Under Maintenance</h1>
+        <p style="color: #aaa; font-size: 1.1rem; max-width: 400px; line-height: 1.6;">
+            The Paraiso Quest servers are currently being upgraded for a better experience. Please grab a drink at the cabana and check back shortly!
+        </p>
+    </div>
+
+    <div class="bg-overlay"></div>
+    <div class="btn-back-wrapper">
+        <button class="btn-back-home" onclick="window.location.href='https://sites.google.com/reacrevenuesolutions.com/rtxtestsites/home?authuser=0'">
+            <span class="material-icons-outlined">arrow_back</span> Back to PARAISO
+        </button>
+    </div>
+
+    <div class="game-container">
+        <h2 class="game-title">Paraiso Quest</h2>
+        <p class="game-subtitle" id="gameSubtitle">Choose Your Adventure</p>
+
+        <div id="quest-menu" class="quest-menu-grid">
+            <div class="quest-card" id="card_scavenger" onclick="openGame('scavenger')">
+                <span class="material-icons-outlined">explore</span>
+                <h3>The Explorer's Path</h3>
+                <p>A physical scavenger hunt around the resort. Solve riddles to uncover our hidden secrets.</p>
+            </div>
+            
+            <div class="quest-card" id="card_explorer" onclick="openGame('explorer')">
+                <span class="material-icons-outlined">my_location</span>
+                <h3>Resort Zombie Outbreak</h3>
+                <p>Access the live interactive map. Fight off fast-moving infected Monsters, find weapons, and locate other players.</p>
+            </div>
+            
+            <div class="quest-card" id="card_radar" onclick="openGame('radar')">
+                <span class="material-icons-outlined">cell_tower</span>
+                <h3>Relic Sonar</h3>
+                <p>Use your GPS and map scanner to ping and locate the daily invisible hidden treasure.</p>
+            </div>
+
+            <div class="quest-card" id="card_atv" onclick="openGame('atv')">
+                <span class="material-icons-outlined">two_wheeler</span>
+                <h3>ATV Dirt Racing</h3>
+                <p>Virtual map racing! Drive your ATV around the resort, chat with others, and avoid NPC traffic.</p>
+            </div>
+
+            <div class="quest-card" id="card_gokart" onclick="openGame('gokart')">
+                <span class="material-icons-outlined">sports_motorsports</span>
+                <h3>Paraiso GoKart</h3>
+                <p>Modern Circuit Sandbox! Race with friends or bots on our interactive 2D canvas track.</p>
+            </div>
+
+            <div class="quest-card" id="card_camera" onclick="openGame('camera')">
+                <span class="material-icons-outlined">photo_camera</span>
+                <h3>Snap Quest</h3>
+                <p>Use your phone's camera to capture beautiful spots around the resort to complete missions.</p>
+            </div>
+            
+            <div class="quest-card" id="card_memory" onclick="openGame('memory')">
+                <span class="material-icons-outlined">dashboard</span>
+                <h3>Paraiso Match</h3>
+                <p>Test your memory with our beautiful resort sights. Perfect while waiting for your meal to arrive.</p>
+            </div>
+        </div>
+
+        <div id="game-auth" class="game-box">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <span class="material-icons-outlined" style="font-size: 3.5rem; color: var(--accent-gold); margin-bottom: 15px; font-weight: 100;">vpn_key</span>
+            <p style="color: #bbb; margin-bottom: 30px; font-size: 0.95rem; line-height: 1.8;">To access this game, please enter the physical <strong>Passkey</strong> provided by our front desk upon your arrival.</p>
+            <input type="text" id="voucherInput" class="auth-input" placeholder="PASSKEY" autocomplete="off" onkeypress="if(event.key === 'Enter') verifyVoucher()">
+            <br>
+            <button class="btn-game" onclick="verifyVoucher()">Unlock Game</button>
+            <div id="auth-error" class="game-feedback"></div>
+        </div>
+
+        <div id="game-loading" class="game-box" style="text-align: center; padding: 70px 40px; max-width: 600px;">
+            <div class="loader-spinner"></div>
+            <h3 id="loading-game-title" style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 2.2rem; margin-bottom: 10px; letter-spacing: 2px;">Loading...</h3>
+            <p style="color: #aaa; font-size: 0.9rem; letter-spacing: 3px; text-transform: uppercase;">Preparing your adventure</p>
+            
+            <div class="credit-box">
+                <p style="color: #fff; font-family: 'Outfit'; font-size: 0.95rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;">Crafted & Developed by <span style="color: var(--accent-gold);">RTX Creations</span></p>
+                <p style="color: #888; font-size: 0.8rem; margin-top: 10px; letter-spacing: 1px;">Got feedback? Reach out at: <a href="mailto:ragientrigo@gmail.com" style="color: var(--sonar-blue); text-decoration: none; font-weight: bold;">ragientrigo@gmail.com</a></p>
+            </div>
+        </div>
+
+        <div id="game-character-select" class="game-box">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <h3 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 1.8rem; margin-bottom: 10px;">Choose Your Explorer</h3>
+            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 25px;">Select your avatar and enter your alias.</p>
+            
+            <input type="text" id="playerAlias" class="auth-input" placeholder="ALIAS (MAX 6)" maxlength="6" autocomplete="off" style="margin-bottom: 20px; font-size: 1rem; padding: 15px; letter-spacing: 3px; max-width: 250px;" onkeypress="if(event.key === 'Enter') enterGPSGame()">
+
+            <div class="avatar-grid" id="avatarGrid">
+                <div class="avatar-card selected" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Abby')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Abby"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Buster')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Buster"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Jack')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Jack"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Luna')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Luna"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Felix')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Felix"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Molly')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Molly"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Sam')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Sam"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Toby')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Toby"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Chloe')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Chloe"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Max')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Max"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Bella')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Oliver')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Oliver"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Leo')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Leo"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Zoe')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Zoe"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Oscar')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Oscar"></div>
+                <div class="avatar-card" onclick="selectAvatar(this, 'https://api.dicebear.com/8.x/adventurer/svg?seed=Mia')"><img src="https://api.dicebear.com/8.x/adventurer/svg?seed=Mia"></div>
+            </div>
+            
+            <button class="btn-game" style="margin-top: 20px;" onclick="enterGPSGame()">Enter World</button>
+        </div>
+
+        <div id="game-gokart-lobby" class="game-box" style="max-width: 500px; padding: 20px;">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            
+            <div id="gk-screen-mode" class="gk-menu-panel active">
+                <h2 class="gk-menu-title">Select Mode</h2>
+                <button class="gk-menu-btn" onclick="gkShowScreen('gk-screen-single')">Single Player</button>
+                <button class="gk-menu-btn" style="border-color: #f97316; color: #f97316;" onclick="gkShowScreen('gk-screen-multi')">Multi Player</button>
+            </div>
+
+            <div id="gk-screen-single" class="gk-menu-panel">
+                <h2 class="gk-menu-title">Single Player</h2>
+                <button class="gk-menu-btn" onclick="gkStartGame('bot')">Versus Bot</button>
+                <button class="gk-menu-btn" onclick="gkStartGame('training')">Training Mode</button>
+                <button class="gk-menu-btn outline" onclick="gkShowScreen('gk-screen-mode')">Back</button>
+            </div>
+
+            <div id="gk-screen-multi" class="gk-menu-panel">
+                <h2 class="gk-menu-title">Multi Player</h2>
+                <button class="gk-menu-btn" style="border-color: #f97316; color: #f97316;" onclick="gkCreateServer()">Create Server</button>
+                <button class="gk-menu-btn" style="border-color: #f97316; color: #f97316;" onclick="gkOpenJoinServer()">Join Server</button>
+                <button class="gk-menu-btn outline" onclick="gkShowScreen('gk-screen-mode')">Back</button>
+            </div>
+
+            <div id="gk-screen-host" class="gk-menu-panel">
+                <h2 class="gk-menu-title">My Server</h2>
+                <p style="color:#aaa; font-size:12px; margin-bottom:15px;">Waiting for players to join...</p>
+                <div id="gk-host-requests" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
+                <button class="gk-menu-btn" style="border-color: #f97316; color: #f97316;" onclick="gkStartMultiplayerGame()">Start Race</button>
+                <button class="gk-menu-btn outline" onclick="gkCloseServer()">Close Server</button>
+            </div>
+
+            <div id="gk-screen-join" class="gk-menu-panel">
+                <h2 class="gk-menu-title">Server List</h2>
+                <p style="color:#aaa; font-size:12px; margin-bottom:15px;" id="gk-join-status">Looking for active games...</p>
+                <div id="gk-server-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
+                <button class="gk-menu-btn outline" id="gk-btn-join-back" onclick="gkShowScreen('gk-screen-multi')">Back</button>
+            </div>
+        </div>
+
+        <div id="game-gokart-play" class="game-box" style="padding: 0; overflow: hidden; height: 75vh; min-height: 550px; background: #050505; border: 2px solid var(--accent-gold);">
+            <button class="btn-close-game" onclick="gkQuitGame()" style="z-index: 10001; background: rgba(0,0,0,0.8); border: 1px solid var(--accent-gold); color: var(--accent-gold); padding: 8px 15px; border-radius: 20px; top: 15px; right: 15px; left: auto;"><span class="material-icons-outlined" style="font-size:14px; margin-right:5px;">exit_to_app</span> Quit</button>
+            
+            <div id="gk-canvas-container" style="width:100%; height:100%; position:relative;">
+                <canvas id="gkGameCanvas"></canvas>
+                
+                <div id="gk-speedometer">
+                    <div id="gk-speed-val">0</div>
+                    <div id="gk-speed-unit">KPH</div>
+                    <div id="gk-mode-badge" style="font-size:10px; color:var(--accent-gold); margin-top:5px; border:1px solid; padding:2px 5px; border-radius:4px;">TRAINING</div>
+                </div>
+
+                <div id="gk-bottom-controls">
+                    <button class="atv-ctrl-btn round orange" oncontextmenu="event.preventDefault();" onmousedown="gkInputs.left=true" onmouseup="gkInputs.left=false" ontouchstart="gkInputs.left=true" ontouchend="gkInputs.left=false"><span class="material-icons-outlined">navigate_before</span></button>
+                    <button class="atv-ctrl-btn round orange" oncontextmenu="event.preventDefault();" onmousedown="gkInputs.right=true" onmouseup="gkInputs.right=false" ontouchstart="gkInputs.right=true" ontouchend="gkInputs.right=false"><span class="material-icons-outlined">navigate_next</span></button>
+                    
+                    <div style="width: 15px;"></div>
+
+                    <button class="atv-ctrl-btn square red" oncontextmenu="event.preventDefault();" onmousedown="gkInputs.brake=true" onmouseup="gkInputs.brake=false" ontouchstart="gkInputs.brake=true" ontouchend="gkInputs.brake=false">BRK</button>
+                    <button class="atv-ctrl-btn square yellow" oncontextmenu="event.preventDefault();" onmousedown="gkInputs.reverse=true" onmouseup="gkInputs.reverse=false" ontouchstart="gkInputs.reverse=true" ontouchend="gkInputs.reverse=false">REV</button>
+                    <button class="atv-ctrl-btn square green" oncontextmenu="event.preventDefault();" onmousedown="gkInputs.forward=true" onmouseup="gkInputs.forward=false" ontouchstart="gkInputs.forward=true" ontouchend="gkInputs.forward=false">GAS</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-explorer" class="game-box">
+            <div id="explorer-map"></div>
+            <div id="hud-map">
+                <div class="hud-title" id="hud-title"><span class="material-icons-outlined" style="color:var(--accent-gold); font-size:16px;">map</span> Resort Zombie Outbreak</div>
+                <div class="hud-status" id="hud-status">Locating...</div>
+            </div>
+
+            <div class="weapon-hud" title="Click a Monster to Attack!">
+                <span id="weaponIcon">🪝</span> <span>Weapon: <span id="weaponName">Plastic Hanger</span></span>
+            </div>
+
+            <div class="hud-actions">
+                <button class="btn-action" title="Leaderboard" onclick="toggleLeaderboard(event)"><span class="material-icons-outlined">emoji_events</span></button>
+                <button class="btn-action" title="Backpack" onclick="openInventory(event)"><span class="material-icons-outlined">inventory_2</span></button>
+                <button class="btn-action" title="Global Chat" id="btnToggleChat" onclick="toggleGlobalChat(event)"><span class="material-icons-outlined">forum</span></button>
+                <button class="btn-action" title="Drop Flare" onclick="dropFlare()"><span class="material-icons-outlined">flare</span></button>
+            </div>
+
+            <div id="leaderboardPanel">
+                <h4 style="color:var(--accent-gold); margin-bottom:10px; border-bottom:1px solid rgba(212, 175, 55, 0.4); padding-bottom:5px; font-size: 12px;">TOP EXPLORERS (XP)</h4>
+                <div id="leaderboardList" style="font-size:0.9rem; line-height:1.6;">Loading...</div>
+            </div>
+
+            <div id="treasurePopup" class="treasure-popup">
+                <div class="treasure-emoji" id="treasureEmoji">🎁</div>
+                <h3 style="color: var(--accent-gold); margin-bottom: 10px; font-family: 'Playfair Display'; font-size: 1.8rem;" id="treasureTitle">Wow! Look!</h3>
+                <p id="treasureText" style="color: #f4f4f4; font-size: 1.1rem; line-height: 1.5; margin-bottom: 25px;"></p>
+                <button class="btn-game" id="btnTreasureAction" style="padding: 10px 30px; font-size: 0.9rem;" onclick="closeTreasure()">Awesome!</button>
+            </div>
+
+            <button class="btn-close-game" onclick="quitGPSGame()" style="z-index: 1001; background: rgba(10,10,10,0.8); color: var(--accent-gold); padding: 10px 20px; border-radius: 30px; top: auto; bottom: 30px; left: 50%; transform: translateX(-50%); border: 1px solid var(--accent-gold); box-shadow: 0 5px 15px rgba(0,0,0,0.5); backdrop-filter: blur(5px);">Exit Outbreak</button>
+        </div>
+
+        <div id="game-radar" class="game-box" style="border-color: var(--sonar-blue);">
+            <div id="sonar-map" style="width: 100%; height: 100%; background: #eee; position: absolute; top: 0; left: 0; z-index: 1;"></div>
+            
+            <div class="hud-map" style="border-color: var(--sonar-blue);">
+                <div class="hud-title" style="color:var(--sonar-blue);"><span class="material-icons-outlined" style="font-size:16px;">cell_tower</span> Relic Sonar</div>
+                <div class="hud-status" id="sonar-status" style="color:var(--sonar-blue); border-color:var(--sonar-blue);">READY</div>
+            </div>
+            
+            <button class="btn-game" onclick="triggerSonar()" style="position:absolute; bottom: 80px; left:50%; transform:translateX(-50%); z-index:1000; border-color:var(--sonar-blue); color:var(--sonar-blue); width: 80%; max-width: 300px; background:rgba(0,0,0,0.9);"><span class="material-icons-outlined" style="vertical-align:middle; margin-right:5px;">radar</span> SCAN AREA</button>
+            
+            <button class="btn-close-game" onclick="quitGPSGame()" style="z-index: 1001; background: rgba(10,10,10,0.8); color: var(--sonar-blue); padding: 10px 20px; border-radius: 30px; top: auto; bottom: 30px; left: 50%; transform: translateX(-50%); border: 1px solid var(--sonar-blue); box-shadow: 0 5px 15px rgba(0,0,0,0.5); backdrop-filter: blur(5px);">Power Off</button>
+        </div>
+
+        <div id="game-atv" class="game-box">
+            
+            <div id="atv-map" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1;"></div>
+            
+            <div id="atv-top-hud" style="position: absolute; top: 15px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: rgba(30,30,30,0.95); border-radius: 30px; display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; z-index: 1000; border: 1px solid var(--atv-orange); box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+                <div style="display: flex; align-items: center; gap: 10px; color: #fff; cursor: pointer;" onclick="quitATVGame()">
+                    <span class="material-icons-outlined" style="color: #aaa;">arrow_back</span>
+                    <div style="display: flex; flex-direction: column; text-align: left;">
+                        <span style="font-weight: 800; font-size: 13px; letter-spacing: 1px; color: #fff; font-family: 'Outfit';">PARK</span>
+                        <span style="color: var(--atv-orange); font-size: 11px; font-weight: bold;"><span class="material-icons-outlined" style="font-size: 13px; vertical-align: middle;">two_wheeler</span> Virtual ATV</span>
+                    </div>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                    <div id="atvActiveWeaponText" style="color:#fff; font-family:'Outfit'; font-size:10px; font-weight:bold; letter-spacing:1px; margin-bottom:2px; text-shadow: 1px 1px 2px #000;">🍌 Banana Gun | Left: 10 | Used: 0</div>
+                    <div id="atvHpText" style="border: 1px solid var(--atv-orange); color: var(--atv-orange); padding: 3px 10px; border-radius: 20px; font-size: 9px; font-weight: bold; letter-spacing: 1px; font-family: 'Outfit';">❤️ HP: 5/5</div>
+                </div>
+            </div>
+
+            <div id="atv-left-actions" style="position: absolute; left: 15px; top: 100px; display: flex; flex-direction: column; gap: 15px; z-index: 1000;">
+                <button class="atv-btn-round" title="Garage (Paint/Tires)" onclick="document.getElementById('atvCustomizeModal').style.display='flex'"><span class="material-icons-outlined">format_paint</span></button>
+                <button class="atv-btn-round" title="ATV Inventory" onclick="openATVInventory()"><span class="material-icons-outlined">inventory_2</span></button>
+                <button class="atv-btn-round" id="btnToggleChatATV" onclick="toggleGlobalChat(event)"><span class="material-icons-outlined">forum</span></button>
+            </div>
+
+            <div id="atv-bottom-controls" style="position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 1000; width: 95%; max-width: 450px; justify-content: center; touch-action: none;">
+                <button class="atv-ctrl-btn round orange" oncontextmenu="event.preventDefault();" onmousedown="atvInputs.left=true" onmouseup="atvInputs.left=false" onmouseleave="atvInputs.left=false" ontouchstart="atvInputs.left=true" ontouchend="atvInputs.left=false"><span class="material-icons-outlined">navigate_before</span></button>
+                <button class="atv-ctrl-btn round orange" oncontextmenu="event.preventDefault();" onmousedown="atvInputs.right=true" onmouseup="atvInputs.right=false" onmouseleave="atvInputs.right=false" ontouchstart="atvInputs.right=true" ontouchend="atvInputs.right=false"><span class="material-icons-outlined">navigate_next</span></button>
+                
+                <button class="atv-ctrl-btn square blue" oncontextmenu="event.preventDefault();" style="border-radius: 50%; width: 65px; height: 65px; margin-left: 10px;" onclick="fireATVWeapon()"><span class="material-icons-outlined">my_location</span></button>
+
+                <button class="atv-ctrl-btn square red" oncontextmenu="event.preventDefault();" onmousedown="atvInputs.brake=true" onmouseup="atvInputs.brake=false" onmouseleave="atvInputs.brake=false" ontouchstart="atvInputs.brake=true" ontouchend="atvInputs.brake=false">BRK</button>
+                <button class="atv-ctrl-btn square yellow" oncontextmenu="event.preventDefault();" onmousedown="atvInputs.reverse=true" onmouseup="atvInputs.reverse=false" onmouseleave="atvInputs.reverse=false" ontouchstart="atvInputs.reverse=true" ontouchend="atvInputs.reverse=false">REV</button>
+                <button class="atv-ctrl-btn square green" oncontextmenu="event.preventDefault();" onmousedown="atvInputs.forward=true" onmouseup="atvInputs.forward=false" onmouseleave="atvInputs.forward=false" ontouchstart="atvInputs.forward=true" ontouchend="atvInputs.forward=false">GAS</button>
+            </div>
+        </div>
+
+        <div id="game-quest" class="game-box" style="animation: floatQuest 6s infinite ease-in-out;">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <div style="font-size: 0.8rem; color: var(--accent-gold); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 20px; font-weight: 700;" id="questProgress">Chapter 1 of 3</div>
+            <div class="material-icons-outlined" style="font-size: 3rem; color: var(--accent-gold); margin-bottom: 20px; opacity: 0.9;" id="questIcon">explore</div>
+            <div class="riddle-text" id="riddleText">"Loading riddle..."</div>
+            <input type="text" id="questAnswer" class="answer-input" placeholder="Secret Word" autocomplete="off" onkeypress="if(event.key === 'Enter') checkAnswer()">
+            <br>
+            <button class="btn-game" onclick="checkAnswer()">Submit</button>
+            <div id="quest-feedback" class="game-feedback"></div>
+        </div>
+
+        <div id="game-complete" class="game-box">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <span class="material-icons-outlined" style="font-size: 5rem; color: var(--accent-gold); margin-bottom: 20px;">emoji_events</span>
+            <h3 style="font-size: 2.5rem; color: var(--accent-gold); font-family: 'Playfair Display', serif; margin-bottom: 15px;">Quest Complete</h3>
+            <p style="color: #ddd; font-size: 1.1rem; line-height: 1.8; margin-bottom: 30px;">You have uncovered the hidden secrets of Paraiso Hills. Present this glowing seal to The Brew Umbrella Cafe for your reward.</p>
+            <div id="scavengerPrizeText" style="padding: 15px 30px; border: 2px dashed var(--accent-gold); display: inline-block; letter-spacing: 5px; font-weight: bold; color: var(--accent-gold); font-size: 1.5rem; border-radius: 10px; background: rgba(212, 175, 55, 0.1);">VIP-SEAL-2026</div>
+        </div>
+
+        <div id="game-camera" class="game-box">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <div style="font-size: 0.8rem; color: var(--accent-gold); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 20px; font-weight: 700;" id="snapProgress">Mission 1 of 3</div>
+            <div class="riddle-text" id="snapMissionText">"Capture the beauty of the Grand Lagoon Pool. Take a picture!"</div>
+            
+            <div class="snap-preview" id="snapPreview">
+                <span class="material-icons-outlined" id="snapIconPlaceholder" style="font-size: 4rem; color: rgba(212, 175, 55, 0.3);">add_a_photo</span>
+                <img id="snapImageDisplay" src="">
+                <div class="scanner-line" id="scannerLine"></div>
+            </div>
+
+            <label class="btn-game" id="btnOpenCamera" style="cursor: pointer;">
+                <input type="file" accept="image/*" capture="environment" style="display: none;" onchange="handleSnap(this)">
+                <span class="material-icons-outlined" style="vertical-align: middle; margin-right: 8px; font-size: 18px;">camera_alt</span> Open Camera
+            </label>
+            
+            <div id="snap-feedback" class="game-feedback"></div>
+        </div>
+
+        <div id="snap-complete" class="game-box">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <span class="material-icons-outlined" style="font-size: 5rem; color: var(--accent-gold); margin-bottom: 20px;">collections</span>
+            <h3 style="font-size: 2.5rem; color: var(--accent-gold); font-family: 'Playfair Display', serif; margin-bottom: 15px;">Master Photographer</h3>
+            <p style="color: #ddd; font-size: 1.1rem; line-height: 1.8; margin-bottom: 30px;">You captured the true essence of Paraiso Hills! Show this badge to the Front Desk to claim your exclusive resort token.</p>
+            <div id="cameraPrizeText" style="padding: 15px 30px; border: 2px dashed var(--accent-gold); display: inline-block; letter-spacing: 5px; font-weight: bold; color: var(--accent-gold); font-size: 1.5rem; border-radius: 10px; background: rgba(212, 175, 55, 0.1);">PHOTO-VIP-26</div>
+        </div>
+
+        <div id="game-memory" class="game-box" style="max-width: 800px;">
+            <button class="btn-close-game" onclick="backToMenu()"><span class="material-icons-outlined">arrow_back</span> Menu</button>
+            <h3 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 1.8rem; margin-bottom: 5px;">Paraiso Match</h3>
+            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 20px;">Find all matching pairs in the fewest moves possible.</p>
+            <div style="color: #fff; letter-spacing: 2px; font-size: 0.9rem;">MOVES: <span id="memoryMoves" style="color: var(--accent-gold); font-weight: bold;">0</span></div>
+            <div class="memory-grid" id="memoryGrid"></div>
+            <h4 id="memoryWin" style="display:none; color: var(--accent-gold); font-family: 'Playfair Display'; font-size: 1.5rem; margin-top: 20px;">Brilliant Mind! You matched them all!</h4>
+            <button id="memoryResetBtn" class="btn-game" style="display:none; margin: 20px auto 0; padding: 10px 30px; font-size: 0.8rem;" onclick="initMemoryGame()">Play Again</button>
+        </div>
+
+        <div id="chatPanel" style="display:none; position:fixed; right:15px; top:75px; width:220px; height:320px; background:rgba(10,10,10,0.95); border:1px solid var(--accent-gold); z-index:200000 !important; border-radius:10px; flex-direction:column; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
+            <div style="padding:10px; background:var(--accent-gold); color:#000; font-weight:bold; font-size:12px; display:flex; justify-content:center; border-radius:8px 8px 0 0;">
+                <span style="font-family:'Outfit'">GLOBAL CHAT</span>
+            </div>
+            <div id="chatMessages" style="flex:1; overflow-y:auto; padding:10px; font-size:11px; text-align:left; font-family:'Plus Jakarta Sans'; color:#fff;"></div>
+            <div style="display:flex; padding:8px; border-top:1px solid rgba(212, 175, 55, 0.3);">
+                <input type="text" id="chatInput" placeholder="Message..." autocomplete="off" style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:6px; font-size:11px; border-radius:4px; outline:none;" onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                <button onclick="sendChatMessage()" style="background:var(--accent-gold); border:none; padding:6px 10px; cursor:pointer; margin-left:5px; border-radius:4px; font-weight:bold;">></button>
+            </div>
+        </div>
+
+        <div id="privateChatPanel" style="display:none; position:fixed; left:15px; top:120px; width:220px; height:280px; background:rgba(10,10,10,0.95); border:1px solid var(--sonar-blue); z-index:200001 !important; border-radius:10px; flex-direction:column; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
+            <div style="padding:10px; background:var(--sonar-blue); color:#fff; font-weight:bold; font-size:12px; display:flex; justify-content:space-between; border-radius:8px 8px 0 0;">
+                <span style="font-family:'Outfit'" id="privateChatTitle">PRIVATE CHAT</span>
+            </div>
+            <div id="privateChatMessages" style="flex:1; overflow-y:auto; padding:10px; font-size:11px; text-align:left; font-family:'Plus Jakarta Sans'; color:#fff;"></div>
+            <div style="display:flex; padding:8px; border-top:1px solid rgba(59, 130, 246, 0.3);">
+                <input type="text" id="privateChatInput" placeholder="Message..." autocomplete="off" style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:6px; font-size:11px; border-radius:4px; outline:none;" onkeypress="if(event.key === 'Enter') sendPrivateMessage()">
+                <button onclick="sendPrivateMessage()" style="background:var(--sonar-blue); border:none; padding:6px 10px; cursor:pointer; margin-left:5px; border-radius:4px; font-weight:bold; color: white;">></button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- AUTO-CLOSE MODALS ON OUTSIDE CLICK ---
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('#leaderboardPanel') && !event.target.closest('.hud-actions') && !event.target.closest('#atv-left-actions') && !event.target.closest('.leaflet-popup')) {
+                document.getElementById('leaderboardPanel').style.display = 'none';
+            }
+            if (!event.target.closest('#privateChatPanel') && !event.target.closest('.leaflet-popup')) {
+                document.getElementById('privateChatPanel').style.display = 'none';
+            }
+            if (!event.target.closest('#chatPanel') && !event.target.closest('#btnToggleChat') && !event.target.closest('#btnToggleChatATV') && !event.target.closest('.leaflet-popup')) {
+                document.getElementById('chatPanel').style.display = 'none';
+            }
+            if (event.target.id === 'emojiPickerModal') {
+                document.getElementById('emojiPickerModal').style.display = 'none';
+            }
+            if (event.target.id === 'inventoryModal') {
+                document.getElementById('inventoryModal').style.display = 'none';
+            }
+            if (event.target.id === 'atvInventoryModal') {
+                document.getElementById('atvInventoryModal').style.display = 'none';
+            }
+            if (event.target.id === 'atvCustomizeModal') {
+                document.getElementById('atvCustomizeModal').style.display = 'none';
+            }
+            if (event.target.id === 'customModalOverlay') {
+                document.getElementById('customModalOverlay').style.display = 'none';
+            }
+            if (event.target.id === 'globalScoreModal') {
+                document.getElementById('globalScoreModal').style.display = 'none';
+            }
+        });
+
+        // --- CUSTOM MODAL LOGIC ---
+        function showModal(title, msg, isConfirm = false, confirmCallback = null) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMsg').innerText = msg;
+            document.getElementById('customModalOverlay').style.display = 'flex';
+            
+            const btnOk = document.getElementById('modalBtnOk');
+            const btnCancel = document.getElementById('modalBtnCancel');
+            
+            const newBtnOk = btnOk.cloneNode(true);
+            btnOk.parentNode.replaceChild(newBtnOk, btnOk);
+            
+            if (isConfirm) {
+                btnCancel.style.display = 'inline-block';
+                newBtnOk.onclick = () => { document.getElementById('customModalOverlay').style.display = 'none'; if(confirmCallback) confirmCallback(); };
+                btnCancel.onclick = () => { document.getElementById('customModalOverlay').style.display = 'none'; };
+            } else {
+                btnCancel.style.display = 'none';
+                newBtnOk.onclick = () => { document.getElementById('customModalOverlay').style.display = 'none'; if(confirmCallback) confirmCallback(); };
+            }
+        }
+
+        // --- EMOJI PICKER LOGIC ---
+        let currentEmoteTargetId = null;
+        function showEmojiPicker(targetId) {
+            currentEmoteTargetId = targetId;
+            document.getElementById('emojiPickerModal').style.display = 'flex';
+        }
+        
+        function selectEmoji(emoji) {
+            if(!currentEmoteTargetId) return;
+            database.ref('emotes').push({ emoji: emoji, senderId: myUserId, targetId: currentEmoteTargetId, timestamp: Date.now() });
+            document.getElementById('emojiPickerModal').style.display = 'none';
+        }
+
+        // --- FIREBASE LISTENERS FOR ADMIN CONTROLS ---
+
+        // Listen to Admin Maintenance Switch
+        database.ref('settings/maintenance').on('value', (snapshot) => {
+            const isMaintenance = snapshot.val();
+            if (isMaintenance) {
+                document.getElementById('maintenanceOverlay').style.display = 'flex';
+            } else {
+                document.getElementById('maintenanceOverlay').style.display = 'none';
+            }
+        });
+
+        // Listen to Admin Game Toggles
+        database.ref('settings/games').on('value', snap => {
+            const games = snap.val() || {};
+            const map = {
+                'scavenger': 'card_scavenger',
+                'explorer': 'card_explorer',
+                'radar': 'card_radar',
+                'atv': 'card_atv',
+                'gokart': 'card_gokart',
+                'camera': 'card_camera',
+                'memory': 'card_memory'
+            };
+            for(let key in map) {
+                let el = document.getElementById(map[key]);
+                if(el) {
+                    el.style.display = games[key] === false ? 'none' : 'block'; 
+                }
+            }
+        });
+
+        // Listen to Global Announcements
+        let lastAnnouncementTime = 0;
+        database.ref('settings/announcement').on('value', snap => {
+            const data = snap.val();
+            if(data && data.time > lastAnnouncementTime && data.time > Date.now() - 60000) { 
+                lastAnnouncementTime = data.time;
+                showModal("📢 RESORT ANNOUNCEMENT", data.msg);
+            }
+        });
+
+
+        // --- GLOBAL VARIABLES & DYNAMIC FIREBASE DATA FETCHING ---
+        let isAuthorized = false;
+        let pendingGame = "";
+        let mapMode = "GLOBAL"; // Default map mode
+        
+        let validVouchers = {};
+        let dynamicQuests = [];
+        let dynamicSnapMissions = [];
+        let gamePrizes = { scavenger: "VIP-SEAL-2026", camera: "PHOTO-VIP-26" };
+
+        // Fetch dynamic data from Admin Panel
+        database.ref('settings/vouchers').on('value', snap => { validVouchers = snap.val() || {}; });
+        database.ref('settings/prizes').on('value', snap => { if(snap.exists()) gamePrizes = snap.val(); });
+        database.ref('settings/scavenger').on('value', snap => {
+            dynamicQuests = [];
+            snap.forEach(child => { dynamicQuests.push(child.val()); });
+        });
+        database.ref('settings/snap').on('value', snap => {
+            dynamicSnapMissions = [];
+            snap.forEach(child => { dynamicSnapMissions.push(child.val().text); });
+        });
+
+        let fallbackQuests = [
+            { icon: "water", riddle: "\"Where waters meet the sky's embrace... Go to the Lagoon Pool. What color is the large tile near the stairs?\"", answer: "BLUE" },
+            { icon: "local_fire_department", riddle: "\"A warm glow in the dark... Visit the Bonfire Area and find the hidden word etched on the log.\"", answer: "EMBER" },
+            { icon: "two_wheeler", riddle: "\"Four wheels to conquer the dirt... Head to the ATV line, what is the word on the yellow sign?\"", answer: "TRAIL" }
+        ];
+        let fallbackSnapMissions = [
+            "Mission 1: Take a beautiful picture of the Grand Lagoon Pool.",
+            "Mission 2: Find a yellow flower in our garden and snap a macro shot.",
+            "Mission 3: Take a smiling selfie at the Treetop Viewpoint Lounge!"
+        ];
+
+
+        // --- GLOBAL CHAT SYSTEM FIX ---
+        let globalChatInitialized = false;
+        function initGlobalSystems() {
+            if(globalChatInitialized) return;
+            database.ref('chats').limitToLast(15).on('child_added', (snapshot) => {
+                const chat = snapshot.val();
+                const chatDiv = document.getElementById('chatMessages');
+                chatDiv.innerHTML += `<div style="margin-bottom:6px;"><span style="color:var(--accent-gold); font-weight:bold;">${chat.sender}:</span> <span style="color:#ddd;">${chat.msg}</span></div>`;
+                chatDiv.scrollTop = chatDiv.scrollHeight;
+            });
+            globalChatInitialized = true;
+        }
+
+        function openGame(gameType) {
+            pendingGame = gameType;
+            
+            document.getElementById('quest-menu').style.display = 'none';
+            document.getElementById('gameSubtitle').style.display = 'none';
+            
+            if (!isAuthorized) {
+                document.getElementById('game-auth').style.display = 'block';
+                document.getElementById('voucherInput').value = '';
+                document.getElementById('auth-error').innerText = '';
+            } else {
+                triggerLoadingAndLaunch(gameType);
+            }
+        }
+
+        function verifyVoucher() {
+            const input = document.getElementById('voucherInput').value.toUpperCase().trim();
+            const errorDiv = document.getElementById('auth-error');
+            
+            const fallbackCheck = ["EXPLORE26", "PARAISOVIP", "PARAISO1"];
+
+            if(validVouchers[input] || fallbackCheck.includes(input)) {
+                errorDiv.innerHTML = "";
+                isAuthorized = true; 
+
+                // DETECT MAP MODE
+                if (input.includes("PARAISO")) {
+                    mapMode = "PARAISO";
+                } else {
+                    mapMode = "GLOBAL";
+                }
+
+                document.getElementById('game-auth').style.display = 'none';
+                triggerLoadingAndLaunch(pendingGame);
+            } else {
+                errorDiv.innerText = "Invalid Passkey. Please check with the front desk."; 
+                errorDiv.style.color = "#ff4c4c";
+            }
+        }
+
+        function triggerLoadingAndLaunch(gameType) {
+            const titles = {
+                'scavenger': 'The Explorer\'s Path',
+                'explorer': 'Resort Zombie Outbreak',
+                'radar': 'Relic Sonar',
+                'atv': 'ATV Dirt Racing',
+                'gokart': 'Paraiso GoKart',
+                'camera': 'Snap Quest',
+                'memory': 'Paraiso Match'
+            };
+            
+            const boxes = document.querySelectorAll('.game-box');
+            boxes.forEach(box => box.style.display = 'none'); 
+            
+            document.getElementById('loading-game-title').innerText = titles[gameType] || 'Loading Game...';
+            document.getElementById('game-loading').style.display = 'block';
+
+            setTimeout(() => {
+                document.getElementById('game-loading').style.display = 'none';
+                launchGame(gameType);
+            }, 2500); 
+        }
+
+        function backToMenu() {
+            const boxes = document.querySelectorAll('.game-box');
+            boxes.forEach(box => box.style.display = 'none');
+            document.getElementById('quest-menu').style.display = 'flex';
+            document.getElementById('gameSubtitle').style.display = 'block';
+            document.getElementById('gameSubtitle').innerText = "Choose Your Adventure";
+            
+            document.getElementById('chatPanel').style.display = 'none';
+            document.getElementById('privateChatPanel').style.display = 'none';
+        }
+
+        // --- AVATAR SELECTION & MULTIPLAYER PREP ---
+        let chosenAvatarUrl = 'https://api.dicebear.com/8.x/adventurer/svg?seed=Abby'; 
+        let myUserId = "ID_" + Math.floor(Math.random() * 9999);
+        let myAlias = "";
+        
+        let myScore = 0;
+        let lastLat = null;
+        let lastLng = null;
+        let lastMoveTime = Date.now();
+        let currentSpeedMultiplier = 1;
+        let flareLayers = {};
+        let globalWatchId = null;
+        let lastGpsSendTime = 0; 
+        
+        // --- INVENTORY & COMBAT SYSTEM ---
+        let myInventory = [
+            { name: "Plastic Hanger", emoji: "🪝", damage: 1, range: 12, type: "melee" },
+            { name: "Egg", emoji: "🥚", damage: 2, range: 35, type: "ranged", ammo: 5 } 
+        ];
+        let myWeapon = myInventory[0]; 
+        let isDead = false;
+        let deadTimerInterval = null;
+        let cabanaLayer = null;
+        const cabanaZone = { lat: 14.5355, lng: 120.9845, radius: 15 }; 
+
+        function selectAvatar(element, url) {
+            document.querySelectorAll('.avatar-card').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            chosenAvatarUrl = url;
+        }
+
+        function addScore(points) {
+            myScore += points;
+            document.getElementById('globalScoreDisplay').innerText = `${myScore} XP`;
+            if (document.getElementById('myScoreDisplay')) {
+                document.getElementById('myScoreDisplay').innerText = myScore;
+            }
+
+            if(isAuthorized) {
+                database.ref('players/' + myUserId).update({ score: myScore });
+            }
+        }
+
+        function launchGame(gameType) {
+            if(gameType === 'scavenger') {
+                document.getElementById('game-quest').style.display = 'block';
+                loadQuest();
+            } else if(gameType === 'camera') {
+                document.getElementById('game-camera').style.display = 'block';
+                loadSnapMission();
+            } else if(gameType === 'memory') {
+                document.getElementById('game-memory').style.display = 'block';
+                initMemoryGame();
+            } else if(gameType === 'gokart') {
+                if(myAlias === "") {
+                    document.getElementById('game-character-select').style.display = 'block';
+                } else {
+                    openGoKartLobby();
+                }
+            } else if(gameType === 'explorer' || gameType === 'radar' || gameType === 'atv') {
+                if(myAlias === "") {
+                    document.getElementById('game-character-select').style.display = 'block';
+                } else {
+                    enterGPSGame();
+                }
+            }
+        }
+
+        function enterGPSGame() {
+            if(myAlias === "") {
+                const aliasInput = document.getElementById('playerAlias').value.trim();
+                const isValid = /^[a-z0-9]{1,6}$/i.test(aliasInput);
+                if (!isValid) { showModal("Invalid Alias", "Please enter a valid Alias (Max 6 letters/numbers, no spaces or special symbols)."); return; }
+                myAlias = aliasInput.toUpperCase();
+            }
+            
+            document.getElementById('game-character-select').style.display = 'none';
+            initGlobalSystems(); 
+            
+            if(pendingGame === 'explorer') {
+                document.getElementById('game-explorer').style.display = 'block';
+                setTimeout(() => {
+                    if (!explorerMap) { initExplorerMap(); } 
+                    else { if(userMarker) userMarker.setIcon(getZombieIcon(chosenAvatarUrl, myAlias, true, null)); }
+                    explorerMap.invalidateSize(); 
+                }, 100);
+            } 
+            else if (pendingGame === 'radar') {
+                document.getElementById('game-radar').style.display = 'block';
+                setTimeout(() => { if (!sonarMap) { initSonarMap(); } sonarMap.invalidateSize(); }, 100);
+            }
+            else if (pendingGame === 'atv') {
+                document.getElementById('game-atv').style.display = 'block';
+                document.body.classList.add('no-scroll'); 
+                setTimeout(() => { if (!atvMap) { initATVMap(); } atvMap.invalidateSize(); }, 100);
+            }
+            else if (pendingGame === 'gokart') {
+                openGoKartLobby();
+            }
+        }
+
+        function quitGPSGame() {
+            if(globalWatchId) navigator.geolocation.clearWatch(globalWatchId);
+            database.ref('players/' + myUserId).remove();
+            backToMenu();
+        }
+
+        function getZombieIcon(urlOrId, name, isMe, zState, hp = null, isMonster = false) {
+            let color = zState ? (zState === 'zombie' ? 'var(--zombie-red)' : 'var(--zombie-green)') : (isMe ? 'var(--accent-gold)' : '#fff');
+            let pulse = isMe ? (zState ? (zState === 'zombie' ? 'pulse-wave-gold' : 'zombie-pulse') : 'pulse-wave-gold') : '';
+            if(isMe && zState === 'zombie') pulse = 'pulse-wave-gold'; 
+
+            let hpBarHTML = "";
+            let maxHp = hp ? Math.max(5, hp) : 5; 
+            if(hp !== null) {
+                hpBarHTML = `<div style="width:100%; height:4px; background:#ef4444; border-radius:2px; margin-top:3px; border:1px solid #000; overflow:hidden;"><div style="width:${(hp/maxHp)*100}%; height:100%; background:#22c55e; transition: width 0.3s;"></div></div>`;
+            }
+            
+            let centerImageHTML = `<img src="${urlOrId}" class="avatar-img-animate" style="width: 100%; height: 100%; border-radius: 50%; border: 2px solid ${color}; background: #222; position:relative; z-index:10;">`;
+            
+            if(isMonster) {
+                color = "var(--zombie-red)"; pulse = "zombie-pulse";
+                centerImageHTML = `<div class="avatar-img-animate" style="width: 100%; height: 100%; border-radius: 50%; border: 2px solid ${color}; background: #000; position:relative; z-index:10; display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow: inset 0 0 10px #ef4444;">
+                                    <img src="${urlOrId}" style="width:110%; height:110%; object-fit:cover; filter: grayscale(1) brightness(0.5) sepia(1) hue-rotate(-50deg) saturate(3);">
+                                   </div>`;
+            }
+
+            return L.divIcon({
+                className: 'custom-div-icon leaflet-marker-icon', 
+                html: `<div class="user-icon-container" style="width: ${isMe?45:35}px; height: ${isMe?45:35}px;">
+                           <div class="${pulse}" style="width: ${isMe?65:0}px; height: ${isMe?65:0}px; top: -10px; left: -10px; position:absolute; z-index:5; border-radius:50%;"></div>
+                           <div style="position:absolute; top:-30px; left:50%; transform:translateX(-50%); text-align:center; z-index:20; min-width: 50px;">
+                               <div style="background:${color}; color:${color==='#fff'?'#000':'#fff'}; font-size:10px; padding:2px 5px; border-radius:4px; font-weight:800; white-space:nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.5); pointer-events: none;">${name}</div>
+                               ${hpBarHTML}
+                           </div>
+                           ${centerImageHTML}
+                       </div>`,
+                iconSize: [isMe?45:35, isMe?45:35], iconAnchor: [isMe?22:17, isMe?22:17]
+            });
+        }
+
+
+        // --- MAP BOUNDARY AND POI DRAWING ---
+        function drawParaisoMap(mapInstance) {
+            if(mapMode !== "PARAISO") return;
+            
+            // Remove street map background feeling
+            mapInstance.getContainer().style.background = '#111';
+
+            const centerLat = 14.5353;
+            const centerLng = 120.9842;
+            const mToLat = 111111; 
+            const mToLng = 107600; 
+
+            const c = (x, y) => [centerLat + (y / mToLat), centerLng + (x / mToLng)];
+
+            const boundaryCoords = [
+                c(8.38, 5.31), c(49.73, -77.43), c(53.13, -89.09), c(0.73, -119.62),
+                c(-51.68, -35.52), c(-43.80, -26.72), c(-30.22, -20.49), c(-7.11, -4.63), c(0.009, -0.003)
+            ];
+            
+            L.polygon(boundaryCoords, {color: 'var(--accent-gold)', fillOpacity: 0.05, dashArray: '5, 5'}).addTo(mapInstance);
+
+            const pois = [
+                {name: "Lake View", coords: c(-20, 50), icon: 'water'},
+                {name: "Garden View", coords: c(30, 20), icon: 'local_florist'},
+                {name: "Family Room", coords: c(10, -20), icon: 'family_restroom'},
+                {name: "Paraiso Resturant", coords: c(-10, -50), icon: 'restaurant'},
+                {name: "Alfresco", coords: c(-30, -60), icon: 'deck'},
+                {name: "Brew Umbrella", coords: c(20, -70), icon: 'local_cafe'},
+                {name: "Lagoon Pool", coords: c(-40, 10), icon: 'pool'},
+                {name: "Camping Site", coords: c(40, -40), icon: 'holiday_village'},
+                {name: "ATV Trail Site", coords: c(30, -90), icon: 'two_wheeler'},
+                {name: "Bonfire", coords: c(45, -20), icon: 'local_fire_department'},
+                {name: "Swing", coords: c(-15, 30), icon: 'park'}
+            ];
+
+            pois.forEach(p => {
+                L.marker(p.coords, {
+                    icon: L.divIcon({
+                        className: '',
+                        html: `<div style="background:rgba(10,10,10,0.85); border:1px solid var(--accent-gold); color:var(--accent-gold); padding:4px 8px; border-radius:6px; font-size:10px; font-family:'Outfit'; white-space:nowrap; text-align:center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); font-weight: bold; transform: translate(-50%, -50%);">
+                                   <span class="material-icons-outlined" style="font-size:14px; vertical-align:middle; margin-right: 3px;">${p.icon}</span>${p.name}
+                               </div>`
+                    })
+                }).addTo(mapInstance);
+            });
+        }
+
+
+        // --- COMBINED MAP EXPLORER & ZOMBIE SURVIVAL LOGIC ---
+        let explorerMap = null;
+        let userMarker = null;
+        let otherMarkers = {};
+        let hasGPSFix = false;
+        let lastFindTime = 0;
+        
+        let aiZombies = [];
+        let zombieChaseInterval = null;
+        let lastSpawnLat = null;
+        let lastSpawnLng = null;
+        let idleRespawnTimer = null;
+        let hiddenMythicalSpawns = [];
+
+        const zombieType = { name: "Zombie", img: "https://api.dicebear.com/8.x/bottts/svg?seed=ScaryZombie&backgroundColor=0a0a0a", hp: 5 }; 
+
+        const mythicalTypes = [
+            { name: "Aswang", img: "https://api.dicebear.com/8.x/shapes/svg?seed=ScaryAswang&backgroundColor=0a0a0a", hp: 6 },
+            { name: "Tikbalang", img: "https://api.dicebear.com/8.x/icons/svg?seed=ScaryTikbalang&backgroundColor=0a0a0a", hp: 8 },
+            { name: "Syokoy", img: "https://api.dicebear.com/8.x/pixel-art-neutral/svg?seed=ScarySyokoy&backgroundColor=0a0a0a", hp: 5 },
+            { name: "Paniki", img: "https://api.dicebear.com/8.x/rings/svg?seed=ScaryPaniki&backgroundColor=0a0a0a", hp: 4 }
+        ];
+
+        const encounters = [
+            { name: "Golden Mango", emoji: "🥭", msg: "Sweet! +20 XP.", type: "xp", val: 20 },
+            { name: "Shiny Pearl", emoji: "🔮", msg: "Rare find! +50 XP.", type: "xp", val: 50 },
+            { name: "Ladle", emoji: "🥄", msg: "Damage: 2.", type: "weapon", dmg: 2, range: 12, wType: "melee" },
+            { name: "Mom's Slippers", emoji: "🩴", msg: "Damage: 3.", type: "weapon", dmg: 3, range: 12, wType: "melee" },
+            { name: "Socks", emoji: "🧦", msg: "Damage: 1. Smelly!", type: "weapon", dmg: 1, range: 12, wType: "melee" },
+            { name: "Soft Broom", emoji: "🧹", msg: "Damage: 2. Sweep the mess!", type: "weapon", dmg: 2, range: 14, wType: "melee" },
+            { name: "Fridge", emoji: "🥶", msg: "Damage: 10. Smash with a Fridge?!", type: "weapon", dmg: 10, range: 12, wType: "melee" },
+            { name: "Cooking Pot", emoji: "🥘", msg: "Damage: 4. Hit on the head!", type: "weapon", dmg: 4, range: 12, wType: "melee" },
+            { name: "Egg", emoji: "🥚", msg: "Ranged Dmg: 2. Ammo: 5", type: "weapon", dmg: 2, range: 35, wType: "ranged", ammo: 5 },
+            { name: "Water Balloon", emoji: "🎈", msg: "Ranged Dmg: 2. Ammo: 5", type: "weapon", dmg: 2, range: 35, wType: "ranged", ammo: 5 }
+        ];
+        
+        function updateHUDWeapon() {
+            document.getElementById('weaponIcon').innerText = myWeapon.emoji;
+            let ammoText = myWeapon.type === "ranged" ? ` (${myWeapon.ammo})` : "";
+            document.getElementById('weaponName').innerText = myWeapon.name + ammoText;
+        }
+
+        function openInventory(event) {
+            if(event) event.stopPropagation();
+            const list = document.getElementById('inventoryList');
+            document.getElementById('invCount').innerText = `${myInventory.length}/10`;
+            list.innerHTML = "";
+            
+            myInventory.forEach((item, index) => {
+                let btnHtml = `<button class="btn-game" style="padding: 5px 15px; font-size: 0.75rem;" onclick="equipWeapon(${index})">Equip</button>`;
+                if (myWeapon && myWeapon.name === item.name) {
+                    btnHtml = `<span style="color:#22c55e; font-size:0.8rem; font-weight:bold; padding-right:10px;">Equipped</span>`;
+                }
+                
+                let ammoText = item.type === "ranged" ? ` | Ammo: ${item.ammo}` : " | Infinite";
+                
+                list.innerHTML += `
+                    <div class="inventory-item">
+                        <div style="font-size:2rem; margin-right:15px; filter: drop-shadow(0 2px 4px #000);">${item.emoji}</div>
+                        <div class="inv-details" style="flex:1;">
+                            <span class="inv-name">${item.name}</span>
+                            <span class="inv-dmg">Dmg: ${item.damage} | Range: ${item.range}m${ammoText}</span>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:5px;">
+                            ${btnHtml}
+                            <button style="background:transparent; border:1px solid #ef4444; color:#ef4444; border-radius:4px; padding:3px; cursor:pointer;" onclick="dropWeapon(${index})">Drop</button>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('inventoryModal').style.display = 'flex';
+        }
+
+        function equipWeapon(index) {
+            myWeapon = myInventory[index];
+            updateHUDWeapon();
+            openInventory(); 
+        }
+        
+        function dropWeapon(index) {
+            if(myInventory.length <= 1) { showModal("Can't Drop", "You need at least one weapon to survive!"); return; }
+            if(myWeapon === myInventory[index]) { myWeapon = myInventory[0]; updateHUDWeapon(); } 
+            myInventory.splice(index, 1);
+            openInventory();
+        }
+
+        function showTreasurePopup(encounter) {
+            document.getElementById('treasureEmoji').innerText = encounter.emoji;
+            if(encounter.type === 'weapon') {
+                let existingItemIndex = myInventory.findIndex(w => w.name === encounter.name);
+                
+                if (myInventory.length >= 10 && existingItemIndex === -1) {
+                    document.getElementById('treasureTitle').innerText = "Backpack Full!";
+                    document.getElementById('treasureText').innerHTML = `You found <strong>${encounter.name}</strong> but your bag is full (10/10). Open inventory to drop an item, then find another!`;
+                    document.getElementById('btnTreasureAction').innerText = "OK";
+                    document.getElementById('btnTreasureAction').onclick = () => closeTreasure();
+                } else {
+                    document.getElementById('treasureTitle').innerText = "Weapon Found!";
+                    document.getElementById('treasureText').innerHTML = `You picked up <strong>${encounter.name}</strong>!<br><span style="font-size:0.85rem; color:#aaa; margin-top:5px; display:block;">${encounter.msg}</span>`;
+                    
+                    if(existingItemIndex > -1 && encounter.type === "ranged") {
+                        myInventory[existingItemIndex].ammo = encounter.ammo; 
+                    } else if (existingItemIndex === -1) {
+                        let newItem = { name: encounter.name, emoji: encounter.emoji, damage: encounter.dmg, range: encounter.range, type: encounter.wType };
+                        if(encounter.wType === "ranged") newItem.ammo = encounter.ammo;
+                        myInventory.push(newItem);
+                    }
+                    
+                    document.getElementById('btnTreasureAction').innerText = "Awesome!";
+                    document.getElementById('btnTreasureAction').onclick = () => closeTreasure();
+                }
+            } else {
+                document.getElementById('treasureTitle').innerText = `+${encounter.val} XP FOUND!`;
+                document.getElementById('treasureText').innerHTML = `You found <strong>${encounter.name}</strong>!<br><span style="font-size:0.85rem; color:#aaa; margin-top:5px; display:block;">${encounter.msg}</span>`;
+                addScore(encounter.val);
+                
+                document.getElementById('btnTreasureAction').innerText = "Awesome!";
+                document.getElementById('btnTreasureAction').onclick = () => closeTreasure();
+            }
+            document.getElementById('treasurePopup').classList.add('show');
+        }
+
+        function closeTreasure() {
+            document.getElementById('treasurePopup').classList.remove('show');
+        }
+
+        function initExplorerMap() {
+            explorerMap = L.map('explorer-map', { zoomControl: false, attributionControl: false }).setView([14.5353, 120.9842], 18);
+            
+            // TILE LAYER CONTROL
+            if (mapMode === "GLOBAL") {
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20 }).addTo(explorerMap);
+            }
+            
+            drawParaisoMap(explorerMap);
+
+            cabanaLayer = L.circle([cabanaZone.lat, cabanaZone.lng], { radius: cabanaZone.radius, color: '#d4af37', fillColor: '#d4af37', className: 'cabana-zone' })
+                            .addTo(explorerMap).bindPopup("<b>👑 VIP CABANA</b><br>Stand here to claim territory and earn passive XP!");
+
+            userMarker = L.marker([14.5353, 120.9842], { icon: getZombieIcon(chosenAvatarUrl, myAlias, true, null) }).addTo(explorerMap);
+            
+            userMarker.on('contextmenu', function(e) {
+                showEmojiPicker(myUserId);
+            });
+
+            if (navigator.geolocation) {
+                globalWatchId = navigator.geolocation.watchPosition(updateMyPosition, handleLocationError, { enableHighAccuracy: true, maximumAge: 5000, timeout: 5000 });
+            }
+            
+            updateHUDWeapon();
+            syncOtherPlayers();
+            database.ref('players/' + myUserId).onDisconnect().remove();
+
+            setInterval(() => {
+                if(isDead || !lastLat) return;
+                const dist = L.latLng(lastLat, lastLng).distanceTo(L.latLng(cabanaZone.lat, cabanaZone.lng));
+                if(dist <= cabanaZone.radius) {
+                    addScore(5);
+                    database.ref('zones/cabana').set({ owner: myAlias });
+                }
+            }, 10000); 
+        }
+        
+        function checkIdleRespawn() {
+            if(aiZombies.length === 0 && !idleRespawnTimer) {
+                idleRespawnTimer = setTimeout(() => {
+                    if(!isDead && lastLat) spawnHorde(lastLat, lastLng);
+                    idleRespawnTimer = null;
+                }, 60000); 
+            }
+        }
+
+        function spawnHorde(lat, lng) {
+            if(!lat || !lng) return;
+            if(idleRespawnTimer) { clearTimeout(idleRespawnTimer); idleRespawnTimer = null; }
+            
+            aiZombies.forEach(z => { if(z.marker) explorerMap.removeLayer(z.marker); });
+            aiZombies = [];
+            lastSpawnLat = lat;
+            lastSpawnLng = lng;
+
+            const speeds = [0.000015, 0.000008, 0.000004];
+            for(let i=0; i<3; i++) { 
+                let zLat = lat + (Math.random() * 0.003 - 0.0015);
+                let zLng = lng + (Math.random() * 0.003 - 0.0015);
+                createAIMonster('zom_' + Date.now() + '_' + i, zLat, zLng, speeds[i], zombieType);
+            }
+            startChaseInterval();
+        }
+        
+        function trySpawnMythicalPoint(lat, lng) {
+            if (Math.random() < 0.25) {
+                let angle = Math.random() * Math.PI * 2;
+                let dist = 0.00015 + (Math.random() * 0.0001); 
+                let pLat = lat + Math.sin(angle) * dist;
+                let pLng = lng + Math.cos(angle) * dist;
+                
+                let mType = mythicalTypes[Math.floor(Math.random() * mythicalTypes.length)];
+                hiddenMythicalSpawns.push({ lat: pLat, lng: pLng, type: mType, active: true, spawned: false });
+            }
+        }
+
+        function createAIMonster(id, initialLat, initialLng, speed, mType) {
+            let marker = L.marker([initialLat, initialLng], { icon: getZombieIcon(mType.img, mType.name.toUpperCase(), false, 'zombie', mType.hp, true) }).addTo(explorerMap);
+            
+            marker.on('click', function(e) {
+                L.DomEvent.stopPropagation(e);
+                if(isDead) return;
+                
+                let zIndex = aiZombies.findIndex(z => z.id === id);
+                if(zIndex === -1) return;
+                let z = aiZombies[zIndex];
+                
+                let dist = L.latLng(lastLat, lastLng).distanceTo(L.latLng(z.lat, z.lng));
+                let weaponRange = myWeapon ? (myWeapon.range || 12) : 12;
+
+                if(dist > weaponRange) {
+                    showModal("Too Far!", `You are too far away! Get closer to use your ${myWeapon ? myWeapon.name : 'weapon'} (within ${weaponRange}m).`);
+                    return;
+                }
+                
+                let dmg = myWeapon ? myWeapon.damage : 1;
+                z.hp -= dmg;
+                
+                let iconDiv = marker.getElement();
+                if(iconDiv) {
+                    let hitEl = document.createElement('div');
+                    hitEl.className = 'hit-anim';
+                    hitEl.innerText = `💥-${dmg}`;
+                    iconDiv.appendChild(hitEl);
+                    setTimeout(() => hitEl.remove(), 800);
+                }
+                
+                if(myWeapon.type === "ranged") {
+                    myWeapon.ammo--;
+                    updateHUDWeapon();
+                    if(myWeapon.ammo <= 0) {
+                        myInventory = myInventory.filter(w => w !== myWeapon); 
+                        myWeapon = myInventory[0]; 
+                        updateHUDWeapon();
+                        showModal("Out of Ammo!", "Your ranged weapon broke/ran out! Switched back to Default Weapon.");
+                    }
+                }
+                
+                if(z.hp <= 0) {
+                    explorerMap.removeLayer(marker);
+                    aiZombies.splice(zIndex, 1);
+                    addScore(25);
+                    checkIdleRespawn(); 
+                } else {
+                    marker.setIcon(getZombieIcon(z.img, z.name.toUpperCase(), false, 'zombie', z.hp, true));
+                }
+            });
+            
+            aiZombies.push({ id: id, lat: initialLat, lng: initialLng, hp: mType.hp, speed: speed, name: mType.name, img: mType.img, marker: marker });
+        }
+
+        function startChaseInterval() {
+             if(!zombieChaseInterval) {
+                zombieChaseInterval = setInterval(() => {
+                    if(isDead || !lastLat) return;
+                    
+                    aiZombies.forEach(z => {
+                        let angle = Math.atan2(lastLat - z.lat, lastLng - z.lng);
+                        let activeSpeed = z.speed * currentSpeedMultiplier;
+                        z.lat += Math.sin(angle) * activeSpeed;
+                        z.lng += Math.cos(angle) * activeSpeed;
+                        z.marker.setLatLng([z.lat, z.lng]);
+                        
+                        let distToPlayer = L.latLng(lastLat, lastLng).distanceTo(L.latLng(z.lat, z.lng));
+                        if(distToPlayer <= 3) { 
+                            triggerDeath({attacker: `a horrific ${z.name}`, weapon: "Bites & Scratches"});
+                        }
+                    });
+                }, 500);
+            }
+        }
+
+        function updateMyPosition(position) {
+            if(isDead) return;
+
+            const lat = position.coords.latitude; 
+            const lng = position.coords.longitude;
+            let now = Date.now();
+            
+            if(userMarker) {
+                userMarker.setLatLng([lat, lng]);
+                
+                if (now - lastGpsSendTime > 1000) {
+                    database.ref('players/' + myUserId).set({
+                        lat: lat, lng: lng, avatar: chosenAvatarUrl, name: myAlias, score: myScore, lastSeen: now
+                    });
+                    lastGpsSendTime = now;
+                }
+            }
+            
+            if(!hasGPSFix) {
+                explorerMap.panTo([lat, lng]); 
+                hasGPSFix = true;
+            }
+
+            let isWalking = true;
+            if(lastLat !== null && lastLng !== null) {
+                let distTraveled = L.latLng(lastLat, lastLng).distanceTo(L.latLng(lat, lng));
+                let timeDiff = (now - lastMoveTime) / 1000; 
+                
+                if(timeDiff > 0) {
+                    let speed_m_s = distTraveled / timeDiff;
+                    if (speed_m_s > 5) {
+                        currentSpeedMultiplier = 4; 
+                        isWalking = false;
+                    } else {
+                        currentSpeedMultiplier = 1;
+                        isWalking = true;
+                    }
+                }
+            }
+            lastMoveTime = now;
+
+            if(lastSpawnLat === null) {
+                spawnHorde(lat, lng);
+            } else {
+                let distFromSpawn = L.latLng(lat, lng).distanceTo(L.latLng(lastSpawnLat, lastSpawnLng));
+                if (distFromSpawn >= 10) {
+                    spawnHorde(lat, lng);
+                }
+            }
+
+            if(isWalking) {
+                trySpawnMythicalPoint(lat, lng);
+                
+                hiddenMythicalSpawns.forEach(point => {
+                    if(point.active && !point.spawned) {
+                        let dist = L.latLng(lat, lng).distanceTo(L.latLng(point.lat, point.lng));
+                        if(dist <= 10) {
+                            point.spawned = true;
+                            point.active = false;
+                            createAIMonster('myth_' + Date.now(), point.lat, point.lng, 0.000018, point.type);
+                            startChaseInterval(); 
+                        }
+                    }
+                });
+            }
+
+            if (lastLat !== null && lastLng !== null) {
+                const dist = L.latLng(lastLat, lastLng).distanceTo(L.latLng(lat, lng));
+                if (dist > 3) { 
+                    if (now - lastFindTime > 15000 && Math.random() < 0.20) {
+                        lastFindTime = now;
+                        const randomEncounter = encounters[Math.floor(Math.random() * encounters.length)];
+                        showTreasurePopup(randomEncounter);
+                    }
+                }
+            }
+            lastLat = lat;
+            lastLng = lng;
+            
+            const statusEl = document.getElementById('hud-status');
+            statusEl.innerHTML = "<span class='material-icons-outlined' style='font-size:12px; vertical-align:middle;'>my_location</span> GPS Active"; 
+            statusEl.style.color = "#d4af37"; statusEl.style.borderColor = "#d4af37"; statusEl.style.background = "rgba(212, 175, 55, 0.1)";
+        }
+
+        function handleLocationError(error) {
+            const statusEl = document.getElementById('hud-status');
+            statusEl.innerHTML = "Resort Hub (GPS Off)"; 
+            statusEl.style.color = "#aaa"; statusEl.style.borderColor = "rgba(255, 255, 255, 0.2)"; statusEl.style.background = "rgba(0, 0, 0, 0.5)";
+        }
+
+        function attackPlayer(targetId, tLat, tLng) {
+            if(isDead) return;
+            if(!myWeapon) { showModal("No Weapon", "You don't have a weapon! Walk around to find one."); return; }
+            if(!lastLat) return;
+            
+            const dist = L.latLng(lastLat, lastLng).distanceTo(L.latLng(tLat, tLng));
+            if(dist > 15) { showModal("Out of Range", "Target is too far! Get closer (within 15 meters)."); return; }
+
+            database.ref('attacks/' + targetId).set({ attacker: myAlias, weapon: myWeapon.name, time: Date.now() });
+            
+            showModal("Victory!", `You defeated them using your ${myWeapon.name}! +100 XP`);
+            addScore(100);
+        }
+
+        function triggerDeath(attackInfo) {
+            isDead = true;
+            document.getElementById('deathCause').innerText = `Eliminated by ${attackInfo.attacker} using ${attackInfo.weapon}`;
+            document.getElementById('deathScreen').style.display = 'flex';
+            
+            database.ref('players/' + myUserId).remove();
+            
+            if(zombieChaseInterval) { clearInterval(zombieChaseInterval); zombieChaseInterval = null; }
+            aiZombies.forEach(z => { if(z.marker) explorerMap.removeLayer(z.marker); });
+            aiZombies = [];
+            hiddenMythicalSpawns = [];
+
+            let timeLeft = 120; // 2 mins
+            const timerEl = document.getElementById('deathTimer');
+            
+            clearInterval(deadTimerInterval);
+            deadTimerInterval = setInterval(() => {
+                timeLeft--;
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
+                timerEl.innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+                
+                if(timeLeft <= 0) {
+                    clearInterval(deadTimerInterval);
+                    isDead = false;
+                    document.getElementById('deathScreen').style.display = 'none';
+                    showModal("Respawned", "You respawned! Get back in the fight.");
+                    lastSpawnLat = null; 
+                    if(lastLat) updateMyPosition({coords:{latitude:lastLat, longitude:lastLng}});
+                }
+            }, 1000);
+        }
+
+        function triggerATVDeath(attackInfo, customTime = 10) {
+            isDead = true;
+            document.getElementById('deathCause').innerText = `Vehicle Destroyed by ${attackInfo.attacker} (${attackInfo.weapon})`;
+            document.getElementById('deathScreen').style.display = 'flex';
+            
+            database.ref('atv_players/' + myUserId).remove();
+            
+            let timeLeft = customTime; 
+            const timerEl = document.getElementById('deathTimer');
+            
+            clearInterval(deadTimerInterval);
+            deadTimerInterval = setInterval(() => {
+                timeLeft--;
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
+                timerEl.innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+                
+                if(timeLeft <= 0) {
+                    clearInterval(deadTimerInterval);
+                    isDead = false;
+                    atvState.hp = 5; // Restore full health
+                    updateATVWeaponHUD();
+                    document.getElementById('deathScreen').style.display = 'none';
+                    showModal("Respawned", "Your vehicle has been repaired! Get back in the race.");
+                }
+            }, 1000);
+        }
+
+        function syncOtherPlayers() {
+            database.ref('attacks/' + myUserId).on('value', (snapshot) => {
+                const attack = snapshot.val();
+                if(attack && !isDead) {
+                    triggerDeath(attack);
+                    database.ref('attacks/' + myUserId).remove();
+                }
+            });
+
+            database.ref('zones/cabana').on('value', (snapshot) => {
+                const z = snapshot.val();
+                if(z && z.owner && cabanaLayer) {
+                    cabanaLayer.bindPopup(`<b>👑 CABANA KING</b><br>Currently owned by: <b style="color:var(--accent-gold)">${z.owner}</b>`);
+                }
+            });
+
+            database.ref('players').on('value', (snapshot) => {
+                const players = snapshot.val();
+                if(!players) return;
+                
+                let leaderArr = [];
+
+                for (let id in otherMarkers) {
+                    if (!players[id]) {
+                        explorerMap.removeLayer(otherMarkers[id]);
+                        delete otherMarkers[id];
+                    }
+                }
+
+                for (let id in players) {
+                    const p = players[id];
+                    leaderArr.push({name: p.name, score: p.score || 0});
+
+                    if (id === myUserId) continue;
+                    if (Date.now() - p.lastSeen > 300000) continue; 
+
+                    if (otherMarkers[id]) {
+                        otherMarkers[id].setLatLng([p.lat, p.lng]);
+                    } else {
+                        otherMarkers[id] = L.marker([p.lat, p.lng], { icon: getZombieIcon(p.avatar, p.name, false, null) })
+                            .addTo(explorerMap)
+                            .bindPopup(`
+                                <div style="text-align:center; font-family:'Outfit'">
+                                    <b style="color:var(--accent-gold); font-size:15px; letter-spacing:1px;">${p.name}</b><br>
+                                    <span style="font-size:10px; color:#aaa; display:block; margin-top:2px;">(Long-press avatar to React!)</span>
+                                    <button onclick="openPrivateChat('${id}', '${p.name}')" style="background:#111; color:#fff; border:1px solid var(--sonar-blue); padding:5px 10px; margin-top:5px; cursor:pointer; width:100%; border-radius:4px;">CHAT</button>
+                                    <button onclick="attackPlayer('${id}', ${p.lat}, ${p.lng})" style="background:red; color:#fff; border:none; padding:5px 10px; margin-top:5px; cursor:pointer; width:100%; border-radius:4px; font-weight:bold;">ATTACK ⚔️</button>
+                                </div>
+                            `);
+                        
+                        otherMarkers[id].on('contextmenu', function(e) {
+                            showEmojiPicker(id);
+                        });
+                    }
+                }
+                
+                const onlineCount = Object.keys(players).length;
+                document.getElementById('hud-title').innerHTML = `<span class="material-icons-outlined" style="color:var(--accent-gold); font-size:16px;">map</span> Resort Zombie Outbreak (${onlineCount} Online)`;
+
+                // Update Leaderboards
+                leaderArr.sort((a,b) => b.score - a.score);
+                let lbHTML = ""; 
+                let globalLbHTML = "";
+                leaderArr.forEach((l, i) => {
+                    if (i < 5) lbHTML += `<div style="margin-bottom:5px;">${i+1}. ${l.name} - <span style="color:var(--accent-gold); font-weight:bold;">${l.score} XP</span></div>`;
+                    globalLbHTML += `<div style="margin-bottom:8px; padding: 5px; background: rgba(255,255,255,0.05); border-radius: 4px;"><b>${i+1}. ${l.name}</b> <span style="float:right; color:var(--accent-gold); font-weight:bold;">${l.score} XP</span></div>`;
+                });
+                document.getElementById('leaderboardList').innerHTML = lbHTML || "No explorers yet.";
+                document.getElementById('globalScorePlayerList').innerHTML = globalLbHTML || "No players online yet.";
+            });
+
+            database.ref('emotes').on('child_added', (snapshot) => {
+                const e = snapshot.val(); 
+                if(Date.now() - e.timestamp > 3000) return; 
+                
+                let targetLatLng = null;
+                let attachToId = e.targetId || e.senderId;
+                
+                if(attachToId === myUserId && lastLat) targetLatLng = [lastLat, lastLng];
+                else if(otherMarkers[attachToId]) targetLatLng = otherMarkers[attachToId].getLatLng();
+                
+                if(targetLatLng) {
+                    const emoteMarker = L.marker(targetLatLng, { icon: L.divIcon({ className: 'emote-marker', html: e.emoji, iconSize: [30, 30] }) }).addTo(explorerMap);
+                    setTimeout(() => explorerMap.removeLayer(emoteMarker), 2000);
+                }
+            });
+
+            database.ref('flares').on('value', (snapshot) => {
+                const f = snapshot.val();
+                for (let id in flareLayers) { if (!f || !f[id]) { explorerMap.removeLayer(flareLayers[id]); delete flareLayers[id]; } }
+                if(!f) return;
+                for (let id in f) {
+                    if(!flareLayers[id]) {
+                        flareLayers[id] = L.circle([f[id].lat, f[id].lng], { radius: 15, color: 'red', className: 'pulse-flare' }).addTo(explorerMap).bindPopup(`${f[id].name}'s Flare!`);
+                    }
+                }
+            });
+        }
+
+        function toggleLeaderboard(event) { 
+            if(event) event.stopPropagation(); 
+            const p = document.getElementById('leaderboardPanel'); 
+            p.style.display = p.style.display === 'block' ? 'none' : 'block'; 
+        }
+        
+        function toggleGlobalChat(event) {
+            if(event) event.stopPropagation();
+            const p = document.getElementById('chatPanel'); 
+            if(p.style.display === 'none' || p.style.display === '') {
+                p.style.display = 'flex';
+                document.getElementById('chatInput').focus();
+            } else {
+                p.style.display = 'none';
+            }
+        }
+        
+        function dropFlare() { 
+            if(!lastLat) return; 
+            database.ref('flares/' + myUserId).set({ lat: lastLat, lng: lastLng, name: myAlias }); 
+            setTimeout(() => database.ref('flares/' + myUserId).remove(), 30000); 
+        }
+
+        // GLOBAL CHAT
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if(msg === "") return;
+            
+            database.ref('chats').push({ sender: myAlias, msg: msg, time: Date.now() });
+            input.value = "";
+        }
+
+        // PRIVATE CHAT
+        let activePrivateChatId = null;
+        let privateChatRef = null;
+
+        function getChatRoomId(id1, id2) {
+            return id1 < id2 ? `${id1}_${id2}` : `${id2}_${id1}`;
+        }
+
+        function openPrivateChat(targetId, targetName) {
+            document.getElementById('privateChatPanel').style.display = 'flex';
+            document.getElementById('privateChatTitle').innerText = targetName.toUpperCase();
+            activePrivateChatId = targetId;
+            document.getElementById('privateChatMessages').innerHTML = "";
+            
+            if(privateChatRef) privateChatRef.off();
+            
+            const roomId = getChatRoomId(myUserId, targetId);
+            privateChatRef = database.ref('private_chats/' + roomId);
+            
+            privateChatRef.limitToLast(15).on('child_added', (snapshot) => {
+                const chat = snapshot.val();
+                const chatDiv = document.getElementById('privateChatMessages');
+                const isMe = chat.sender === myAlias;
+                const color = isMe ? '#3b82f6' : '#fff';
+                chatDiv.innerHTML += `<div style="margin-bottom:6px; text-align:${isMe ? 'right' : 'left'};"><span style="color:${color}; font-weight:bold;">${chat.sender}:</span> <span style="color:#ddd;">${chat.msg}</span></div>`;
+                chatDiv.scrollTop = chatDiv.scrollHeight;
+            });
+        }
+        
+        function closePrivateChat() {
+            document.getElementById('privateChatPanel').style.display = 'none';
+            activePrivateChatId = null;
+            if(privateChatRef) { privateChatRef.off(); privateChatRef = null; }
+        }
+
+        function sendPrivateMessage() {
+            if(!activePrivateChatId) return;
+            const input = document.getElementById('privateChatInput');
+            const msg = input.value.trim();
+            if(msg === "") return;
+            
+            const roomId = getChatRoomId(myUserId, activePrivateChatId);
+            database.ref('private_chats/' + roomId).push({ sender: myAlias, msg: msg, time: Date.now() });
+            input.value = "";
+        }
+
+        // --- RELIC SONAR LOGIC ---
+        let sonarMap = null;
+        let sonarMarker = null;
+        let relicMarker = null;
+        const secretRelic = cabanaZone;
+
+        function initSonarMap() {
+            sonarMap = L.map('sonar-map', { zoomControl: false, attributionControl: false }).setView([14.5353, 120.9842], 18);
+            
+            // TILE LAYER CONTROL
+            if (mapMode === "GLOBAL") {
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20 }).addTo(sonarMap);
+            }
+            drawParaisoMap(sonarMap);
+            
+            sonarMarker = L.marker([14.5353, 120.9842], { icon: getZombieIcon(chosenAvatarUrl, myAlias, true, null) }).addTo(sonarMap);
+
+            if (navigator.geolocation) {
+                globalWatchId = navigator.geolocation.watchPosition(pos => {
+                    sonarMarker.setLatLng([pos.coords.latitude, pos.coords.longitude]); 
+                    sonarMap.panTo([pos.coords.latitude, pos.coords.longitude]);
+                    lastLat = pos.coords.latitude; 
+                    lastLng = pos.coords.longitude;
+                }, e=>{}, { enableHighAccuracy: true });
+            }
+        }
+
+        function triggerSonar() {
+            if(!lastLat) return;
+            
+            const ping = L.circle([lastLat, lastLng], { radius: 0, color: 'var(--sonar-blue)', weight: 2, fillOpacity: 0.1 }).addTo(sonarMap);
+            let r = 0; 
+            const expand = setInterval(() => { 
+                r += 5; ping.setRadius(r); 
+                if(r > 150) { clearInterval(expand); sonarMap.removeLayer(ping); } 
+            }, 50);
+            
+            const dist = L.latLng(lastLat, lastLng).distanceTo(L.latLng(secretRelic.lat, secretRelic.lng));
+            document.getElementById('sonar-status').innerText = "SCANNING...";
+            
+            setTimeout(() => {
+                if(dist <= 150) {
+                    document.getElementById('sonar-status').innerText = "RELIC DETECTED!";
+                    
+                    if(!relicMarker) {
+                        relicMarker = L.marker([secretRelic.lat, secretRelic.lng], { icon: L.divIcon({className:'', html:'<div style="font-size:30px; filter:drop-shadow(0 0 10px #3b82f6);">🏺</div>'})}).addTo(sonarMap);
+                    }
+                    
+                    setTimeout(() => { 
+                        if(relicMarker) { sonarMap.removeLayer(relicMarker); relicMarker = null; } 
+                        document.getElementById('sonar-status').innerText = "READY"; 
+                    }, 4000);
+                    
+                    if(dist <= 15) { 
+                        showModal("Relic Found!", "You found the Relic! +200 XP"); 
+                        addScore(200); 
+                    }
+                } else {
+                    document.getElementById('sonar-status').innerText = "NO SIGNAL";
+                    setTimeout(()=> document.getElementById('sonar-status').innerText = "READY", 2000);
+                }
+            }, 1000);
+        }
+
+        // --- ATV RACING LOGIC (ORIGINAL AND SMOOTH) ---
+        let atvMap = null;
+        let atvMarker = null;
+        let atvOtherMarkers = {};
+        let npcMarkers = [];
+        let atvDrops = []; 
+        let atvMines = [];
+        let atvZombies = []; 
+        let atvLoop = null;
+        let atvLastHitTime = 0;
+
+        let atvState = { lat: 14.5353, lng: 120.9842, heading: 0, speed: 0, color: '#f97316', tires: '#222222', style: 'standard', hp: 5 };
+        let atvInputs = { forward: false, reverse: false, left: false, right: false, brake: false };
+        
+        let atvWeapons = [{ id: 'banana', name: 'Banana Gun', emoji: '🍌', ammo: 10, used: 0 }];
+        let activeAtvWeaponIndex = 0;
+        
+        const funnyWeaponsPool = [
+            { id: 'tsinelas', name: 'Slipper Sniper', emoji: '🩴', ammo: 5, used: 0 },
+            { id: 'sabaw', name: 'Hot Soup', emoji: '🥣', ammo: 3, used: 0 },
+            { id: 'tinapa', name: 'Smoked Fish Blaster', emoji: '🐟', ammo: 5, used: 0 },
+            { id: 'durian', name: 'Durian Bomb', emoji: '🍈', ammo: 2, used: 0 },
+            { id: 'nokia', name: 'Nokiha 3310', emoji: '📱', ammo: 1, used: 0 },
+            { id: 'walis', name: 'Broomstick', emoji: '🧹', ammo: 10, used: 0 },
+            { id: 'tirador', name: 'Slingshot', emoji: '🏹', ammo: 15, used: 0 }
+        ];
+
+        let npcs = [
+            { id: 'npc1', lat: 14.5355, lng: 120.9840, heading: 90, speed: 0.00002 },
+            { id: 'npc2', lat: 14.5350, lng: 120.9845, heading: 270, speed: 0.000015 },
+            { id: 'npc3', lat: 14.5358, lng: 120.9848, heading: 180, speed: 0.000025 }
+        ];
+
+        function getATVIcon(colorStr, heading, isMe, avatarUrl, name, tireColor, styleType) {
+            let glow = isMe ? `box-shadow: 0 0 15px ${colorStr};` : '';
+            let defaultAvatar = 'https://api.dicebear.com/8.x/adventurer/svg?seed=NPC';
+            let img = avatarUrl || defaultAvatar;
+            let displayName = name || 'NPC';
+
+            let bodyRadius = "8px"; 
+            let extraHTML = "";
+            let tireHTML = `
+                <div style="position:absolute; top: 5px; left: -16px; width:8px; height:14px; background:${tireColor}; border-radius:3px; border:1px solid #000;"></div>
+                <div style="position:absolute; top: 5px; right: -16px; width:8px; height:14px; background:${tireColor}; border-radius:3px; border:1px solid #000;"></div>
+                <div style="position:absolute; bottom: 5px; left: -16px; width:8px; height:14px; background:${tireColor}; border-radius:3px; border:1px solid #000;"></div>
+                <div style="position:absolute; bottom: 5px; right: -16px; width:8px; height:14px; background:${tireColor}; border-radius:3px; border:1px solid #000;"></div>
+            `;
+            let baseSizeHTML = `width: 35px; height: 50px;`;
+
+            if (styleType === 'buggy') {
+                bodyRadius = "20px";
+            } else if (styleType === 'sport') {
+                bodyRadius = "50% 50% 0 0";
+            } else if (styleType === 'race') {
+                bodyRadius = "8px 8px 0 0";
+                extraHTML = `<div style="position:absolute; bottom:-5px; width:120%; height:8px; background:#111; border-radius:2px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);"></div>`;
+            } else if (styleType === 'dirt') {
+                bodyRadius = "4px";
+                tireHTML = `
+                <div style="position:absolute; top: 2px; left: -16px; width:10px; height:16px; background:${tireColor}; border-radius:4px; border:1px solid #000;"></div>
+                <div style="position:absolute; top: 2px; right: -16px; width:10px; height:16px; background:${tireColor}; border-radius:4px; border:1px solid #000;"></div>
+                <div style="position:absolute; bottom: 2px; left: -16px; width:10px; height:16px; background:${tireColor}; border-radius:4px; border:1px solid #000;"></div>
+                <div style="position:absolute; bottom: 2px; right: -16px; width:10px; height:16px; background:${tireColor}; border-radius:4px; border:1px solid #000;"></div>
+                `;
+            } else if (styleType === 'hotdog') {
+                bodyRadius = "20px";
+                colorStr = "#8b4513";
+                extraHTML = `<div style="position:absolute; top:10%; left:40%; width:20%; height:80%; background:#ffd700; border-radius:5px;"></div>`;
+            } else if (styleType === 'tank' || styleType === 'cannon') {
+                bodyRadius = "4px";
+                extraHTML = `<div style="width: 8px; height: 30px; background: #333; position: absolute; top: -25px; border: 2px solid #000; z-index: -1;"></div>`;
+            } else if (styleType === 'missile') {
+                bodyRadius = "8px";
+                extraHTML = `
+                    <div style="position:absolute; top:10px; left:-12px; width:6px; height:20px; background:#ccc; border-radius:50% 50% 0 0; border:1px solid #000;"><div style="background:red; width:100%; height:4px; border-radius: 50% 50% 0 0;"></div></div>
+                    <div style="position:absolute; top:10px; right:-12px; width:6px; height:20px; background:#ccc; border-radius:50% 50% 0 0; border:1px solid #000;"><div style="background:red; width:100%; height:4px; border-radius: 50% 50% 0 0;"></div></div>
+                `;
+            } else if (styleType === 'boat') {
+                bodyRadius = "50% 50% 10px 10px / 100% 100% 10px 10px";
+                tireHTML = ""; 
+            } else if (styleType === 'ufo') {
+                bodyRadius = "50%";
+                baseSizeHTML = `width: 45px; height: 45px;`;
+                tireHTML = "";
+                extraHTML = `<div style="width: 30px; height: 30px; background: rgba(0, 255, 255, 0.5); position: absolute; border-radius: 50%; border: 1px solid #0ff; z-index: 1;"></div>`;
+            } else if (styleType === 'coffin') {
+                bodyRadius = "0px";
+                extraHTML = `<div style="position:absolute; top:0; left:0; width:100%; height:100%; background:inherit; clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%); z-index: -1;"></div>`;
+                baseSizeHTML = `width: 35px; height: 50px; background: transparent; border: none;`; 
+            }
+
+            let htmlContent = `
+                <div style="width: 70px; height: 70px; position: relative; display: flex; flex-direction: column; align-items: center;">
+                    <div style="${baseSizeHTML} background: ${styleType === 'coffin' ? 'transparent' : colorStr}; border: ${styleType === 'coffin' ? 'none' : '2px solid #000'}; border-radius: ${bodyRadius}; transform: rotate(${heading}deg); display: flex; justify-content: center; align-items: center; position: relative; z-index: 2; ${glow}">
+                        ${extraHTML}
+                        <div style="width: 22px; height: 22px; background: #fff; border-radius: 50%; overflow: hidden; border: 2px solid #000; z-index: 5;">
+                            <img src="${img}" style="width:100%; height:100%; object-fit:cover;">
+                        </div>
+                        ${tireHTML}
+                    </div>
+                    <div style="background: ${colorStr}; color: white; font-size: 9px; font-weight: 800; border: 1px solid #000; padding: 2px 6px; border-radius: 4px; z-index: 3; white-space: nowrap; margin-top: 2px; font-family: 'Outfit';">
+                        ${displayName}
+                    </div>
+                </div>
+            `;
+
+            return L.divIcon({ className: 'custom-div-icon', html: htmlContent, iconSize: [70, 80], iconAnchor: [35, 40] });
+        }
+
+        function saveATVCustomization() {
+            atvState.color = document.getElementById('paintColorInput').value;
+            atvState.tires = document.getElementById('tireColorInput').value;
+            atvState.style = document.getElementById('vehicleStyleInput').value;
+            document.getElementById('atvCustomizeModal').style.display = 'none';
+        }
+
+        function spawnATVZombie(lat, lng) {
+            let zMarker = L.marker([lat, lng], { icon: getZombieIcon(zombieType.img, 'ZOMBIE', false, 'zombie', 2, true) }).addTo(atvMap);
+            atvZombies.push({ marker: zMarker, lat: lat, lng: lng, heading: Math.random() * 360, hp: 2, speed: 0.00001 });
+        }
+
+        function initATVMap() {
+            atvMap = L.map('atv-map', { zoomControl: false, attributionControl: false }).setView([atvState.lat, atvState.lng], 19);
+            
+            // TILE LAYER CONTROL
+            if (mapMode === "GLOBAL") {
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 21 }).addTo(atvMap);
+            }
+            
+            drawParaisoMap(atvMap);
+            
+            atvState.hp = 5; 
+            atvMarker = L.marker([atvState.lat, atvState.lng], { icon: getATVIcon(atvState.color, atvState.heading, true, chosenAvatarUrl, myAlias, atvState.tires, atvState.style) }).addTo(atvMap);
+            
+            npcMarkers.forEach(npc => {
+                let m = L.marker([npc.lat, npc.lng], { icon: getATVIcon('#aaa', npc.heading, false, null, npc.id.toUpperCase(), '#222', 'standard') }).addTo(atvMap);
+                npcMarkers.push({ data: npc, marker: m });
+            });
+
+            for(let i=0; i<5; i++) { spawnATVZombie(atvState.lat + (Math.random()*0.002 - 0.001), atvState.lng + (Math.random()*0.002 - 0.001)); }
+
+            startATVEngine();
+            syncATVPlayers();
+            updateATVWeaponHUD();
+
+            database.ref('atv_attacks/' + myUserId).on('value', (snapshot) => {
+                const attack = snapshot.val();
+                if(attack && !isDead) {
+                    if (Date.now() - atvLastHitTime > 1000) {
+                        atvLastHitTime = Date.now();
+                        atvState.hp -= 1;
+                        updateATVWeaponHUD();
+                        
+                        let myIcon = atvMarker.getElement();
+                        if(myIcon) {
+                            let hitEl = document.createElement('div');
+                            hitEl.className = 'hit-anim'; hitEl.innerText = `💥 BAM!`;
+                            myIcon.appendChild(hitEl);
+                            setTimeout(() => hitEl.remove(), 800);
+                        }
+                        if(atvState.hp <= 0) triggerATVDeath(attack, 10);
+                    }
+                    database.ref('atv_attacks/' + myUserId).remove();
+                }
+            });
+        }
+
+        function startATVEngine() {
+            if (atvLoop) clearInterval(atvLoop);
+            let frameCounter = 0;
+
+            atvLoop = setInterval(() => {
+                if (isDead) return;
+                frameCounter++;
+                const maxSpeed = 0.00008; 
+                const accel = 0.000002;
+                const friction = 0.000001;
+                const turnSpeed = 4; 
+
+                if (atvInputs.forward) {
+                    atvState.speed += accel;
+                    if (atvState.speed > maxSpeed) atvState.speed = maxSpeed;
+                } else if (atvInputs.reverse) {
+                    atvState.speed -= accel;
+                    if (atvState.speed < -maxSpeed / 2) atvState.speed = -maxSpeed / 2;
+                } else {
+                    if (atvState.speed > 0) { atvState.speed -= friction; if (atvState.speed < 0) atvState.speed = 0; } 
+                    else if (atvState.speed < 0) { atvState.speed += friction; if (atvState.speed > 0) atvState.speed = 0; }
+                }
+
+                if (atvInputs.brake) atvState.speed = 0;
+
+                if (Math.abs(atvState.speed) > 0.000001) {
+                    let turnDir = atvState.speed > 0 ? 1 : -1;
+                    if (atvInputs.left) atvState.heading -= turnSpeed * turnDir;
+                    if (atvInputs.right) atvState.heading += turnSpeed * turnDir;
+                }
+
+                const rad = atvState.heading * (Math.PI / 180);
+                atvState.lat += Math.cos(rad) * atvState.speed;
+                atvState.lng += Math.sin(rad) * atvState.speed;
+
+                let collidedWithNpc = false;
+                let collidedWithPlayerId = null;
+                
+                npcMarkers.forEach(n => {
+                    if(L.latLng(atvState.lat, atvState.lng).distanceTo(L.latLng(n.data.lat, n.data.lng)) < 4) {
+                        collidedWithNpc = true;
+                        n.data.heading = (n.data.heading + 180 + (Math.random() * 40 - 20)) % 360; 
+                    }
+                });
+
+                for(let id in atvOtherMarkers) {
+                    if(L.latLng(atvState.lat, atvState.lng).distanceTo(atvOtherMarkers[id].getLatLng()) < 4) collidedWithPlayerId = id;
+                }
+
+                if (collidedWithNpc || collidedWithPlayerId) {
+                    atvState.speed = -0.00005; 
+                    atvState.heading += (Math.random() * 30 - 15); 
+                    
+                    let myIcon = atvMarker.getElement();
+                    if(myIcon) {
+                        let hitEl = document.createElement('div');
+                        hitEl.className = 'hit-anim'; hitEl.innerText = `💥 CRASH!`;
+                        hitEl.style.fontSize = "35px";
+                        myIcon.appendChild(hitEl);
+                        setTimeout(() => hitEl.remove(), 800);
+                    }
+
+                    if (Date.now() - atvLastHitTime > 1500) {
+                        atvLastHitTime = Date.now();
+                        atvState.hp -= 1;
+                        updateATVWeaponHUD();
+
+                        if (collidedWithPlayerId) database.ref('atv_attacks/' + collidedWithPlayerId).set({ attacker: myAlias, weapon: 'Vehicle Ram', time: Date.now() });
+                        if (atvState.hp <= 0) triggerATVDeath({ attacker: collidedWithPlayerId ? 'Another Driver' : 'NPC Vehicle', weapon: 'Crash' }, 10);
+                    }
+                }
+
+                atvMarker.setLatLng([atvState.lat, atvState.lng]);
+                atvMarker.setIcon(getATVIcon(atvState.color, atvState.heading, true, chosenAvatarUrl, myAlias, atvState.tires, atvState.style));
+                atvMap.panTo([atvState.lat, atvState.lng], { animate: false });
+
+                // OPTIMIZATION RELAXED (every 4 frames = 200ms sync)
+                if (isAuthorized && frameCounter % 4 === 0 && !isDead) {
+                    database.ref('atv_players/' + myUserId).set({
+                        lat: atvState.lat, lng: atvState.lng, heading: atvState.heading, name: myAlias, avatar: chosenAvatarUrl, 
+                        color: atvState.color, tires: atvState.tires, style: atvState.style, lastSeen: Date.now()
+                    });
+                }
+
+                if(frameCounter % 60 === 0 && Math.random() < 0.2 && atvDrops.length < 5 && !isDead) {
+                    let type = Math.random() < 0.5 ? 'ammo' : 'weapon';
+                    let wData = type === 'weapon' ? funnyWeaponsPool[Math.floor(Math.random()*funnyWeaponsPool.length)] : null;
+                    let dropLat = atvState.lat + (Math.random() * 0.001 - 0.0005);
+                    let dropLng = atvState.lng + (Math.random() * 0.001 - 0.0005);
+                    
+                    let iconHtml = type === 'ammo' ? '📦' : '🎁';
+                    let dropMarker = L.marker([dropLat, dropLng], { icon: L.divIcon({className:'', html:`<div style="font-size:25px; filter:drop-shadow(0 2px 5px #000); animation: avatarBob 2s infinite;">${iconHtml}</div>`})}).addTo(atvMap);
+                    
+                    atvDrops.push({ marker: dropMarker, lat: dropLat, lng: dropLng, type: type, wData: wData });
+                }
+
+                if(frameCounter % 150 === 0 && Math.random() < 0.3 && atvMines.length < 8 && !isDead) {
+                    let mineLat = atvState.lat + (Math.random() * 0.0015 - 0.00075);
+                    let mineLng = atvState.lng + (Math.random() * 0.0015 - 0.00075);
+                    let mineMarker = L.marker([mineLat, mineLng], { icon: L.divIcon({className:'', html:`<div style="font-size:20px; filter:drop-shadow(0 2px 5px #000);">💣</div>`})}).addTo(atvMap);
+                    atvMines.push({ marker: mineMarker, lat: mineLat, lng: mineLng });
+                }
+
+                atvZombies.forEach(z => {
+                    let dist = L.latLng(atvState.lat, atvState.lng).distanceTo(L.latLng(z.lat, z.lng));
+                    if (dist < 25 && !isDead) { 
+                        let angle = Math.atan2(atvState.lng - z.lng, atvState.lat - z.lat);
+                        z.lat += Math.cos(angle) * 0.00004;
+                        z.lng += Math.sin(angle) * 0.00004;
+                        
+                        if (dist < 3 && Date.now() - atvLastHitTime > 1500) {
+                            atvState.hp -= 1;
+                            atvLastHitTime = Date.now();
+                            updateATVWeaponHUD();
+                            
+                            let myIcon = atvMarker.getElement();
+                            if(myIcon) {
+                                let hitEl = document.createElement('div');
+                                hitEl.className = 'hit-anim'; hitEl.innerText = `🩸 BITE!`;
+                                myIcon.appendChild(hitEl);
+                                setTimeout(() => hitEl.remove(), 800);
+                            }
+                            if(atvState.hp <= 0) triggerATVDeath({ attacker: 'Zombies', weapon: 'Swarm' }, 10);
+                        }
+                    } else {
+                        let zRad = z.heading * (Math.PI/180);
+                        z.lat += Math.cos(zRad) * z.speed;
+                        z.lng += Math.sin(zRad) * z.speed;
+                        if(Math.random() < 0.05) z.heading += (Math.random()*40 - 20);
+                    }
+                    
+                    z.marker.setLatLng([z.lat, z.lng]);
+                    z.marker.setIcon(getZombieIcon(zombieType.img, 'ZOMBIE', false, 'zombie', z.hp, true));
+                });
+
+                if (!isDead) {
+                    for(let i = atvDrops.length - 1; i >= 0; i--) {
+                        let drop = atvDrops[i];
+                        let distToDrop = L.latLng(atvState.lat, atvState.lng).distanceTo(L.latLng(drop.lat, drop.lng));
+                        if(distToDrop < 6) {
+                            if(drop.type === 'ammo') {
+                                atvWeapons[activeAtvWeaponIndex].ammo += 5;
+                                showModal("Ammo Box Picked Up!", "+5 Ammo to your active weapon.");
+                                updateATVWeaponHUD();
+                                atvMap.removeLayer(drop.marker);
+                                atvDrops.splice(i, 1);
+                            } else if(drop.type === 'weapon') {
+                                let existIdx = atvWeapons.findIndex(w => w.id === drop.wData.id);
+                                if(existIdx > -1) {
+                                    atvWeapons[existIdx].ammo += drop.wData.ammo;
+                                    showModal("Weapon Found!", `Found ${drop.wData.name}! Ammo added.`);
+                                    updateATVWeaponHUD();
+                                    atvMap.removeLayer(drop.marker);
+                                    atvDrops.splice(i, 1);
+                                } else if(atvWeapons.length < 3) {
+                                    atvWeapons.push({ id: drop.wData.id, name: drop.wData.name, emoji: drop.wData.emoji, ammo: drop.wData.ammo, used: 0 });
+                                    showModal("New Weapon Picked Up!", `You picked up ${drop.wData.emoji} ${drop.wData.name}!`);
+                                    atvMap.removeLayer(drop.marker);
+                                    atvDrops.splice(i, 1);
+                                } else {
+                                    showModal("Backpack Full", "You can only carry 3 weapons. Tap the Inventory button to drop one.");
+                                }
+                            }
+                        }
+                    }
+
+                    for(let i = atvMines.length - 1; i >= 0; i--) {
+                        let mine = atvMines[i];
+                        let distToMine = L.latLng(atvState.lat, atvState.lng).distanceTo(L.latLng(mine.lat, mine.lng));
+                        if(distToMine < 5) {
+                            let myIcon = atvMarker.getElement();
+                            if(myIcon) {
+                                let expEl = document.createElement('div');
+                                expEl.style.cssText = "position:absolute; top:-40px; left:-40px; font-size:80px; z-index:999; text-shadow: 0 0 20px red; animation: explode 1s forwards;";
+                                expEl.innerText = `💥`;
+                                myIcon.appendChild(expEl);
+                            }
+                            atvMap.removeLayer(mine.marker);
+                            atvMines.splice(i, 1);
+                            
+                            atvState.hp = 0;
+                            updateATVWeaponHUD();
+                            triggerATVDeath({ attacker: 'a Landmine', weapon: 'Explosion' }, 120);
+                        }
+                    }
+                }
+
+                npcMarkers.forEach(n => {
+                    let radNpc = n.data.heading * (Math.PI / 180);
+                    n.data.lat += Math.cos(radNpc) * n.data.speed;
+                    n.data.lng += Math.sin(radNpc) * n.data.speed;
+                    
+                    if (n.data.lat > 14.5370 || n.data.lat < 14.5330) n.data.heading += 180;
+                    if (n.data.lng > 120.9870 || n.data.lng < 120.9810) n.data.heading += 180;
+
+                    n.marker.setLatLng([n.data.lat, n.data.lng]);
+                    n.marker.setIcon(getATVIcon('#aaa', n.data.heading, false, null, n.data.id.toUpperCase(), '#222', 'standard'));
+                });
+
+            }, 50); 
+        }
+
+        function updateATVWeaponHUD() {
+            let active = atvWeapons[activeAtvWeaponIndex];
+            if(active.used === undefined) active.used = 0;
+            document.getElementById('atvActiveWeaponText').innerText = `${active.emoji} ${active.name} | Left: ${active.ammo} | Used: ${active.used}`;
+            let hpStars = "❤️".repeat(Math.max(0, atvState.hp)) + "🖤".repeat(Math.max(0, 5 - atvState.hp));
+            document.getElementById('atvHpText').innerText = `HP: ${atvState.hp}/5 ${hpStars}`;
+        }
+
+        function fireATVWeapon() {
+            if (isDead || atvWeapons.length === 0) return;
+            let wp = atvWeapons[activeAtvWeaponIndex];
+            if (wp.ammo <= 0) { showModal("No Ammo", "You're out of ammo! Look for drops on the road."); return; }
+            
+            wp.ammo--; wp.used = (wp.used || 0) + 1; updateATVWeaponHUD();
+
+            let projLat = atvState.lat; let projLng = atvState.lng; let projHeading = atvState.heading;
+            let projMarker = L.marker([projLat, projLng], {
+                icon: L.divIcon({className: '', html: `<div style="font-size:20px; filter:drop-shadow(0 0 5px #ff0); transform:rotate(${projHeading}deg); animation: pulseRed 0.5s infinite;">${wp.emoji}</div>`})
+            }).addTo(atvMap);
+
+            let projInterval = setInterval(() => {
+                projLat += Math.cos(projHeading * (Math.PI/180)) * 0.0003;
+                projLng += Math.sin(projHeading * (Math.PI/180)) * 0.0003;
+                projMarker.setLatLng([projLat, projLng]);
+
+                for (let i = atvZombies.length - 1; i >= 0; i--) {
+                    let z = atvZombies[i];
+                    if (L.latLng(projLat, projLng).distanceTo(L.latLng(z.lat, z.lng)) < 5) {
+                        z.hp--;
+                        clearInterval(projInterval); atvMap.removeLayer(projMarker);
+                        
+                        let hitEl = document.createElement('div'); hitEl.className = 'hit-anim'; hitEl.innerText = `💥`;
+                        z.marker.getElement().appendChild(hitEl); setTimeout(() => hitEl.remove(), 800);
+
+                        if(z.hp <= 0) {
+                            atvMap.removeLayer(z.marker); atvZombies.splice(i, 1);
+                            addScore(30); showModal("Zombie Kill!", `You defeated an infected on the road! +30 XP`);
+                        }
+                        return;
+                    }
+                }
+            }, 50);
+
+            setTimeout(() => { clearInterval(projInterval); atvMap.removeLayer(projMarker); }, 800);
+
+            npcMarkers.forEach(n => {
+                let dist = L.latLng(atvState.lat, atvState.lng).distanceTo(L.latLng(n.data.lat, n.data.lng));
+                if(dist < 30) {
+                    let angleToNpc = Math.atan2(n.data.lng - atvState.lng, n.data.lat - atvState.lat) * (180 / Math.PI);
+                    let angleDiff = Math.abs((angleToNpc - atvState.heading + 360) % 360);
+                    if(angleDiff < 25 || angleDiff > 335) { 
+                        let hitEl = document.createElement('div'); hitEl.className = 'hit-anim'; hitEl.innerText = `💥 Pow!`;
+                        n.marker.getElement().appendChild(hitEl); setTimeout(() => hitEl.remove(), 800);
+                        addScore(10);
+                    }
+                }
+            });
+
+            for(let id in atvOtherMarkers) {
+                let dist = L.latLng(atvState.lat, atvState.lng).distanceTo(atvOtherMarkers[id].getLatLng());
+                if(dist < 30) {
+                    let angleToPlayer = Math.atan2(atvOtherMarkers[id].getLatLng().lng - atvState.lng, atvOtherMarkers[id].getLatLng().lat - atvState.lat) * (180 / Math.PI);
+                    let angleDiff = Math.abs((angleToPlayer - atvState.heading + 360) % 360);
+                    if(angleDiff < 25 || angleDiff > 335) {
+                        database.ref('atv_attacks/' + id).set({ attacker: myAlias, weapon: wp.name, time: Date.now() });
+                        addScore(20);
+                    }
+                }
+            }
+        }
+
+        function openATVInventory() {
+            const list = document.getElementById('atvInventoryList');
+            document.getElementById('atvInvCount').innerText = `${atvWeapons.length}/3`;
+            list.innerHTML = "";
+            atvWeapons.forEach((item, index) => {
+                let btnHtml = `<button class="btn-game" style="padding: 5px 15px; font-size: 0.75rem; border-color:#f97316; color:#f97316;" onclick="equipATVWeapon(${index})">Equip</button>`;
+                if (activeAtvWeaponIndex === index) btnHtml = `<span style="color:#22c55e; font-size:0.8rem; font-weight:bold; padding-right:10px;">Equipped</span>`;
+                
+                list.innerHTML += `
+                    <div class="inventory-item" style="border-color: rgba(249, 115, 22, 0.3);">
+                        <div style="font-size:2rem; margin-right:15px; filter: drop-shadow(0 2px 4px #000);">${item.emoji}</div>
+                        <div class="inv-details" style="flex:1;">
+                            <span class="inv-name" style="color:#f97316;">${item.name}</span>
+                            <span class="inv-dmg">Ammo Left: ${item.ammo} | Used: ${item.used || 0}</span>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:5px;">
+                            ${btnHtml}
+                            <button style="background:transparent; border:1px solid #ef4444; color:#ef4444; border-radius:4px; padding:3px; cursor:pointer;" onclick="dropATVWeapon(${index})">Drop</button>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('atvInventoryModal').style.display = 'flex';
+        }
+
+        function equipATVWeapon(index) { activeAtvWeaponIndex = index; updateATVWeaponHUD(); openATVInventory(); }
+        
+        function dropATVWeapon(index) {
+            if(atvWeapons.length <= 1) { showModal("Can't Drop", "Don't drop it! You need it for combat!"); return; }
+            if(activeAtvWeaponIndex === index) { activeAtvWeaponIndex = 0; updateATVWeaponHUD(); }
+            else if (activeAtvWeaponIndex > index) { activeAtvWeaponIndex--; }
+            atvWeapons.splice(index, 1); updateATVWeaponHUD(); openATVInventory();
+        }
+
+        function syncATVPlayers() {
+            database.ref('atv_players').on('value', (snapshot) => {
+                const players = snapshot.val();
+                if(!players) return;
+
+                for (let id in atvOtherMarkers) { if (!players[id]) { atvMap.removeLayer(atvOtherMarkers[id]); delete atvOtherMarkers[id]; } }
+
+                for (let id in players) {
+                    if (id === myUserId) continue;
+                    const p = players[id];
+                    if (Date.now() - p.lastSeen > 10000) continue; 
+
+                    let pColor = p.color || '#3b82f6'; let pTires = p.tires || '#222'; let pStyle = p.style || 'standard';
+
+                    if (atvOtherMarkers[id]) {
+                        atvOtherMarkers[id].setLatLng([p.lat, p.lng]);
+                        atvOtherMarkers[id].setIcon(getATVIcon(pColor, p.heading, false, p.avatar, p.name, pTires, pStyle)); 
+                    } else {
+                        atvOtherMarkers[id] = L.marker([p.lat, p.lng], { icon: getATVIcon(pColor, p.heading, false, p.avatar, p.name, pTires, pStyle) })
+                            .addTo(atvMap)
+                            .bindPopup(`<div style="text-align:center;"><b style="color:${pColor}; font-family: 'Outfit'">${p.name}</b><br><button onclick="openPrivateChat('${id}', '${p.name}')" style="background:#111; color:#fff; border:1px solid ${pColor}; padding:5px 10px; margin-top:5px; cursor:pointer; width:100%; border-radius:4px;">CHAT</button></div>`);
+                    }
+                }
+            });
+        }
+
+        function quitATVGame() {
+            if (atvLoop) clearInterval(atvLoop);
+            document.body.classList.remove('no-scroll'); 
+            atvMines.forEach(m => atvMap.removeLayer(m.marker)); atvMines = [];
+            atvZombies.forEach(z => atvMap.removeLayer(z.marker)); atvZombies = [];
+            database.ref('atv_players/' + myUserId).remove(); backToMenu();
+        }
+
+        // --- NEW GAME: GOKART (CANVAS TRACK) ---
+        function openGoKartLobby() {
+            document.getElementById('game-character-select').style.display = 'none';
+            initGlobalSystems();
+            document.getElementById('game-gokart-lobby').style.display = 'block';
+            gkShowScreen('gk-screen-mode'); 
+        }
+
+        function gkShowScreen(id) {
+            document.querySelectorAll('.gk-menu-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        let gkCanvas, gkCtx, gkWidth, gkHeight;
+        let gkInputs = { forward: false, reverse: false, left: false, right: false, brake: false };
+        let gkMyKart = { x: 500, y: 2000, angle: 0, speed: 0, maxSpeed: 18, accel: 0.3, friction: 0.08, turnSpeed: 0.06, width: 25, height: 45, color: '#f97316' };
+        let gkOtherPlayers = {};
+        let gkLastSendTime = 0;
+        let gkCurrentMode = "";
+        let gkHostServerId = null;
+        let gkJoinedServerId = null;
+        let gkHeartbeatInterval = null;
+        let gkReqAnimFrame = null;
+        let gkIsPlaying = false;
+
+        const gkOffX = 2200; const gkOffY = 2200; const gkScale = 16;
+        const gkTr = (x, y) => { return { x: gkOffX + (x * gkScale), y: gkOffY - (y * gkScale) }; };
+
+        const gkRawBoundary = [ [8.3857,5.3183], [49.7357,-77.4360], [53.1362,-89.0900], [0.7357,-119.6286], [-51.6814,-35.5260], [-43.8097,-26.7219], [-30.2202,-20.4906], [-7.1190,-4.6334], [0.0096,-0.0039], [0,0] ];
+        const gkRawLotA = [ [-25.7639,-15.0150], [-18.4347,-30.5200], [-46.7992,-47.0507], [-99.2164,37.0519], [-91.3447,45.8559], [-77.7552,52.0872], [-54.6540,67.9445], [-47.5253,72.5739], [-39.1395,77.8922], [-0.1675,-0.1030], [0,0] ];
+        const gkRawLotB = [ [2.3779,-4.7589], [5.7784,-16.4129], [-18.4303,-30.5216], [-25.7595,-15.0166], [0.0044,-0.0016] ];
+
+        function gkBuildPath(points) {
+            let p = new Path2D();
+            let start = gkTr(points[0][0], points[0][1]);
+            p.moveTo(start.x, start.y);
+            for(let i=1; i<points.length; i++) {
+                let pt = gkTr(points[i][0], points[i][1]);
+                p.lineTo(pt.x, pt.y);
+            }
+            p.closePath(); return p;
+        }
+
+        const gkTrackPath = gkBuildPath(gkRawBoundary);
+        const gkLotAPath = gkBuildPath(gkRawLotA);
+        const gkLotBPath = gkBuildPath(gkRawLotB);
+
+        function gkBuildGlobalTrack() {
+            let p = new Path2D(); p.ellipse(gkOffX, gkOffY, 1500, 800, 0, 0, Math.PI * 2); return p;
+        }
+        const gkGlobalTrackPath = gkBuildGlobalTrack();
+
+        function gkResizeCanvas() {
+            let container = document.getElementById('gk-canvas-container');
+            gkWidth = gkCanvas.width = container.offsetWidth;
+            gkHeight = gkCanvas.height = container.offsetHeight;
+        }
+        window.addEventListener('resize', () => { if(gkIsPlaying) gkResizeCanvas(); });
+
+        window.addEventListener('keydown', e => {
+            if(!gkIsPlaying) return;
+            if(e.key === 'ArrowUp' || e.key === 'w') gkInputs.forward = true;
+            if(e.key === 'ArrowDown' || e.key === 's') gkInputs.reverse = true;
+            if(e.key === 'ArrowLeft' || e.key === 'a') gkInputs.left = true;
+            if(e.key === 'ArrowRight' || e.key === 'd') gkInputs.right = true;
+            if(e.key === ' ') gkInputs.brake = true;
+        });
+        window.addEventListener('keyup', e => {
+            if(!gkIsPlaying) return;
+            if(e.key === 'ArrowUp' || e.key === 'w') gkInputs.forward = false;
+            if(e.key === 'ArrowDown' || e.key === 's') gkInputs.reverse = false;
+            if(e.key === 'ArrowLeft' || e.key === 'a') gkInputs.left = false;
+            if(e.key === 'ArrowRight' || e.key === 'd') gkInputs.right = false;
+            if(e.key === ' ') gkInputs.brake = false;
+        });
+
+        function gkAdjustColor(col, amt) {
+            let usePound = false; 
+            if (col[0] == "#") { col = col.slice(1); usePound = true; }
+            let num = parseInt(col,16);
+            let r = (num >> 16) + amt; if (r > 255) r = 255; else if (r < 0) r = 0;
+            let b = ((num >> 8) & 0x00FF) + amt; if (b > 255) b = 255; else if (b < 0) b = 0;
+            let g = (num & 0x0000FF) + amt; if (g > 255) g = 255; else if (g < 0) g = 0;
+            let hex = (g | (b << 8) | (r << 16)).toString(16);
+            while (hex.length < 6) { hex = "0" + hex; }
+            return (usePound ? "#" : "") + hex;
+        }
+
+        function gkIsCollision(x, y) {
+            gkCtx.lineWidth = 170; // Pinakapal ang boundary para ma-detect nang maaga ang wall
+            if (mapMode === "PARAISO") {
+                return !gkCtx.isPointInStroke(gkTrackPath, x, y);
+            } else {
+                return !gkCtx.isPointInStroke(gkGlobalTrackPath, x, y);
+            }
+        }
+
+        function gkDrawGrid(camX, camY) {
+            gkCtx.fillStyle = '#1e293b'; gkCtx.fillRect(0, 0, gkWidth, gkHeight);
+            gkCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)'; gkCtx.lineWidth = 1; gkCtx.beginPath();
+            let offsetX = -camX % 100; let offsetY = -camY % 100;
+            for(let x = offsetX; x < gkWidth; x += 100) { gkCtx.moveTo(x, 0); gkCtx.lineTo(x, gkHeight); }
+            for(let y = offsetY; y < gkHeight; y += 100) { gkCtx.moveTo(0, y); gkCtx.lineTo(gkWidth, y); }
+            gkCtx.stroke();
+        }
+
+        function gkDrawTrack(camX, camY) {
+            gkCtx.save();
+            gkCtx.translate(-camX, -camY);
+
+            if (mapMode === "PARAISO") {
+                gkCtx.fillStyle = '#0f172a'; gkCtx.fill(gkLotAPath); gkCtx.fill(gkLotBPath);
+                gkCtx.strokeStyle = 'rgba(212, 175, 55, 0.3)'; gkCtx.lineWidth = 4; gkCtx.stroke(gkLotAPath); gkCtx.stroke(gkLotBPath);
+
+                gkCtx.lineWidth = 170; gkCtx.strokeStyle = '#ef4444'; gkCtx.stroke(gkTrackPath);
+                gkCtx.lineWidth = 170; gkCtx.strokeStyle = '#fff'; gkCtx.setLineDash([40, 40]); gkCtx.stroke(gkTrackPath); gkCtx.setLineDash([]);
+                gkCtx.lineWidth = 150; gkCtx.strokeStyle = '#262626'; gkCtx.stroke(gkTrackPath);
+                gkCtx.lineWidth = 4; gkCtx.strokeStyle = '#facc15'; gkCtx.setLineDash([30, 40]); gkCtx.stroke(gkTrackPath); gkCtx.setLineDash([]);
+                
+                const resortPOIs = [
+                    { name: "Paraiso Resturant", loc: gkTr(0, 0), icon: "🍽️" },
+                    { name: "Lake View", loc: gkTr(-80, 50), icon: "🌊" },
+                    { name: "Garden View", loc: gkTr(-45, 60), icon: "🌸" },
+                    { name: "Family Room", loc: gkTr(-20, 20), icon: "🏡" },
+                    { name: "Alfresco", loc: gkTr(5, -5), icon: "🍷" },
+                    { name: "Brew Umbrella", loc: gkTr(15, -15), icon: "☕" },
+                    { name: "Lagoon Pool", loc: gkTr(-20, -20), icon: "🏊" },
+                    { name: "Camping Site", loc: gkTr(-60, 40), icon: "⛺" },
+                    { name: "ATV Trail Site", loc: gkTr(20, -50), icon: "🛺" },
+                    { name: "Bonfire", loc: gkTr(-40, -40), icon: "🔥" },
+                    { name: "Swing", loc: gkTr(40, -80), icon: "🪢" }
+                ];
+                for (let poi of resortPOIs) {
+                    gkCtx.fillStyle = "rgba(0,0,0,0.7)"; gkCtx.beginPath(); gkCtx.roundRect(poi.loc.x - 60, poi.loc.y - 30, 120, 60, 10); gkCtx.fill();
+                    gkCtx.fillStyle = "#fff"; gkCtx.font = "bold 12px Outfit"; gkCtx.textAlign = "center";
+                    gkCtx.fillText(poi.icon, poi.loc.x, poi.loc.y - 5);
+                    gkCtx.fillStyle = "var(--accent-gold)"; gkCtx.fillText(poi.name, poi.loc.x, poi.loc.y + 15);
+                }
+            } else {
+                gkCtx.lineWidth = 170; gkCtx.strokeStyle = '#ef4444'; gkCtx.stroke(gkGlobalTrackPath);
+                gkCtx.lineWidth = 170; gkCtx.strokeStyle = '#fff'; gkCtx.setLineDash([40, 40]); gkCtx.stroke(gkGlobalTrackPath); gkCtx.setLineDash([]);
+                gkCtx.lineWidth = 150; gkCtx.strokeStyle = '#262626'; gkCtx.stroke(gkGlobalTrackPath);
+                gkCtx.lineWidth = 4; gkCtx.strokeStyle = '#facc15'; gkCtx.setLineDash([30, 40]); gkCtx.stroke(gkGlobalTrackPath); gkCtx.setLineDash([]);
+                
+                gkCtx.fillStyle = "rgba(0,0,0,0.7)"; gkCtx.beginPath(); gkCtx.roundRect(gkOffX - 60, gkOffY - 30, 120, 60, 10); gkCtx.fill();
+                gkCtx.fillStyle = "#fff"; gkCtx.font = "bold 12px Outfit"; gkCtx.textAlign = "center";
+                gkCtx.fillText("🌍", gkOffX, gkOffY - 5);
+                gkCtx.fillStyle = "var(--accent-gold)"; gkCtx.fillText("Global Circuit", gkOffX, gkOffY + 15);
+            }
+            gkCtx.restore();
+        }
+
+        function gkDrawKart(kart, camX, camY, isMe) {
+            gkCtx.save(); gkCtx.translate(kart.x - camX, kart.y - camY); gkCtx.rotate(kart.angle);
+            gkCtx.fillStyle = 'rgba(0,0,0,0.5)'; gkCtx.fillRect(-kart.width/2 + 5, -kart.height/2 + 5, kart.width, kart.height);
+
+            gkCtx.fillStyle = '#111'; 
+            const wh = 14; const ww = 7;
+            const frontWheelAngle = isMe && (gkInputs.left ? -0.3 : gkInputs.right ? 0.3 : 0);
+            
+            gkCtx.fillRect(-kart.width/2 - 4, kart.height/2 - wh - 3, ww, wh); 
+            gkCtx.fillRect(kart.width/2 - ww + 4, kart.height/2 - wh - 3, ww, wh); 
+            
+            gkCtx.save(); gkCtx.translate(-kart.width/2, -kart.height/2 + 8); gkCtx.rotate(frontWheelAngle); gkCtx.fillRect(-4, -wh/2, ww, wh); gkCtx.restore(); 
+            gkCtx.save(); gkCtx.translate(kart.width/2, -kart.height/2 + 8); gkCtx.rotate(frontWheelAngle); gkCtx.fillRect(-ww+4, -wh/2, ww, wh); gkCtx.restore(); 
+
+            let grad = gkCtx.createLinearGradient(0, -kart.height/2, 0, kart.height/2);
+            grad.addColorStop(0, kart.color); grad.addColorStop(1, gkAdjustColor(kart.color, -60));
+            gkCtx.fillStyle = grad; gkCtx.fillRect(-kart.width/2, -kart.height/2, kart.width, kart.height);
+            
+            gkCtx.fillStyle = '#222'; gkCtx.fillRect(-6, 0, 12, 10); 
+            gkCtx.fillStyle = isMe ? '#fff' : '#aaa'; 
+            gkCtx.beginPath(); gkCtx.arc(0, -2, 8, 0, Math.PI * 2); gkCtx.fill(); 
+            gkCtx.fillStyle = '#111'; gkCtx.fillRect(-6, -6, 12, 4); 
+
+            if(!isMe && kart.name) {
+                gkCtx.rotate(-kart.angle);
+                gkCtx.fillStyle = "#fff"; gkCtx.font = "bold 12px Outfit"; gkCtx.textAlign = "center";
+                gkCtx.fillText(kart.name, 0, -35);
+            }
+            gkCtx.restore();
+        }
+
+        function gkUpdateBot(p) {
+            if(!p.isBot) return;
+            p.speed = 10;
+            let cx = gkOffX, cy = gkOffY;
+            let targetAngle = Math.atan2(p.renderX - cx, cy - p.renderY) + Math.PI/2;
+            p.renderAngle += (targetAngle - p.renderAngle) * 0.1;
+            p.renderX += Math.sin(p.renderAngle) * p.speed;
+            p.renderY -= Math.cos(p.renderAngle) * p.speed;
+        }
+
+        // Multiplayer Server Logic
+        function gkCreateServer() {
+            gkHostServerId = "ROOM_" + Math.floor(Math.random() * 10000);
+            database.ref('gokart_rooms/' + gkHostServerId).set({ hostId: myUserId, hostName: myAlias, status: 'waiting', lastHeartbeat: Date.now() });
+
+            gkHeartbeatInterval = setInterval(() => { database.ref('gokart_rooms/' + gkHostServerId + '/lastHeartbeat').set(Date.now()); }, 10000); 
+            database.ref('gokart_rooms/' + gkHostServerId).onDisconnect().remove();
+
+            database.ref('gokart_rooms/' + gkHostServerId + '/players').on('value', snapshot => {
+                let pList = document.getElementById('gk-host-requests');
+                pList.innerHTML = ""; let data = snapshot.val(); if(!data) return;
+
+                for(let pid in data) {
+                    if(pid === myUserId) continue;
+                    let p = data[pid];
+                    if(p.status === 'pending') {
+                        pList.innerHTML += `<div class="gk-player-req-item"><span>${p.name}</span><div><button class="gk-acc-btn" onclick="gkAcceptPlayer('${pid}')">Accept</button> <button class="gk-rej-btn" onclick="gkRejectPlayer('${pid}')">Reject</button></div></div>`;
+                    } else if (p.status === 'accepted') {
+                        pList.innerHTML += `<div class="gk-player-req-item" style="color:#22c55e">${p.name} (Ready)</div>`;
+                    }
+                }
+            });
+
+            gkJoinedServerId = gkHostServerId;
+            gkShowScreen('gk-screen-host');
+        }
+
+        function gkCloseServer() {
+            if(gkHeartbeatInterval) clearInterval(gkHeartbeatInterval);
+            if(gkHostServerId) { database.ref('gokart_rooms/' + gkHostServerId).remove(); gkHostServerId = null; gkJoinedServerId = null; }
+            gkShowScreen('gk-screen-multi');
+        }
+
+        function gkAcceptPlayer(pid) { database.ref('gokart_rooms/' + gkHostServerId + '/players/' + pid).update({ status: 'accepted' }); }
+        function gkRejectPlayer(pid) { database.ref('gokart_rooms/' + gkHostServerId + '/players/' + pid).remove(); }
+
+        function gkOpenJoinServer() {
+            gkShowScreen('gk-screen-join');
+            let sList = document.getElementById('gk-server-list');
+            document.getElementById('gk-join-status').innerText = "Looking for active games...";
+
+            database.ref('gokart_rooms').on('value', snapshot => {
+                if(gkJoinedServerId) return; 
+                sList.innerHTML = ""; let data = snapshot.val(); let count = 0;
+
+                for(let rid in data) {
+                    let room = data[rid];
+                    if(Date.now() - room.lastHeartbeat > 900000) { database.ref('gokart_rooms/' + rid).remove(); continue; } 
+                    if(room.status === 'waiting') {
+                        count++;
+                        sList.innerHTML += `<div class="gk-server-list-item"><span><b>${room.hostName}'s</b> Server</span><button class="gk-server-join-btn" onclick="gkRequestJoin('${rid}')">JOIN</button></div>`;
+                    }
+                }
+                if(count === 0) document.getElementById('gk-join-status').innerText = "No active servers found.";
+                else document.getElementById('gk-join-status').innerText = "Select a server:";
+            });
+        }
+
+        function gkRequestJoin(roomId) {
+            document.getElementById('gk-join-status').innerText = "Waiting for Host to accept...";
+            document.getElementById('gk-server-list').innerHTML = "";
+            document.getElementById('gk-btn-join-back').style.display = "none";
+            gkJoinedServerId = roomId;
+
+            let myPlayerRef = database.ref('gokart_rooms/' + roomId + '/players/' + myUserId);
+            myPlayerRef.set({ name: myAlias, status: 'pending' });
+            myPlayerRef.onDisconnect().remove();
+
+            myPlayerRef.on('value', snap => {
+                let data = snap.val();
+                if(!data) {
+                    gkJoinedServerId = null; myPlayerRef.off(); document.getElementById('gk-btn-join-back').style.display = "block";
+                    gkOpenJoinServer(); alert("Host rejected or closed the room.");
+                } else if(data.status === 'accepted') {
+                    document.getElementById('gk-join-status').innerHTML = "<span style='color:#22c55e'>Accepted! Waiting for host to start...</span>";
+                    database.ref('gokart_rooms/' + roomId + '/status').on('value', statusSnap => {
+                        if(statusSnap.val() === 'playing') { gkStartGame('multi'); database.ref('gokart_rooms/' + roomId + '/status').off(); }
+                    });
+                }
+            });
+        }
+
+        function gkStartMultiplayerGame() {
+            database.ref('gokart_rooms/' + gkHostServerId).update({ status: 'playing' });
+            gkStartGame('multi');
+        }
+
+        function gkInitGameSync() {
+            database.ref('gokart_rooms/' + gkJoinedServerId + '/gamestate').on('value', snap => {
+                let data = snap.val(); if(!data) return;
+                let activeNow = Date.now();
+
+                for (let id in data) {
+                    if (id === myUserId) continue;
+                    if (activeNow - data[id].lastSeen > 5000) continue; 
+                    if (!gkOtherPlayers[id]) {
+                        gkOtherPlayers[id] = { ...data[id], renderX: data[id].x, renderY: data[id].y, renderAngle: data[id].angle };
+                    } else {
+                        gkOtherPlayers[id].x = data[id].x; gkOtherPlayers[id].y = data[id].y; 
+                        gkOtherPlayers[id].angle = data[id].angle; gkOtherPlayers[id].color = data[id].color; gkOtherPlayers[id].name = data[id].name;
+                    }
+                }
+            });
+        }
+
+        // Start & Loop
+        function gkStartGame(mode) {
+            gkCurrentMode = mode;
+            document.getElementById('game-gokart-lobby').style.display = 'none';
+            document.getElementById('game-gokart-play').style.display = 'block';
+            
+            gkCanvas = document.getElementById('gkGameCanvas');
+            gkCtx = gkCanvas.getContext('2d');
+            gkResizeCanvas();
+            document.getElementById('gk-mode-badge').innerText = mode.toUpperCase();
+
+            gkIsPlaying = true; gkOtherPlayers = {};
+            
+            // Set spawn point exactly on the track line to avoid getting stuck outside
+            if (mapMode === "PARAISO") {
+                gkMyKart.x = gkTr(8.38, 5.31).x; 
+                gkMyKart.y = gkTr(8.38, 5.31).y;
+            } else {
+                gkMyKart.x = gkOffX; 
+                gkMyKart.y = gkOffY - 800;
+            }
+            gkMyKart.speed = 0; gkMyKart.angle = Math.PI / 2;
+
+            if(mode === 'multi' && gkJoinedServerId) gkInitGameSync();
+            if(mode === 'bot') gkOtherPlayers['bot_1'] = { renderX: gkMyKart.x + 150, renderY: gkMyKart.y, renderAngle: gkMyKart.angle, color: '#ef4444', isBot: true, name: 'BOT' };
+
+            gkGameLoop();
+        }
+
+        function gkGameLoop() {
+            if(!gkIsPlaying) return;
+
+            if (gkInputs.forward) {
+                gkMyKart.speed += gkMyKart.accel;
+                if(gkMyKart.speed > gkMyKart.maxSpeed) gkMyKart.speed = gkMyKart.maxSpeed;
+            } else if (gkInputs.reverse) {
+                gkMyKart.speed -= gkMyKart.accel;
+                if(gkMyKart.speed < -gkMyKart.maxSpeed / 2) gkMyKart.speed = -gkMyKart.maxSpeed / 2;
+            } else {
+                if (gkMyKart.speed > 0) { gkMyKart.speed -= gkMyKart.friction; if(gkMyKart.speed < 0) gkMyKart.speed = 0; }
+                if (gkMyKart.speed < 0) { gkMyKart.speed += gkMyKart.friction; if(gkMyKart.speed > 0) gkMyKart.speed = 0; }
+            }
+
+            if (gkInputs.brake) { gkMyKart.speed *= 0.85; if(Math.abs(gkMyKart.speed) < 0.5) gkMyKart.speed = 0; }
+
+            if (Math.abs(gkMyKart.speed) > 0.1) {
+                let turnDir = gkMyKart.speed > 0 ? 1 : -1;
+                let driftFactor = gkInputs.forward && Math.abs(gkMyKart.speed) > gkMyKart.maxSpeed*0.7 ? 1.3 : 1; 
+                if (gkInputs.left) gkMyKart.angle -= (gkMyKart.turnSpeed * turnDir * driftFactor);
+                if (gkInputs.right) gkMyKart.angle += (gkMyKart.turnSpeed * turnDir * driftFactor);
+            }
+
+            let nextX = gkMyKart.x + Math.sin(gkMyKart.angle) * gkMyKart.speed;
+            let nextY = gkMyKart.y - Math.cos(gkMyKart.angle) * gkMyKart.speed;
+
+            if (gkIsCollision(nextX, nextY)) {
+                // Harder bounce to avoid glitching through walls
+                gkMyKart.speed = -gkMyKart.speed * 0.8; 
+                gkMyKart.x -= Math.sin(gkMyKart.angle) * 15;
+                gkMyKart.y += Math.cos(gkMyKart.angle) * 15;
+            } else {
+                gkMyKart.x = nextX;
+                gkMyKart.y = nextY;
+            }
+
+            document.getElementById('gk-speed-val').innerText = Math.abs(Math.floor(gkMyKart.speed * 5));
+
+            let camX = gkMyKart.x - gkWidth / 2;
+            let camY = gkMyKart.y - gkHeight / 2;
+
+            gkCtx.clearRect(0, 0, gkWidth, gkHeight);
+            gkDrawGrid(camX, camY);
+            gkDrawTrack(camX, camY);
+
+            for (let id in gkOtherPlayers) {
+                let p = gkOtherPlayers[id];
+                if(p.isBot) {
+                    gkUpdateBot(p);
+                    gkDrawKart({ x: p.renderX, y: p.renderY, angle: p.renderAngle, width: 25, height: 45, color: p.color, name: 'BOT' }, camX, camY, false);
+                } else {
+                    p.renderX += (p.x - p.renderX) * 0.15;
+                    p.renderY += (p.y - p.renderY) * 0.15;
+                    let angleDiff = p.angle - p.renderAngle;
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                    p.renderAngle += angleDiff * 0.15;
+                    gkDrawKart({ x: p.renderX, y: p.renderY, angle: p.renderAngle, width: 25, height: 45, color: p.color, name: p.name }, camX, camY, false);
+                }
+            }
+
+            gkDrawKart(gkMyKart, camX, camY, true);
+            
+            if(gkCurrentMode === 'multi' && gkJoinedServerId) {
+                let now = Date.now();
+                if (now - gkLastSendTime > 100) {
+                    database.ref('gokart_rooms/' + gkJoinedServerId + '/gamestate/' + myUserId).set({
+                        x: gkMyKart.x, y: gkMyKart.y, angle: gkMyKart.angle, color: gkMyKart.color, name: myAlias, lastSeen: now
+                    });
+                    gkLastSendTime = now;
+                }
+            }
+
+            gkReqAnimFrame = requestAnimationFrame(gkGameLoop);
+        }
+
+        function gkQuitGame() {
+            gkIsPlaying = false;
+            cancelAnimationFrame(gkReqAnimFrame);
+            if(gkHeartbeatInterval) clearInterval(gkHeartbeatInterval);
+            if(gkHostServerId) { database.ref('gokart_rooms/' + gkHostServerId).remove(); gkHostServerId = null; }
+            if(gkJoinedServerId && gkCurrentMode === 'multi') {
+                database.ref('gokart_rooms/' + gkJoinedServerId + '/players/' + myUserId).remove();
+                database.ref('gokart_rooms/' + gkJoinedServerId + '/gamestate/' + myUserId).remove();
+                gkJoinedServerId = null;
+            }
+            
+            document.getElementById('game-gokart-play').style.display = 'none';
+            backToMenu();
+        }
+
+        // --- SCAVENGER HUNT LOGIC ---
+        let currentQuest = 0;
+
+        function loadQuest() {
+            // Use dynamic quests from Firebase, or fallback if none
+            const qList = dynamicQuests.length > 0 ? dynamicQuests : fallbackQuests;
+            if(qList.length === 0) return;
+            const q = qList[currentQuest];
+            
+            document.getElementById('questProgress').innerText = `Chapter ${currentQuest + 1} of ${qList.length}`;
+            document.getElementById('questIcon').innerText = q.icon || "explore";
+            document.getElementById('riddleText').innerText = q.riddle;
+            document.getElementById('questAnswer').value = "";
+            document.getElementById('quest-feedback').innerText = "";
+        }
+
+        function checkAnswer() {
+            const qList = dynamicQuests.length > 0 ? dynamicQuests : fallbackQuests;
+            const input = document.getElementById('questAnswer').value.toUpperCase().trim();
+            const feedback = document.getElementById('quest-feedback');
+            
+            if (input === qList[currentQuest].answer) {
+                feedback.innerText = "Correct! Unlocking the next clue..."; feedback.style.color = "#4CAF50";
+                addScore(10); 
+                setTimeout(() => {
+                    currentQuest++;
+                    if (currentQuest >= qList.length) {
+                        document.getElementById('game-quest').style.display = 'none';
+                        document.getElementById('game-complete').style.display = 'block';
+                        document.getElementById('scavengerPrizeText').innerText = gamePrizes.scavenger;
+                        addScore(50);
+                    } else { loadQuest(); }
+                }, 1500);
+            } else {
+                feedback.innerText = "Incorrect. Take a closer look around."; feedback.style.color = "#ff4c4c";
+            }
+        }
+
+        // --- SNAP QUEST LOGIC ---
+        let currentSnap = 0;
+        let snapAttempts = 0; 
+
+        function loadSnapMission() {
+            const sList = dynamicSnapMissions.length > 0 ? dynamicSnapMissions : fallbackSnapMissions;
+            if(sList.length === 0) return;
+            
+            document.getElementById('snapProgress').innerText = `Mission ${currentSnap + 1} of ${sList.length}`;
+            document.getElementById('snapMissionText').innerText = sList[currentSnap];
+            document.getElementById('snapImageDisplay').style.display = 'none';
+            document.getElementById('snapIconPlaceholder').style.display = 'block';
+            document.getElementById('snap-feedback').innerText = "";
+            document.getElementById('btnOpenCamera').style.display = 'inline-block';
+            snapAttempts = 0;
+        }
+
+        function analyzeImageColor(imgEl, missionIndex) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            canvas.width = 64; canvas.height = 64; 
+            ctx.drawImage(imgEl, 0, 0, 64, 64);
+            const data = ctx.getImageData(0, 0, 64, 64).data;
+
+            let r = 0, g = 0, b = 0;
+            for(let i = 0; i < data.length; i += 4) { r += data[i]; g += data[i+1]; b += data[i+2]; }
+            const pixelCount = data.length / 4;
+            r /= pixelCount; g /= pixelCount; b /= pixelCount;
+
+            let isSuccess = false; let errorMessage = "";
+
+            if (missionIndex === 0) {
+                if (b > r * 0.9 || b > g * 0.9) isSuccess = true;
+                else errorMessage = "I don't see enough BLUE water. Are you sure you're at the pool?";
+            } 
+            else if (missionIndex === 1) {
+                if (r > 90 && g > 90 && b < (r + g) / 2) isSuccess = true;
+                else errorMessage = "I don't see a YELLOW flower. Try getting closer to the bloom!";
+            } 
+            else if (missionIndex === 2) {
+                if (imgEl.naturalHeight >= imgEl.naturalWidth) isSuccess = true;
+                else errorMessage = "Please hold your phone upright (Portrait) for a proper selfie!";
+            }
+
+            if (!isSuccess && snapAttempts >= 2) { isSuccess = true; errorMessage = ""; }
+            return { success: isSuccess, error: errorMessage };
+        }
+
+        function handleSnap(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                const imgDisplay = document.getElementById('snapImageDisplay');
+                const placeholder = document.getElementById('snapIconPlaceholder');
+                const scanner = document.getElementById('scannerLine');
+                const feedback = document.getElementById('snap-feedback');
+                const btn = document.getElementById('btnOpenCamera');
+
+                reader.onload = function(e) {
+                    imgDisplay.src = e.target.result;
+                    imgDisplay.onload = function() {
+                        imgDisplay.style.display = 'block'; placeholder.style.display = 'none'; btn.style.display = 'none'; 
+                        scanner.style.display = 'block'; feedback.innerText = "Analyzing image pixels & environment..."; feedback.style.color = "#d4af37";
+
+                        setTimeout(() => {
+                            scanner.style.display = 'none';
+                            const result = analyzeImageColor(imgDisplay, currentSnap);
+
+                            if (result.success) {
+                                feedback.innerText = "Location Verified! Mission Accomplished."; feedback.style.color = "#4CAF50"; addScore(10); 
+                                setTimeout(() => {
+                                    currentSnap++;
+                                    const sList = dynamicSnapMissions.length > 0 ? dynamicSnapMissions : fallbackSnapMissions;
+                                    if(currentSnap >= sList.length) {
+                                        document.getElementById('game-camera').style.display = 'none';
+                                        document.getElementById('snap-complete').style.display = 'block';
+                                        document.getElementById('cameraPrizeText').innerText = gamePrizes.camera;
+                                        addScore(50); 
+                                    } else { loadSnapMission(); }
+                                }, 2000);
+                            } else {
+                                snapAttempts++; feedback.innerText = result.error + " (Try again)"; feedback.style.color = "#ff4c4c";
+                                btn.style.display = 'inline-block'; btn.innerHTML = `<span class="material-icons-outlined" style="vertical-align: middle; margin-right: 8px; font-size: 18px;">replay</span> Retake Photo`;
+                            }
+                        }, 2500); 
+                    };
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // --- MEMORY MATCH LOGIC ---
+        const memoryImages = [
+            "https://res.cloudinary.com/dc7ff0sz2/image/upload/v1775027406/INfinity_Pool_z4y6l3.png",
+            "https://res.cloudinary.com/dc7ff0sz2/image/upload/v1775027381/Lakeview_1_xhz4ap.jpg",
+            "https://res.cloudinary.com/dc7ff0sz2/image/upload/v1775027707/atv_carla_vcgunq.png",
+            "https://res.cloudinary.com/dc7ff0sz2/image/upload/v1775027430/Resto_nurw8x.png"
+        ];
+        let memoryCards = []; let flippedCards = []; let matchedPairs = 0; let moves = 0; let locked = false;
+
+        function initMemoryGame() {
+            const grid = document.getElementById('memoryGrid');
+            grid.innerHTML = '';
+            document.getElementById('memoryWin').style.display = 'none';
+            document.getElementById('memoryResetBtn').style.display = 'none';
+            moves = 0; matchedPairs = 0; flippedCards = []; locked = false;
+            document.getElementById('memoryMoves').innerText = moves;
+
+            let deck = [...memoryImages, ...memoryImages];
+            deck.sort(() => Math.random() - 0.5);
+
+            deck.forEach((img, i) => {
+                const card = document.createElement('div');
+                card.className = 'memory-card'; card.dataset.val = img;
+                card.innerHTML = `<div class="memory-face memory-front"><img src="${img}"></div><div class="memory-face memory-back"></div>`;
+                card.onclick = () => flipCard(card);
+                grid.appendChild(card);
+            });
+        }
+
+        function flipCard(card) {
+            if (locked || card === flippedCards[0] || card.classList.contains('flip')) return;
+            card.classList.add('flip'); flippedCards.push(card);
+
+            if (flippedCards.length === 2) { moves++; document.getElementById('memoryMoves').innerText = moves; checkForMatch(); }
+        }
+
+        function checkForMatch() {
+            locked = true;
+            const isMatch = flippedCards[0].dataset.val === flippedCards[1].dataset.val;
+            if (isMatch) {
+                matchedPairs++; flippedCards = []; locked = false;
+                if(matchedPairs === memoryImages.length) {
+                    setTimeout(() => { document.getElementById('memoryWin').style.display = 'block'; document.getElementById('memoryResetBtn').style.display = 'block'; addScore(50); }, 500);
+                }
+            } else {
+                setTimeout(() => { flippedCards[0].classList.remove('flip'); flippedCards[1].classList.remove('flip'); flippedCards = []; locked = false; }, 1000);
+            }
+        }
+
+        // Disable Right Click & Dev Tools
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function (e) {
+            if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) || (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) { return false; }
+        }
+    </script>
+</body>
+</html>
